@@ -335,17 +335,15 @@ class PackageQueueButton: PackageButton {
                     downloadPopup.view.tintColor = tintColor
                 }
             })
-        } else {
+        } else if package.sourceRepo != nil || package.local_deb != nil {
             self.requestQueuePackage(package: package, queue: .installations)
+        } else {
+            self.showVersionPrompt(nil)
         }
     }
     
     @objc func buttonTapped(_ sender: Any?) {
         guard let package = self.package else {
-            return
-        }
-        if package.fromStatusFile {
-            self.handleButtonPress(package)
             return
         }
         self.handleButtonPress(package)

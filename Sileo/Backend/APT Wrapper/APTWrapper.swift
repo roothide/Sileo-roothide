@@ -18,8 +18,8 @@ class APTWrapper {
         case back = 0
         case uicache = 1
         case reopen = 2
-        case restart = 3
-        case reload = 4
+        case reload = 3
+        case restart = 4
         case reboot = 5
         case usreboot = 6
     }
@@ -80,6 +80,27 @@ class APTWrapper {
 
             let fileNumber = attr[FileAttributeKey.systemFileNumber] as? Int64
             dictionary[app] = fileNumber
+        }
+        return dictionary
+    }
+    
+    class func dictionaryOfScannedTweaks() -> [String: Int64] {
+        var dictionary: [String: Int64] = [:]
+        let fileManager = FileManager.default
+
+        guard let files = try? fileManager.contentsOfDirectory(atPath: "\(CommandPath.prefix)/Library/MobileSubstrate/DynamicLibraries") else {
+            return dictionary
+        }
+
+        for file in files {
+            let path = String(format: "\(CommandPath.prefix)/Library/MobileSubstrate/DynamicLibraries/%@", file)
+
+            guard let attr = try? fileManager.attributesOfItem(atPath: path) else {
+                continue
+            }
+
+            let fileNumber = attr[FileAttributeKey.systemFileNumber] as? Int64
+            dictionary[file] = fileNumber
         }
         return dictionary
     }
@@ -224,6 +245,7 @@ class APTWrapper {
         #else
         DispatchQueue.global(qos: .default).async {
             let oldApps = APTWrapper.dictionaryOfScannedApps()
+            let oldTweaks = APTWrapper.dictionaryOfScannedTweaks()
 
             var pipestatusfd: [Int32] = [0, 0]
             var pipestdout: [Int32] = [0, 0]
@@ -428,9 +450,13 @@ class APTWrapper {
                     let sileoLines = str.components(separatedBy: "\n")
                     for sileoLine in sileoLines {
                         if sileoLine.hasPrefix("finish:") {
+                            NSLog("SileoLog: finish action=\(sileoLine)")
                             var newFinish = FINISH.back
                             if sileoLine.hasPrefix("finish:return") {
                                 newFinish = .back
+                            }
+                            if sileoLine.hasPrefix("finish:uicache") {
+                                newFinish = .uicache
                             }
                             if sileoLine.hasPrefix("finish:reopen") {
                                 newFinish = .reopen
@@ -495,6 +521,14 @@ class APTWrapper {
                     } else {
                         spawn(command: "\(CommandPath.prefix)/usr/bin/uicache", args: ["uicache", "-p", URL(fileURLWithPath: "/Applications/").appendingPathComponent(appName).path])
                     }
+                }
+            }
+            
+            //the dpkg trigger of sileo is not always reliable, it may not work when sileo is updating/reinstalling with other packages.
+            let newTweaks = APTWrapper.dictionaryOfScannedTweaks()
+            if newTweaks != oldTweaks {
+                if finish.rawValue < FINISH.restart.rawValue {
+                    finish = FINISH.restart
                 }
             }
 

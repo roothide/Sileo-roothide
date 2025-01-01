@@ -490,43 +490,50 @@ class DownloadsTableViewController: SileoViewController {
     }
     
     @IBAction private func completeButtonTapped(_ sender: Any?) {
-        if (returnButtonAction == .back || returnButtonAction == .uicache) && !refreshSileo {
+        if (returnButtonAction == .back) && !refreshSileo {
             queueCompleted()
             return
         }
         
-        guard let window = UIApplication.shared.keyWindow else { return queueCompleted() }
-
         isFired = true
         setNeedsStatusBarAppearanceUpdate()
         
+        let window = UIApplication.shared.keyWindow
+
         let animator = UIViewPropertyAnimator(duration: 0.3, dampingRatio: 1) {
-            window.alpha = 0
-            window.transform = .init(scaleX: 0.9, y: 0.9)
+            window?.alpha = 0
+            window?.transform = .init(scaleX: 0.9, y: 0.9)
         }
 
         // When the animation has finished, fire the dumb respring code
         animator.addCompletion { _ in
+            
+            //at least since iOS 15, "uicache -p sileo.app" will kill the sileo process, so we need to use a detached background process to perform all operations here
+            
+            var commands = [String]()
+            
+            if self.refreshSileo {
+                commands.append("/usr/bin/uicache -p \(rootfs(Bundle.main.bundlePath))")
+            }
+            
             switch self.returnButtonAction {
-            case .back, .uicache:
-                spawn(command: CommandPath.uicache, args: ["uicache", "-p", rootfs("\(Bundle.main.bundlePath)")]);
+                case .uicache:
+                    commands.append("/usr/bin/uicache -a")
+                case .reload, .restart:
+                    commands.append("/usr/bin/sbreload")
+                case .reboot, .usreboot:
+                    commands.append("/usr/bin/sync")
+                    commands.append("/usr/bin/launchctl reboot userspace")
+                default:
+                    break
+            }
+            
+            var cmdstr = commands.joined(separator: ";")
+            //cmdstr = "{ set -x; \(cmdstr); } > /tmp/sileo.log 2>&1"
+            spawn(command:jbroot("/usr/bin/sh"), args: ["sh", "-c", cmdstr], root: true, setgroup: true)
+                        
+            if self.returnButtonAction == .reopen && !self.refreshSileo {
                 exit(0)
-            case .reopen:
-                exit(0)
-            case .restart, .reload:
-                if self.refreshSileo {
-                    spawn(command: CommandPath.uicache, args: ["uicache", "-p", rootfs("\(Bundle.main.bundlePath)")])
-                }
-                spawn(command: "\(CommandPath.prefix)/usr/bin/sbreload", args: ["sbreload"])
-                while true {
-                   window.snapshotView(afterScreenUpdates: false)
-                }
-            case .reboot:
-                spawnAsRoot(args: ["\(CommandPath.prefix)/usr/bin/sync"])
-                spawnAsRoot(args: ["\(CommandPath.prefix)/usr/bin/ldrestart"])
-            case .usreboot:
-                spawnAsRoot(args: ["\(CommandPath.prefix)/usr/bin/sync"])
-                spawnAsRoot(args: ["\(CommandPath.prefix)/usr/bin/launchctl", "reboot", "userspace"])
             }
         }
         // Fire the animation
@@ -553,7 +560,7 @@ class DownloadsTableViewController: SileoViewController {
     private func startInstall() {
         NSLog("SileoLog: startInstall")
         func shouldShow(_ finish: APTWrapper.FINISH) -> Bool {
-            finish == .restart || finish == .reload || finish == .reboot || finish == .usreboot
+            (finish == .reload || finish == .restart || finish == .reboot || finish == .usreboot) && !refreshSileo
         }
         
         #if targetEnvironment(simulator) || TARGET_SANDBOX
@@ -684,27 +691,20 @@ class DownloadsTableViewController: SileoViewController {
             if refreshSileo {
                 completeButton?.setTitle(String(localizationKey: "After_Install_Relaunch"), for: .normal)
                 completeLaterButton?.setTitle(String(localizationKey: "After_Install_Relaunch_Later"), for: .normal)
-                break }
-            completeButton?.setTitle(String(localizationKey: "Done"), for: .normal)
-        case .reopen:
-            completeButton?.setTitle(String(localizationKey: "After_Install_Relaunch"), for: .normal)
-            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Relaunch_Later"), for: .normal)
-        case .restart, .reload:
-            completeButton?.setTitle(String(localizationKey: "After_Install_Respring"), for: .normal)
-            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Respring_Later"), for: .normal)
-        case .reboot:
-            completeButton?.setTitle(String(localizationKey: "After_Install_Reboot"), for: .normal)
-            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Reboot_Later"), for: .normal)
-        case .usreboot:
-            completeButton?.setTitle(String(localizationKey: "After_Install_Reboot"), for: .normal)
-            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Reboot_Later"), for: .normal)
-        case .uicache:
-            if refreshSileo {
-                completeButton?.setTitle(String(localizationKey: "After_Install_Relaunch"), for: .normal)
-                completeLaterButton?.setTitle(String(localizationKey: "After_Install_Relaunch_Later"), for: .normal)
             } else {
                 completeButton?.setTitle(String(localizationKey: "Done"), for: .normal)
             }
+        case .uicache:
+            completeButton?.setTitle(String(localizationKey: "Refresh"), for: .normal)
+        case .reopen:
+            completeButton?.setTitle(String(localizationKey: "After_Install_Relaunch"), for: .normal)
+            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Relaunch_Later"), for: .normal)
+        case .reload, .restart:
+            completeButton?.setTitle(String(localizationKey: "After_Install_Respring"), for: .normal)
+            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Respring_Later"), for: .normal)
+        case .reboot, .usreboot:
+            completeButton?.setTitle(String(localizationKey: "After_Install_Reboot"), for: .normal)
+            completeLaterButton?.setTitle(String(localizationKey: "After_Install_Reboot_Later"), for: .normal)
         }
     }
     

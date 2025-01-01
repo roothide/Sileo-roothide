@@ -889,13 +889,13 @@ extension PackageListViewController: UISearchResultsUpdating {
             } else {
                 packages = packageManager.packageList(identifier: self.packagesLoadIdentifier,
                                                       search: query,
-                                                      sortPackages: self.packagesLoadIdentifier != "--installed",
+                                                      sortPackages: true,
                                                       repoContext: self.repoContext,
                                                       lookupTable: self.searchCache)
                 self.searchCache[query.lowercased()] = packages
             }
             
-            if self.packagesLoadIdentifier == "--installed" {
+            if self.packagesLoadIdentifier == "--installed" && query.isEmpty {
                 switch SortMode() {
                 case .installdate:
                     packages = packages.sorted(by: { package1, package2 -> Bool in
