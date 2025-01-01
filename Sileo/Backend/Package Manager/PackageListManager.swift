@@ -92,7 +92,7 @@ final class PackageListManager {
                 NotificationCenter.default.post(name: PackageListManager.reloadNotification, object: nil)
                 NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
                 
-                if UserDefaults.standard.bool(forKey: "AutoRefreshSources", fallback: true) {
+                if UserDefaults.standard.bool(forKey: "AutoRefreshSources", fallback: true) && !UserDefaults.standard.bool(forKey: "uicacheRequired") {
                     // Start a background repo refresh here instead because it doesn't like it in the Source View Controller
                     NotificationCenter.default.post(name: SourcesViewController.refreshReposNotification, object: nil)
                 }

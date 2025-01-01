@@ -83,7 +83,7 @@ final class FeaturedViewController: SileoViewController, UIScrollViewDelegate, F
                 foundBroken = true
             }
             
-            if DpkgWrapper.dpkgInterrupted() || foundBroken {
+            if (DpkgWrapper.dpkgInterrupted() || foundBroken) && !UserDefaults.standard.bool(forKey: "uicacheRequired") {
                 DispatchQueue.main.sync {
                     let alertController = UIAlertController(title: String(localizationKey: "FixingDpkg.Title", type: .error),
                                                             message: String(localizationKey: "FixingDpkg.Body", type: .error),

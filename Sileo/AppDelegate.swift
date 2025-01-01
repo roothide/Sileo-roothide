@@ -54,6 +54,25 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
         // Start the language helper for customised localizations
         _ = LanguageHelper.shared
 
+//        UserDefaults.standard.setValue(true, forKey: "uicacheRequired")
+        if UserDefaults.standard.bool(forKey: "uicacheRequired") {
+            DispatchQueue.main.async {
+                let alert = UIAlertController(title: String(localizationKey: "Apply_Changes"), message: String(localizationKey: "Apply_Changes_Confirm"), preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: String(localizationKey: "After_Install_Relaunch"), style: .destructive, handler: { _ in
+                    UserDefaults.standard.setValue(false, forKey: "uicacheRequired")
+                    UserDefaults.standard.synchronize()
+                    spawnAsRoot(args:[jbroot("/usr/bin/uicache"), "-p", rootfs(Bundle.main.bundlePath)])
+                    exit(0)
+                }))
+                
+                var controller:UIViewController = (self.window?.rootViewController)!
+                while controller.presentedViewController != nil && controller.presentedViewController?.isBeingDismissed==false {
+                    controller = controller.presentedViewController!
+                }
+                controller.present(alert, animated: true)
+            }
+        }
+        
         guard let tabBarController = self.window?.rootViewController as? UITabBarController else {
             fatalError("Invalid Storyboard")
         }
@@ -71,12 +90,11 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                         
                         let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
                         let okAction = UIAlertAction(title: String(localizationKey: "OK"), style: .cancel) { _ in
+                            UserDefaults.standard.set(true, forKey: "updatesPrompt")
                             alert.dismiss(animated: true, completion: nil)
                         }
                         alert.addAction(okAction)
                         self.window?.rootViewController?.present(alert, animated: true, completion: nil)
-                        
-                        UserDefaults.standard.set(true, forKey: "updatesPrompt")
                     }
                 }
             }
@@ -305,6 +323,15 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     }
     
     func application(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
+        DispatchQueue.global(qos: .default).async { DispatchQueue.main.async {
+            if self.window?.rootViewController?.presentedViewController != nil {
+                return
+            }
+            self.application_(application, performActionFor: shortcutItem, completionHandler: completionHandler)
+        }}
+    }
+    
+    func application_(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
         guard let tabBarController = TabBarController.singleton,
               let controllers = tabBarController.viewControllers,
               let sourcesSVC = controllers[2] as? SourcesSplitViewController,

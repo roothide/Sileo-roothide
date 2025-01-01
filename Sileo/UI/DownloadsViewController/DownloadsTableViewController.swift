@@ -490,7 +490,7 @@ class DownloadsTableViewController: SileoViewController {
     }
     
     @IBAction private func completeButtonTapped(_ sender: Any?) {
-        if (returnButtonAction == .back) && !refreshSileo {
+        if returnButtonAction == .back && !refreshSileo {
             queueCompleted()
             return
         }
@@ -508,32 +508,35 @@ class DownloadsTableViewController: SileoViewController {
         // When the animation has finished, fire the dumb respring code
         animator.addCompletion { _ in
             
-            //at least since iOS 15, "uicache -p sileo.app" will kill the sileo process, so we need to use a detached background process to perform all operations here
-            
-            var commands = [String]()
-            
-            if self.refreshSileo {
-                commands.append("/usr/bin/uicache -p \(rootfs(Bundle.main.bundlePath))")
-            }
+            //1: at least since iOS16, "uicache -p sileo.app" will kill the sileo process
+            //2: rebooting userspace immediately after executing uicache may cause jailbreak apps to disappear
             
             switch self.returnButtonAction {
                 case .uicache:
-                    commands.append("/usr/bin/uicache -a")
+                    spawnAsRoot(args:[jbroot("/usr/bin/uicache"), "-a"])
+                
                 case .reload, .restart:
-                    commands.append("/usr/bin/sbreload")
+                    spawnAsRoot(args:[jbroot("/usr/bin/sbreload")])
+                
                 case .reboot, .usreboot:
-                    commands.append("/usr/bin/sync")
-                    commands.append("/usr/bin/launchctl reboot userspace")
+                    spawnAsRoot(args:[jbroot("/usr/bin/sync")])
+                    spawnAsRoot(args:[jbroot("/usr/bin/launchctl"), "reboot", "userspace"])
+                
+                case .reopen:
+                    if self.refreshSileo {
+                        UserDefaults.standard.setValue(false, forKey: "uicacheRequired")
+                        UserDefaults.standard.synchronize()
+                        spawnAsRoot(args:[jbroot("/usr/bin/uicache"), "-p", rootfs(Bundle.main.bundlePath)])
+                    }
+                    exit(0)
+                
                 default:
-                    break
-            }
-            
-            var cmdstr = commands.joined(separator: ";")
-            //cmdstr = "{ set -x; \(cmdstr); } > /tmp/sileo.log 2>&1"
-            spawn(command:jbroot("/usr/bin/sh"), args: ["sh", "-c", cmdstr], root: true, setgroup: true)
-                        
-            if self.returnButtonAction == .reopen && !self.refreshSileo {
-                exit(0)
+                    if self.refreshSileo {
+                        UserDefaults.standard.setValue(false, forKey: "uicacheRequired")
+                        UserDefaults.standard.synchronize()
+                        spawnAsRoot(args:[jbroot("/usr/bin/uicache"), "-p", rootfs(Bundle.main.bundlePath)])
+                        exit(0)
+                    }
             }
         }
         // Fire the animation
@@ -560,7 +563,7 @@ class DownloadsTableViewController: SileoViewController {
     private func startInstall() {
         NSLog("SileoLog: startInstall")
         func shouldShow(_ finish: APTWrapper.FINISH) -> Bool {
-            (finish == .reload || finish == .restart || finish == .reboot || finish == .usreboot) && !refreshSileo
+            finish == .reload || finish == .restart || finish == .reboot || finish == .usreboot
         }
         
         #if targetEnvironment(simulator) || TARGET_SANDBOX
@@ -705,6 +708,11 @@ class DownloadsTableViewController: SileoViewController {
         case .reboot, .usreboot:
             completeButton?.setTitle(String(localizationKey: "After_Install_Reboot"), for: .normal)
             completeLaterButton?.setTitle(String(localizationKey: "After_Install_Reboot_Later"), for: .normal)
+        }
+        
+        if refreshSileo {
+            UserDefaults.standard.setValue(true, forKey: "uicacheRequired")
+            UserDefaults.standard.synchronize()
         }
     }
     
