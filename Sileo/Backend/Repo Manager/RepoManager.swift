@@ -258,6 +258,7 @@ final class RepoManager {
             PaymentManager.shared.removeProviders(for: repo)
             DependencyResolverAccelerator.shared.removeRepo(repo: repo)
         }
+        DownloadManager.shared.reloadData(recheckPackages: true)
         NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
     }
 
@@ -1234,15 +1235,15 @@ final class RepoManager {
                 }
             }
             
-            // This method can be safely called on a non-main thread.
-            backgroundIdentifier.map(UIApplication.shared.endBackgroundTask)
-            
             DispatchQueue.main.async {
                 if reposUpdated > 0 {
                     NotificationCenter.default.post(name: PackageListManager.reloadNotification, object: nil)
                     NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
                 }
                 completion(errorsFound, errorOutput)
+                
+                // This method can be safely called on a non-main thread.
+                backgroundIdentifier.map(UIApplication.shared.endBackgroundTask)
             }
         }
     }

@@ -60,6 +60,8 @@ open class BaseSubtitleTableViewCell: UITableViewCell {
         textLabelFrame.origin.y = 9
         detailTextLabelFrame.origin.y = 30
         
+        let progressViewPadding = 3.0
+        let contentOffset = self.convert(contentView.frame.origin, to: self)
         if UIView.userInterfaceLayoutDirection(for: self.semanticContentAttribute) == .leftToRight {
             if icon != nil {
                 textLabelFrame.origin.x = 72
@@ -68,6 +70,11 @@ open class BaseSubtitleTableViewCell: UITableViewCell {
                 textLabelFrame.origin.x = 16
                 detailTextLabelFrame.origin.x = 16
             }
+            textLabelFrame.size.width = contentView.frame.size.width - textLabelFrame.origin.x
+            detailTextLabelFrame.size.width = contentView.frame.size.width - detailTextLabelFrame.origin.x
+            
+            progressView.frame = CGRect(x: progressX, y: self.contentView.bounds.height - 2, width: self.bounds.width - contentOffset.x - progressX - progressViewPadding, height: 2)
+            
         } else {
             if icon != nil {
                 iconView.frame.origin.x = self.contentView.frame.size.width - 16 - iconView.frame.size.width
@@ -78,11 +85,21 @@ open class BaseSubtitleTableViewCell: UITableViewCell {
                 textLabelFrame.origin.x = self.contentView.frame.size.width - textLabelFrame.size.width - 16
                 detailTextLabelFrame.origin.x = self.contentView.frame.size.width - detailTextLabelFrame.size.width - 16
             }
+            if textLabelFrame.origin.x < 0 {
+                textLabelFrame.size.width -= -textLabelFrame.origin.x
+                textLabelFrame.origin.x = 0
+            }
+            if detailTextLabelFrame.origin.x < 0 {
+                detailTextLabelFrame.size.width -= -detailTextLabelFrame.origin.x
+                detailTextLabelFrame.origin.x = 0
+            }
+            
+            let fix = self.frame.size.width - (contentOffset.x + self.contentView.frame.size.width)
+            progressView.frame = CGRect(x: -contentOffset.x + progressViewPadding, y: self.contentView.bounds.height - 2, width: self.bounds.width - fix - progressX - progressViewPadding, height: 2)
         }
         
         self.textLabel?.frame = textLabelFrame
         self.detailTextLabel?.frame = detailTextLabelFrame
-        progressView.frame = CGRect(x: progressX, y: self.contentView.bounds.height - 2, width: self.contentView.bounds.width - (progressX * 2), height: 2)
     }
     
     public var title: String? = nil {

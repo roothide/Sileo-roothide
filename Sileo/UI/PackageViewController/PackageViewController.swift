@@ -56,7 +56,7 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
     @IBOutlet private var depictionHeaderImageViewHeight: NSLayoutConstraint!
     @IBOutlet private var contentViewHeight: NSLayoutConstraint!
     @IBOutlet private var contentViewWidth: NSLayoutConstraint!
-    @IBOutlet private var downloadButtonWidth: NSLayoutConstraint!
+//    @IBOutlet private var downloadButtonWidth: NSLayoutConstraint!
 
     private var allowNavbarUpdates = false
     private var currentNavBarOpacity = CGFloat(0)
@@ -101,7 +101,7 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
         newDepictView.alpha = 0.1
         self.depictionView = newDepictView
         self.contentView.addSubview(newDepictView)
-        self.view.layoutIfNeeded()
+        self.view.setNeedsLayout()
         
         FRUIView.animate(withDuration: 0.25, animations: {
             oldDepictView?.alpha = 0
@@ -137,6 +137,10 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(PackageViewController.reloadData),
                                                name: PackageListManager.reloadNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(PackageViewController.reloadData),
+                                               name: PackageListManager.installChange,
                                                object: nil)
 
         packageIconView.layer.cornerRadius = 15
@@ -236,6 +240,12 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
                     self.savedProvisional = self.package
                     self.package = newPackage
                 }
+            }
+        }
+        
+        if let package=package, package.fromStatusFile {
+            if let newInstalled = PackageListManager.shared.installedPackage(identifier: package.package) {
+                self.package = newInstalled
             }
         }
 
@@ -623,6 +633,7 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
 
     func subviewHeightChanged() {
         NSLog("SileoLog: PackageViewController.subviewHeightChanged")
+        self.view.setNeedsLayout()
         self.view.layoutIfNeeded()
     }
 
@@ -715,20 +726,28 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
             let ignoreUpdatesText = installedPackage.wantInfo == .hold ?
                 String(localizationKey: "Package_Hold_Disable_Action") : String(localizationKey: "Package_Hold_Enable_Action")
             let ignoreUpdates = UIAlertAction(title: ignoreUpdatesText, style: .default) { _ in
-                if installedPackage.wantInfo == .hold {
-                    #if !targetEnvironment(simulator) && !TARGET_SIMULATOR
-                    if DpkgWrapper.ignoreUpdates(false, package: package.package) {
+                do {
+                    if installedPackage.wantInfo == .hold {
+#if !targetEnvironment(simulator) && !TARGET_SIMULATOR
+                        try DpkgWrapper.ignoreUpdates(false, package: package.package)
                         installedPackage.wantInfo = .install
-                    }
-                    #endif
-                } else {
-                    #if !targetEnvironment(simulator) && !TARGET_SIMULATOR
-                    if DpkgWrapper.ignoreUpdates(true, package: package.package) {
+#endif
+                    } else {
+#if !targetEnvironment(simulator) && !TARGET_SIMULATOR
+                        try DpkgWrapper.ignoreUpdates(true, package: package.package)
                         installedPackage.wantInfo = .hold
+#endif
                     }
-                    #endif
+                    NotificationCenter.default.post(Notification(name: PackageListManager.prefsNotification))
+                } catch {
+                    sharePopup.dismiss(animated: true) {
+                        let alertController = UIAlertController(title: String(localizationKey: "Unknown", type: .error), message: "\(error)", preferredStyle: .alert)
+                        alertController.addAction(UIAlertAction(title: String(localizationKey: "OK"), style: .cancel, handler: { _ in
+                            self.dismiss(animated: true, completion: nil)
+                        }))
+                        self.present(alertController, animated: true, completion: nil)
+                    }
                 }
-                NotificationCenter.default.post(Notification(name: PackageListManager.prefsNotification))
             }
             sharePopup.addAction(ignoreUpdates)
         }
@@ -778,15 +797,11 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
             return
         }
         
-        DispatchQueue.main.async {
-            self.downloadButton.isEnabled = false
-            self.navBarDownloadButton?.isEnabled = false
-        }
-                
         PaymentManager.shared.getPaymentProvider(for: repo) { error, provider in
-                guard error == nil, let provider = provider else {
-                    return
-                }
+            guard error == nil, let provider = provider else {
+                return
+            }
+            
 // we can always request price for packages even if the repo is not logged in
 //                guard provider.isAuthenticated else {
 //                    return //we have to re-verify its payment status if the repo is not logged in
@@ -795,13 +810,8 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
             provider.getPackageInfo(forIdentifier: package.package) { error, info in
                 guard error == nil, let info=info, info.available else { return }
                 
-                DispatchQueue.main.async {
-                    self.downloadButton.isEnabled = true
-                    self.navBarDownloadButton?.isEnabled = true
-                    
-                    self.downloadButton.paymentInfo = info
-                    self.navBarDownloadButton?.paymentInfo = info
-                }
+                self.downloadButton.paymentInfo = info
+                self.navBarDownloadButton?.paymentInfo = info
             }
         }
     }

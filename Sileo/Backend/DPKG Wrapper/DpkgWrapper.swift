@@ -137,11 +137,13 @@ class DpkgWrapper {
         return true
     }
     
-    public class func ignoreUpdates(_ ignoreUpdates: Bool, package: String) -> Bool {
+    public class func ignoreUpdates(_ ignoreUpdates: Bool, package: String) throws {
         let ignoreCommand = ignoreUpdates ? "hold" : "unhold"
-        let command = [CommandPath.aptmark, "\(ignoreCommand)", "\(package)"]
-        let (status,_,_) = spawnAsRoot(args: command)
-        return status==0
+        let command = [CommandPath.aptmark, "-oDir::State::lists=", "\(ignoreCommand)", "\(package)"]
+        let (status,stdout,stderr) = spawnAsRoot(args: command)
+        if status != 0 {
+            throw NSError(domain: "Sileo.Apt", code: 0, userInfo: ["Description": "apt-mark return \(status)\n\(stdout)\n\(stderr)"])
+        }
     }
     
     public class func rawFields(packageURL: URL) throws -> String {

@@ -33,7 +33,7 @@ public class SileoScrollViewController: SileoViewController {
     
 class PackageListViewController: SileoScrollViewController, UIGestureRecognizerDelegate {
     @IBOutlet final var collectionView: UICollectionView?
-    @IBOutlet final var downloadsButton: UIBarButtonItem?
+//    @IBOutlet final var downloadsButton: UIBarButtonItem?
     
     @IBInspectable final var showSearchField: Bool = false
     @IBInspectable final var showUpdates: Bool = false //=true in InterfaceBuild
@@ -121,7 +121,7 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
         }
     }
     
-    @IBAction func refreshInstalledPackages(_ sender: UIRefreshControl?) {
+    @objc func refreshInstalledPackages(_ sender: UIRefreshControl?) {
         sender?.beginRefreshing()
         PackageListManager.shared.installChange()
         NotificationCenter.default.post(name: PackageListManager.stateChange, object: nil)
@@ -414,6 +414,12 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     var isEnabled = true
     @objc func upgradeAllClicked(_ sender: Any?) {
         guard isEnabled else { return }
+        
+        if DownloadManager.shared.queueRunning {
+            TabBarController.singleton?.presentPopupController()
+            return
+        }
+        
         isEnabled = false
         hapticResponse()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -567,14 +573,14 @@ extension PackageListViewController: UICollectionViewDataSource {
         switch findWhatFuckingSectionThisIs(indexPath.section) {
         case .canister:
             headerView.actionText = nil
-            headerView.separatorView?.isHidden = false
+//            headerView.separatorView?.isHidden = false
             headerView.sortContainer?.isHidden = true
             headerView.upgradeButton?.isHidden = true
             headerView.label?.text = String(localizationKey: "External_Repo")
             return headerView
         case .ignoredUpdates:
             headerView.actionText = nil
-            headerView.separatorView?.isHidden = false
+//            headerView.separatorView?.isHidden = false
             headerView.sortContainer?.isHidden = true
             headerView.upgradeButton?.isHidden = true
             headerView.label?.text = String(localizationKey: "Ignored Updates")
@@ -583,7 +589,7 @@ extension PackageListViewController: UICollectionViewDataSource {
             headerView.label?.text = String(localizationKey: "Updates_Heading")
             headerView.actionText = String(localizationKey: "Upgrade_All_Button")
             headerView.sortContainer?.isHidden = true
-            headerView.separatorView?.isHidden = true
+//            headerView.separatorView?.isHidden = true
             headerView.upgradeButton?.addTarget(self, action: #selector(self.upgradeAllClicked(_:)), for: .touchUpInside)
             return headerView
         case .packages:
@@ -597,11 +603,11 @@ extension PackageListViewController: UICollectionViewDataSource {
                 case .size: headerView.sortHeader?.text = String(localizationKey: "Sort_Install_Size")
                 }
                 headerView.sortContainer?.addTarget(self, action: #selector(self.sortPopup(sender:)), for: .touchUpInside)
-                headerView.separatorView?.isHidden = false
+//                headerView.separatorView?.isHidden = false
                 return headerView
             } else if showProvisional && loadProvisional {
                 headerView.actionText = nil
-                headerView.separatorView?.isHidden = false
+//                headerView.separatorView?.isHidden = false
                 headerView.sortContainer?.isHidden = true
                 headerView.upgradeButton?.isHidden = true
                 headerView.label?.text = String(localizationKey: "Internal_Repo")
@@ -610,7 +616,7 @@ extension PackageListViewController: UICollectionViewDataSource {
         case .reallyBoringList: fatalError("Literally impossible to be here")
         case .searchHistoryList:
             headerView.actionText = String(localizationKey: "Clear_Search_History")
-            headerView.separatorView?.isHidden = false
+//            headerView.separatorView?.isHidden = false
             headerView.sortContainer?.isHidden = true
             headerView.upgradeButton?.isHidden = false
             headerView.upgradeButton?.addTarget(nil, action: #selector(clearHistory), for: .touchUpInside)

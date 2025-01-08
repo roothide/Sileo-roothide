@@ -20,7 +20,12 @@ class PackageQueueButton: PackageButton {
     public var package: Package? {
         didSet {
             DispatchQueue.main.async {
-                self.updateInfo()
+                if let package=self.package, package.commercial {
+                    self.paymentInfo = PaymentPackageInfo(price: String(localizationKey: "Package_Paid"), purchased: false, available: true)
+                    //paymentInfo->didSet->self.updateInfo()
+                } else {
+                    self.updateInfo()
+                }
             }
         }
     }
@@ -85,13 +90,6 @@ class PackageQueueButton: PackageButton {
         for versionPackage in allPackages {
             let title = package.fromStatusFile ? "\t\(versionPackage.version) • \(versionPackage.sourceRepo!.displayName)" : versionPackage.version
             let versionAction = UIAlertAction(title: title, style: .default, handler: { (_: UIAlertAction) in
-                let downloadManager = DownloadManager.shared
-                let queueFound = downloadManager.find(package: versionPackage)
-                if queueFound != .none {
-                    // but it's a already queued! user changed their mind about installing this new package => nuke it from the queue
-                    downloadManager.remove(package: versionPackage, queue: queueFound)
-                }
-
                 self.requestQueuePackage(package: versionPackage, queue: .installations)
             })
             if package.fromStatusFile { versionAction.setValue(CATextLayerAlignmentMode.left, forKey: "titleTextAlignment") }
@@ -149,11 +147,7 @@ class PackageQueueButton: PackageButton {
             self.isProminent = true
         }
         
-        if package.commercial && paymentInfo==nil {
-            return
-        }
-        
-        self.isEnabled = !DownloadManager.shared.lockedForInstallation
+        self.isEnabled = !DownloadManager.shared.queueRunning
     }
     
     func updateButton(title: String) {
@@ -180,8 +174,9 @@ class PackageQueueButton: PackageButton {
         var actionItems: [CSActionItem] = []
 
         let downloadManager = DownloadManager.shared
+        
+        if downloadManager.queueRunning { return [] }
 
-        let queueFound = downloadManager.find(package: package)
         //self.installedPackage may not be ready yet
         if let installedPackage = PackageListManager.shared.installedPackage(identifier: package.package) {
             if !package.commercial || (paymentInfo?.available ?? false) {
@@ -195,9 +190,6 @@ class PackageQueueButton: PackageButton {
                         let action = CSActionItem(title: String(localizationKey: "Package_Upgrade_Action"),
                                                   image: UIImage(systemNameOrNil: "icloud.and.arrow.down"),
                                                   style: .default) {
-                            if queueFound != .none {
-                                downloadManager.remove(package: package, queue: queueFound)
-                            }
                             self.hapticResponse()
                             self.requestQueuePackage(package: package, queue: .upgrades)
                         }
@@ -206,9 +198,6 @@ class PackageQueueButton: PackageButton {
                         let action = CSActionItem(title: String(localizationKey: "Package_Reinstall_Action"),
                                                   image: UIImage(systemNameOrNil: "arrow.clockwise.circle"),
                                                   style: .default) {
-                            if queueFound != .none {
-                                downloadManager.remove(package: package, queue: queueFound)
-                            }
                             self.hapticResponse()
                             self.requestQueuePackage(package: package, queue: .installations)
                         }
@@ -268,6 +257,10 @@ class PackageQueueButton: PackageButton {
                 CanisterResolver.shared.queuePackage(package)
                 return
             }
+        }
+        if DownloadManager.shared.queueRunning {
+            TabBarController.singleton?.presentPopupController()
+            return
         }
         self.hapticResponse()
         let downloadManager = DownloadManager.shared
@@ -351,8 +344,10 @@ class PackageQueueButton: PackageButton {
     
     private func queuePackage(_ package: Package, _ queue: DownloadManagerQueue)
     {
-        DownloadManager.shared.add(package: package, queue: queue)
-        DownloadManager.shared.reloadData(recheckPackages: true)
+        if DownloadManager.shared.queueRunning { return }
+        DownloadManager.shared.add(package: package, queue: queue) {
+            DownloadManager.shared.reloadData(recheckPackages: true)
+        }
         NotificationCenter.default.post(name: PackageQueueButton.actionPerformedNotification, object: nil)
     }
     
@@ -366,6 +361,8 @@ class PackageQueueButton: PackageButton {
     private func requestQueuePackage(package: Package, queue: DownloadManagerQueue)
     {
         NSLog("SileoLog: requestQueuePackage \(package.package)=\(package.version) commercial=\(package.commercial) \(package.sourceRepo):\(package.sourceRepo?.rawURL) purchased=\(self.hasPurchased) queue=\(queue.rawValue)")
+        
+        if DownloadManager.shared.queueRunning { return }
         
         //some repos(eg:Chariz) only set the latest packages as cydia::commercial
         guard let mainPackage = self.package else {
@@ -476,11 +473,7 @@ class PackageQueueButton: PackageButton {
     }
     
     private func presentAlert(paymentError: PaymentError?, title: String) {
-        DispatchQueue.main.async {
-            self.viewControllerForPresentation?.present(PaymentError.alert(for: paymentError, title: title),
-                                                        animated: true,
-                                                        completion: nil)
-        }
+        SileoAppDelegate.presentController(PaymentError.alert(for: paymentError, title: title))
     }
     
     private func hapticResponse() {

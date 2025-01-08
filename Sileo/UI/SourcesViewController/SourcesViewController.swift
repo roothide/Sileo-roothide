@@ -337,10 +337,9 @@ final class SourcesViewController: SileoViewController {
             }
             return
         }
-        guard let url = notification.object as? String,
-              let visibibleCells = tableView.visibleCells as? [SourcesTableViewCell] else { return }
-        for cell in visibibleCells {
-            guard let repo = cell.repo else { continue }
+        guard let url = notification.object as? String else { return }
+        for cell in tableView.loadedCells {
+            guard let cell = cell as? SourcesTableViewCell, let repo = cell.repo else { continue }
             if repo.rawURL == url {
                 NSLog("SileoLog: cell.image=\(repo.repoIcon)")
                 cell.image(repo)
@@ -349,7 +348,7 @@ final class SourcesViewController: SileoViewController {
         }
     }
     
-    @IBAction func refreshSources(_ sender: UIRefreshControl?) {
+    @objc func refreshSources(_ sender: UIRefreshControl?) {
         self.refreshSources(forceUpdate: false, forceReload: true)
     }
     
@@ -501,6 +500,11 @@ final class SourcesViewController: SileoViewController {
     }
     
     private func deleteRepo(at indexPath: IndexPath) {
+        if DownloadManager.shared.queueRunning {
+            TabBarController.singleton?.presentPopupController()
+            return
+        }
+        
         let repo = self.sortedRepoList[indexPath.row]
         RepoManager.shared.remove(repo: repo)
         tableView.deleteRows(at: [indexPath], with: .fade)
@@ -535,7 +539,7 @@ final class SourcesViewController: SileoViewController {
                 cell.installedLabel.text = "\(count)"
             }
         } else {
-            for cell in tableView.visibleCells ?? [] {
+            for cell in tableView.loadedCells {
                 if let sourcesCell = cell as? SourcesTableViewCell {
                     let cellRepo = sourcesCell.repo
                     sourcesCell.repo = cellRepo

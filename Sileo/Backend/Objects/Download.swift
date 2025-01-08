@@ -28,4 +28,21 @@ final class Download {
         self.package = package
         self.session = session
     }
+    
+    func beginBackgroundTask() {
+        self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+//just let the task pending in background            self.task?.cancel()
+            if let backgroundTaskIdentifier = self.backgroundTask {
+                UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+            }
+            self.backgroundTask = nil
+        })
+    }
+    
+    func endBackgroundTask() {
+        if let backgroundTaskIdentifier = self.backgroundTask {
+            self.backgroundTask = nil
+            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+        }
+    }
 }

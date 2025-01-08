@@ -87,6 +87,41 @@ class DependencyResolverAccelerator {
         #endif
     }
     
+    public func buildOperations(packages: [Package]) {
+        let cachedirpath = jbroot("\(CommandPath.sileolists)/operations")
+        let resolverPrefix = URL(fileURLWithPath: cachedirpath)
+        
+        spawnAsRoot(args: [CommandPath.rm, "-rf", rootfs(cachedirpath)])
+        
+        let attributes: [FileAttributeKey: Any] = [
+            .posixPermissions: 0o755,
+            .ownerAccountID: 501,
+            .groupOwnerAccountID: 501
+        ]
+        
+        try! FileManager.default.createDirectory(atPath: cachedirpath, withIntermediateDirectories: false, attributes: attributes)
+        
+        for package in packages {
+            //NSLog("SileoLog: sourcesFile=\(sourcesFile) packages=\(packages.map({ $0.package }))")
+            
+            guard let data=package.rawData, let sourceFile=package.sourceFileURL else { continue }
+            
+            let newSourcesFile = resolverPrefix.appendingPathComponent(sourceFile.lastPathComponent)
+            
+            var sourcesData = Data()
+            var bytes = [UInt8](data)
+            if bytes.suffix(2) != [10, 10] { // \n\n
+                if bytes.last == 10 {
+                    bytes.append(10)
+                } else {
+                    bytes.append(contentsOf: [10, 10])
+                }
+            }
+            sourcesData.append(Data(bytes))
+            try! sourcesData.append(to: newSourcesFile)
+        }
+    }
+    
     public func getDependencies(packages: [Package]) throws {
         NSLog("SileoLog: DependencyResolverAccelerator.getDependencies(\(packages.map({ $0.package }))")
         NSLog("SileoLog: preflightedPackages=\(preflightedPackages.keys)")

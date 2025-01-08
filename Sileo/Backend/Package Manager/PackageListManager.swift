@@ -640,11 +640,7 @@ final class PackageListManager {
                 }
                 alert.addAction(okAction)
                 
-                var controller:UIViewController = TabBarController.singleton!
-                while controller.presentedViewController != nil {
-                    controller = controller.presentedViewController!
-                }
-                controller.present(alert, animated: true)
+                SileoAppDelegate.presentController(alert)
             }
             return
         }

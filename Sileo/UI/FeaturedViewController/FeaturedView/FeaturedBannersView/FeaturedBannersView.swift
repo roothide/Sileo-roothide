@@ -10,12 +10,18 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
     var scrollView: UIScrollView?
     let stackView = UIStackView()
     
-    let itemSize: CGSize
+    var itemSize = CGSize(width: 0,height: 0)
     
     let bannerViews: [FeaturedBannerView] = []
     
+    var sourceRepo: Repo? = nil
+    
     required init?(dictionary: [String: Any], viewController: UIViewController, tintColor: UIColor, isActionable: Bool) {
         var dictionary = dictionary
+        
+        if let repo = dictionary["repo"] as? Repo {
+            self.sourceRepo = repo
+        }
         
         let deviceName = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
         if let specificDict = dictionary[deviceName] as? [String: Any] {
@@ -34,7 +40,6 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
         guard itemSize != .zero else {
             return nil
         }
-        self.itemSize = itemSize
         
         guard let banners = dictionary["banners"] as? [[String: Any]] else {
             return nil
@@ -67,7 +72,6 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
         centerX.priority = .defaultLow
         centerX.isActive = true
         
-        var packages = [String]()
         for banner in banners {
             guard (banner["url"] as? String) != nil else {
                 continue
@@ -75,20 +79,26 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
             guard (banner["title"] as? String) != nil else {
                 continue
             }
+            if let repo = self.sourceRepo, let package = banner["package"] as? String, !package.isEmpty {
+                if PackageListManager.shared.newestPackage(identifier: package, repoContext: repo) == nil {
+                    continue
+                }
+            }
             
             let bannerView = FeaturedBannerView()
             bannerView.itemSize = itemSize
             bannerView.banner = banner
             bannerView.layer.cornerRadius = itemCornerRadius
-            if let package = banner["package"] as? String {
-                packages.append(package)
-            }
             bannerView.addTarget(self, action: #selector(FeaturedBannersView.bannerTapped), for: .touchUpInside)
             bannerView.widthAnchor.constraint(equalToConstant: itemSize.width).isActive = true
             bannerView.previewDelegate = self
             
             viewController.registerForPreviewing(with: bannerView, sourceView: bannerView)
-            stackView.addArrangedSubview(bannerView)            
+            stackView.addArrangedSubview(bannerView)
+        }
+        
+        if !stackView.arrangedSubviews.isEmpty {
+            self.itemSize = itemSize
         }
     }
     
@@ -102,12 +112,15 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
     
     func viewController(bannerView: FeaturedBannerView) -> UIViewController? {
         let banner = bannerView.banner
-        if let package = banner["package"] as? String {
+        if let package = banner["package"] as? String, !package.isEmpty {
             let package: Package? = {
-                if let holder = PackageListManager.shared.newestPackage(identifier: package, repoContext: nil) {
+                if let holder = PackageListManager.shared.newestPackage(identifier: package, repoContext: self.sourceRepo) {
                     return holder
-                } else if let provisional = CanisterResolver.shared.package(for: package) {
-                    return provisional
+                }
+                if self.sourceRepo==nil {
+                    if let provisional = CanisterResolver.shared.package(for: package) {
+                        return provisional
+                    }
                 }
                 return nil
             }()
@@ -119,6 +132,7 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
                 let loadIdentifier = "idents: ".appending(packages.joined(separator: " "))
                 let listViewController = PackageListViewController(nibName: "PackageListViewController", bundle: nil)
                 listViewController.title = controllerName
+                listViewController.repoContext = self.sourceRepo
                 listViewController.packagesLoadIdentifier = loadIdentifier
                 listViewController.navigationItem.largeTitleDisplayMode = .never
                 return listViewController
@@ -129,7 +143,7 @@ class FeaturedBannersView: FeaturedBaseView, FeaturedBannerViewPreview {
     
     @objc func bannerTapped(_ bannerView: FeaturedBannerView) {
         guard let controller = self.viewController(bannerView: bannerView) else {
-            if (bannerView.banner["package"] as? String) != nil {
+            if let package=bannerView.banner["package"] as? String, !package.isEmpty {
                 if let repoName = bannerView.banner["repoName"] as? String {
                     let title = String(localizationKey: "Package Unavailable")
                     let message = String(format: String(localizationKey: "Package_Unavailable"), repoName)

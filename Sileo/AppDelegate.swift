@@ -18,6 +18,40 @@ import BackgroundTasks
 class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegate {
     public var window: UIWindow?
     
+    static let presentQueue = DispatchQueue(label: "presentQueue")
+    static func presentController(_ controller: UIViewController)
+    {
+        presentQueue.async {
+            var presenting = false
+            var presented = false
+            
+            while !presenting {
+                DispatchQueue.main.sync {
+                    var vc = UIApplication.shared.keyWindow!.rootViewController!
+                    while vc.presentedViewController != nil {
+                        vc = vc.presentedViewController!
+                        if vc.isBeingDismissed {
+                            return
+                        }
+                    }
+                    
+                    presenting = true
+                    vc.present(controller, animated: true) {
+                        presented = true
+                    }
+                }
+                
+                if !presenting {
+                    usleep(1000*100)
+                }
+            }
+
+            while !presented {
+                usleep(100*1000)
+            }
+        }
+    }
+    
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         NSLog("SileoLog: willFinishLaunchingWithOptions")
         return true
@@ -65,11 +99,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                     exit(0)
                 }))
                 
-                var controller:UIViewController = (self.window?.rootViewController)!
-                while controller.presentedViewController != nil && controller.presentedViewController?.isBeingDismissed==false {
-                    controller = controller.presentedViewController!
-                }
-                controller.present(alert, animated: true)
+                SileoAppDelegate.presentController(alert)
             }
         }
         
@@ -94,16 +124,21 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                             alert.dismiss(animated: true, completion: nil)
                         }
                         alert.addAction(okAction)
-                        self.window?.rootViewController?.present(alert, animated: true, completion: nil)
+                        SileoAppDelegate.presentController(alert)
                     }
                 }
             }
         }
         
         if #available(iOS 13.0, *) {
-            BGTaskScheduler.shared.register(forTaskWithIdentifier: "sileo.backgroundrefresh",
+            
+            let bgtaskregisted = BGTaskScheduler.shared.register(forTaskWithIdentifier: "sileo.backgroundrefresh",
                                             using: nil) { [weak self] task in
-                self?.handleRefreshTask(task as! BGAppRefreshTask)
+                self?.handleRefreshTask(task)
+            }
+            NSLog("SileoLog: bgtaskregisted=\(bgtaskregisted) backgroundRefreshStatus=\(UIApplication.shared.backgroundRefreshStatus)")
+            BGTaskScheduler.shared.getPendingTaskRequests { tasks in
+                NSLog("SileoLog: pendingTaskRequests=\(tasks)")
             }
         } else {
             UIApplication.shared.setMinimumBackgroundFetchInterval(4 * 3600)
@@ -137,6 +172,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     }
     
     private func backgroundRepoRefreshTask(_ completion: @escaping () -> Void) {
+        NSLog("SileoLog: backgroundRepoRefreshTask")
         DispatchQueue.global(qos: .userInitiated).async {
             PackageListManager.shared.initWait()
             let currentUpdates = PackageListManager.shared.availableUpdates().filter({ $0.1?.wantInfo != .hold }).map({ $0.0 })
@@ -254,10 +290,13 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         NSLog("SileoLog: openurl=\(url) options=\(options)")
-        if let vc=self.window?.rootViewController?.presentedViewController {
+        guard let rootVC=self.window?.rootViewController else {
+            return true
+        }
+        if let vc=rootVC.presentedViewController {
             NSLog("SileoLog: presented=\(vc)")
             if vc.isKind(of: UIActivityViewController.self) || vc.isKind(of: NativePackageViewController.self) || vc.isKind(of: UINavigationController.self) {
-                vc.dismiss(animated: true)
+                rootVC.dismiss(animated: true)
             }
         }
         
@@ -286,7 +325,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                         }
                         let view = NativePackageViewController.viewController(for: package) as! PackageViewController
                         view.isPresentedModally = true
-                        self.window?.rootViewController?.present(UINavigationController(rootViewController: view), animated: true, completion: nil)
+                        SileoAppDelegate.presentController(UINavigationController(rootViewController: view))
                     } else {
                         guard let tabBarController = self.window?.rootViewController as? UITabBarController,
                               let sourcesSVC = tabBarController.viewControllers?[2] as? UISplitViewController,
@@ -302,7 +341,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                     // presentModally ignored; we always present modally for an external URL open.
                     var presentModally = false
                     if let viewController = URLManager.viewController(url: url, isExternalOpen: true, presentModally: &presentModally) {
-                        self.window?.rootViewController?.present(viewController, animated: true, completion: nil)
+                        SileoAppDelegate.presentController(viewController)
                     }
                 }
             }
@@ -344,12 +383,17 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
         }
         
         if shortcutItem.type.hasSuffix(".UpgradeAll") {
+            if DownloadManager.shared.queueRunning {
+                tabBarController.presentPopupController()
+                return
+            }
+            
             tabBarController.selectedViewController = packageListNVC
             
             let title = String(localizationKey: "Sileo")
             let msg = String(localizationKey: "Upgrade_All_Shortcut_Processing_Message")
             let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
-            packageListVC.present(alert, animated: true, completion: nil)
+            SileoAppDelegate.presentController(alert)
             
             sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, completion: { _, _ in
                 PackageListManager.shared.upgradeAll(completion: {
@@ -389,7 +433,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     }
     
     @available(iOS 13.0, *)
-    private func handleRefreshTask(_ task: BGAppRefreshTask) {
+    private func handleRefreshTask(_ task: BGTask) {
         func _return() {
             task.setTaskCompleted(success: true)
             scheduleRefreshTask()
@@ -401,12 +445,13 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     
     @available(iOS 13.0, *)
     private func scheduleRefreshTask() {
+        NSLog("SileoLog: scheduleRefreshTask")
         let fetchTask = BGAppRefreshTaskRequest(identifier: "sileo.backgroundrefresh")
         fetchTask.earliestBeginDate = Date(timeIntervalSinceNow: 4 * 3600)
         do {
             try BGTaskScheduler.shared.submit(fetchTask)
         } catch {
-            print("Unable to submit task: \(error.localizedDescription)")
+            NSLog("SileoLog: Unable to submit task: \(error.localizedDescription)")
         }
     }
     

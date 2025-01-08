@@ -138,6 +138,7 @@ class FeaturedPackageView: FeaturedBaseView, PackageQueueButtonDataProvider {
         }
         
         self.reloadPackage()
+        
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(FeaturedPackageView.reloadPackage),
                                                name: PackageListManager.reloadNotification,
@@ -251,9 +252,7 @@ class FeaturedPackageView: FeaturedBaseView, PackageQueueButtonDataProvider {
             self.packageButton.paymentInfo = nil
             return
         }
-        
-        self.packageButton.paymentInfo = PaymentPackageInfo(price: String(localizationKey: "Package_Paid"), purchased: false, available: true)
-        
+                
         PaymentManager.shared.getPaymentProvider(for: repo) { error, provider in
                 guard error == nil, let provider = provider else {
                     return

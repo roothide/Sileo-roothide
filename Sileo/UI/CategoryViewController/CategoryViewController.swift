@@ -152,7 +152,7 @@ class CategoryViewController: SileoTableViewController {
             guard let featuredURL = repoContext.url?.appendingPathComponent("sileo-featured.json") else {
                 return
             }
-            EvanderNetworking.request(url: featuredURL, type: [String: Any].self, cache: .init(localCache: true, skipNetwork: true)) { [weak self] success, _, _, dict in
+            EvanderNetworking.request(url: featuredURL, type: [String: Any].self, cache: .init(localCache: true, skipNetwork: false)) { [weak self] success, _, _, dict in
                 guard success,
                       let `self` = self,
                       let depiction = dict,
@@ -160,6 +160,8 @@ class CategoryViewController: SileoTableViewController {
                 guard let banners = depiction["banners"] as? [[String: Any]],
                       !banners.isEmpty else { return }
                 DispatchQueue.main.async {
+                    var depiction = depiction
+                    depiction["repo"] = self.repoContext
                     if let featuredBannersView = FeaturedBannersView.view(dictionary: depiction, viewController: self, tintColor: nil, isActionable: false) {
                         let newHeight = featuredBannersView.depictionHeight(width: self.view.bounds.width)
                         featuredBannersView.heightAnchor.constraint(equalToConstant: newHeight).isActive = true

@@ -201,6 +201,8 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
             return nil
         }
         
+        if DownloadManager.shared.queueRunning { return nil }
+        
         guard let package = targetPackage else { return nil }
         
         var actions = [SwipeAction]()
@@ -286,10 +288,6 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func uninstallAction(_ package: Package) -> SwipeAction {
         let uninstall = SwipeAction(style: .destructive, title: String(localizationKey: "Package_Uninstall_Action")) { _, _ in
-            let queueFound = DownloadManager.shared.find(package: package)
-            if queueFound != .none {
-                DownloadManager.shared.remove(package: package.package)
-            }
             self.requestQueuePackage(package: package, queue: .uninstallations)
             self.hapticResponse()
             self.hideSwipe(animated: true)
@@ -300,10 +298,6 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func upgradeAction(_ package: Package) -> SwipeAction {
         let update = SwipeAction(style: .default, title: String(localizationKey: "Package_Upgrade_Action")) { _, _ in
-            let queueFound = DownloadManager.shared.find(package: package)
-            if queueFound != .none {
-                DownloadManager.shared.remove(package: package.package)
-            }
             self.requestQueuePackage(package: package, queue: .upgrades)
             self.hapticResponse()
             self.hideSwipe(animated: true)
@@ -315,10 +309,6 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func reinstallAction(_ package: Package) -> SwipeAction {
         let reinstall = SwipeAction(style: .default, title: String(localizationKey: "Package_Reinstall_Action")) { _, _ in
-            let queueFound = DownloadManager.shared.find(package: package)
-            if queueFound != .none {
-                DownloadManager.shared.remove(package: package.package)
-            }
             self.requestQueuePackage(package: package, queue: .installations)
             self.hapticResponse()
             self.hideSwipe(animated: true)
@@ -331,14 +321,10 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     private func getAction(_ package: Package) -> SwipeAction {
         NSLog("SileoLog: getAction \(package.package)");
         let install = SwipeAction(style: .default, title: String(localizationKey: "Package_Get_Action")) { _, _ in
-            let queueFound = DownloadManager.shared.find(package: package)
-            if queueFound != .none {
-                DownloadManager.shared.remove(package: package.package)
-            }
             if package.sourceRepo != nil && package.local_deb==nil {
                 self.requestQueuePackage(package: package, queue: .installations)
+                self.hapticResponse()
             }
-            self.hapticResponse()
             self.hideSwipe(animated: true)
         }
 //It is not enough to determine whether the package has been purchased at this time.
@@ -353,8 +339,10 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func queuePackage(_ package: Package, _ queue: DownloadManagerQueue)
     {
-        DownloadManager.shared.add(package: package, queue: queue)
-        DownloadManager.shared.reloadData(recheckPackages: true)
+        if DownloadManager.shared.queueRunning { return }
+        DownloadManager.shared.add(package: package, queue: queue) {
+            DownloadManager.shared.reloadData(recheckPackages: true)
+        }
     }
     
     private func checkPurchaseStatus()
@@ -383,6 +371,8 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func requestQueuePackage(package: Package, queue: DownloadManagerQueue)
     {
+        if DownloadManager.shared.queueRunning { return }
+        
         //local deb?
         guard let repo = package.sourceRepo, package.commercial, !self.hasPurchased, queue != .uninstallations else {
             return queuePackage(package, queue)
@@ -481,13 +471,7 @@ extension PackageCollectionViewCell: SwipeCollectionViewCellDelegate {
     
     private func presentAlert(paymentError: PaymentError, title: String) {
         NSLog("SileoLog: presentAlert \(title) \(paymentError)")
-        DispatchQueue.main.async {
-//            UIApplication.shared.windows.last?.rootViewController?.present(PaymentError.alert(for: paymentError,
-            UIApplication.shared.keyWindow?.rootViewController?.present(PaymentError.alert(for: paymentError,
-                                                                                              title: title),
-                                                                                              animated: true,
-                                                                                              completion: nil)
-        }
+        SileoAppDelegate.presentController(PaymentError.alert(for: paymentError,title: title))
     }
     
     private func hapticResponse() {

@@ -184,6 +184,9 @@ class APTWrapper {
         #if targetEnvironment(simulator) || TARGET_SANDBOX
         return completionCallback(0, .back, true)
         #else
+        
+        DependencyResolverAccelerator.shared.buildOperations(packages: (installs+installDeps).map({$0.package}))
+        
         var arguments = [CommandPath.aptget,
                          "install", "--reinstall",
                          "--allow-unauthenticated",
@@ -191,7 +194,7 @@ class APTWrapper {
                          "--no-download",
                          "--allow-remove-essential",
                          "--allow-change-held-packages",
-                         "-oDir::State::lists=sileolists/",
+                         "-oDir::State::lists=sileolists/operations/",
                          "-y", "-f",
                          "-oAPT::Status-Fd=5",
                          "-oAPT::Keep-Fds::=6",
@@ -244,6 +247,11 @@ class APTWrapper {
 //        }
         #else
         DispatchQueue.global(qos: .default).async {
+            
+            DownloadManager.aptQueue.sync {
+                // wait for all tasks in the current apt queue to be completed
+            }
+            
             let oldApps = APTWrapper.dictionaryOfScannedApps()
             let oldTweaks = APTWrapper.dictionaryOfScannedTweaks()
 
@@ -421,7 +429,7 @@ class APTWrapper {
                 let array = Array(UnsafeBufferPointer(start: buffer, count: bytesRead)) + [UInt8(0)]
                 array.withUnsafeBufferPointer { ptr in
                     let str = String(cString: unsafeBitCast(ptr.baseAddress, to: UnsafePointer<CChar>.self))
-
+                    NSLog("SileoLog: status str=\(str)")
                     let statusLines = str.components(separatedBy: "\n")
                     for status in statusLines {
                         let (statusValid, statusProgress, statusReadable, package) = self.installProgress(aptStatus: status)

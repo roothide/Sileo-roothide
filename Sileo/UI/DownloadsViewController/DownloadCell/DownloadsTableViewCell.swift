@@ -10,58 +10,74 @@ import Foundation
 import Evander
 
 class DownloadsTableViewCell: BaseSubtitleTableViewCell {
-    public var package: DownloadPackage? = nil {
+    public var package: Package? {
         didSet {
-            internalPackage = package?.package
-        }
-    }
-    
-    public var internalPackage: Package? {
-        didSet {
-            self.title = internalPackage?.name
-            if let url = internalPackage?.icon {
+            self.title = package?.name
+            if let url = package?.icon {
                 self.icon = EvanderNetworking.image(url: url, size: iconView.frame.size) { [weak self] image in
                     if let strong = self,
-                       url == strong.internalPackage?.icon {
+                       url == strong.package?.icon {
                         DispatchQueue.main.async {
                             strong.icon = image
                         }
                     }
-                } ?? internalPackage?.defaultIcon
+                } ?? package?.defaultIcon
             } else {
-                self.icon = internalPackage?.defaultIcon
+                self.icon = package?.defaultIcon
             }
         }
     }
     
-    public var operation: DownloadsTableViewController.InstallOperation? {
+    public var action: DownloadsTableViewController.Action? {
         didSet {
-            internalPackage = operation?.package
-            var progress = operation?.progress ?? 0.0
-            progress = (progress / 1.0) * 0.3
-            self.progress = progress + 0.7
-            if let status = operation?.status {
-                subtitle = status
-            }
-            operation?.cell = self
+            NSLog("SileoLog: didSet action \(action?.package) \(action?.progress) \(action?.status)")
+            action?.cell = self
         }
     }
     
     public var download: Download? = nil {
         didSet {
-            self.updateDownload()
+            retryButton.isHidden = true
+        }
+    }
+    
+    public var errorDescription: String? = nil {
+        didSet {
+            let errored = errorDescription != nil
+            self.textLabel?.textColor = errored ? .red : .sileoLabel
+            self.detailTextLabel?.textColor = errored ? .red : UIColor(red: 172.0/255.0, green: 184.0/255.0, blue: 193.0/255.0, alpha: 1)
         }
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        
-        operation?.cell = nil
+        icon = nil
+        title = nil
+        subtitle = nil
+        progress = 0
+        package = nil
+        download = nil
+        action = nil
+        action?.cell = nil
+        errorDescription = nil
     }
     
-    public func updateDownload() {
-        retryButton.isHidden = true
-        if let download = download {
+    public func updateStatus() {
+        NSLog("SileoLog: updateStatus \(package?.package) \(package?.sourceRepo?.repoName) download=\(download),\(download?.progress) action=\(action) err=\(errorDescription) oldsubtitle=\(self.subtitle)")
+
+        if let err = errorDescription {
+            self.progress = 0
+            self.subtitle = String(localizationKey: err)
+        } else if let action = self.action {
+            var progress = action.progress
+            progress = (progress / 1.0) * 0.3
+            self.progress = progress + 0.7
+            if let status = action.status {
+                self.subtitle = status
+            } else {
+                self.subtitle = String(localizationKey: "Ready_Status")
+            }
+        } else if let download = download {
             self.progress = (download.progress / 1.0) * 0.7
             if download.progress == 1.0 && download.failureReason == nil {
                 self.subtitle = String(localizationKey: "Ready_Status")
@@ -72,44 +88,26 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
                 retryButton.isHidden = false
                 self.subtitle = String(format: String(localizationKey: "Error_Indicator", type: .error), failureReason)
             } else if download.started {
-                self.subtitle = String(format: String(localizationKey: "Download_Progress"),
-                                       ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesWritten), countStyle: .file),
-                                       ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesExpectedToWrite), countStyle: .file))
+                if download.totalBytesWritten > 0 {
+                    self.subtitle = String(format: String(localizationKey: "Download_Progress"),
+                                           ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesWritten), countStyle: .file),
+                                           ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesExpectedToWrite), countStyle: .file))
+                } else {
+                    self.subtitle = String(localizationKey: "Download_Starting")
+                }
             } else {
-                if let repoName = package?.package.sourceRepo?.repoName {
+                if let repoName = package?.sourceRepo?.repoName {
                     self.subtitle = "\(String(localizationKey: "Queued_Package_Status")) • \(repoName)"
                 } else {
                     self.subtitle = String(localizationKey: "Queued_Package_Status")
                 }
             }
-        } else if shouldHaveDownload && errorDescription==nil {
-            if let repoName = package?.package.sourceRepo?.repoName {
+        } else {
+            self.progress = 0
+            if let repoName = package?.sourceRepo?.repoName {
                 self.subtitle = "\(String(localizationKey: "Queued_Package_Status")) • \(repoName)"
             } else {
                 self.subtitle = String(localizationKey: "Queued_Package_Status")
-            }
-            self.progress = 0
-        } else {
-            self.progress = 0
-            self.subtitle = String(localizationKey: errorDescription ?? (shouldHaveDownload ? "Download_Starting" : "Ready_Status"))
-        }
-    }
-    
-    public var errorDescription: String? = nil {
-        didSet {
-            let errored = errorDescription != nil
-            if errored {
-                download = nil
-            }
-            self.textLabel?.textColor = errored ? .red : .sileoLabel
-            self.detailTextLabel?.textColor = errored ? .red : UIColor(red: 172.0/255.0, green: 184.0/255.0, blue: 193.0/255.0, alpha: 1)
-        }
-    }
-    
-    public var shouldHaveDownload: Bool = false {
-        didSet {
-            if !shouldHaveDownload {
-                download = nil
             }
         }
     }
@@ -117,16 +115,11 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
     public let retryButton = UIButton()
     
     @objc public func retryDownload() {
-        retryButton.isHidden = true
-        let downloadMan = DownloadManager.shared
-        guard let package = package,
-              let download = downloadMan.vars.queuedDownloads[package.package.package],
-              !download.success else { return }
-        download.completed = false
-        download.task = nil
-        download.queued = false
-        NSLog("SileoLog: startMoreDownloads (retryDownload)")
-        downloadMan.startMoreDownloads()
+        
+        self.download = nil
+        self.updateStatus()
+        
+        DownloadManager.shared.retryDownload(package: self.package!.package)
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

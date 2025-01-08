@@ -151,6 +151,8 @@ final class CanisterResolver {
     
     public func queueCache() {
         NSLog("SileoLog: CanisterResolver.queueCache total=\(cachedQueue.count)")
+        
+        if DownloadManager.shared.queueRunning { return }
 
         var refreshLists = false
         for (index, package) in cachedQueue.enumerated().reversed() {

@@ -116,7 +116,7 @@ final public class MacRootWrapper {
 }
 #endif
 
-@discardableResult func spawn(command: String, args: [String], root: Bool = false, setgroup: Bool = false) -> (Int, String, String) {
+@discardableResult func spawn(command: String, args: [String], root: Bool = false) -> (Int, String, String) {
     var pipestdout: [Int32] = [0, 0]
     var pipestderr: [Int32] = [0, 0]
 
@@ -158,27 +158,21 @@ final public class MacRootWrapper {
     let envp: [UnsafeMutablePointer<CChar>?] = env.map { $0.withCString(strdup) }
     defer { for case let env? in envp { free(env) } }
     
-    var attr: posix_spawnattr_t?
-    posix_spawnattr_init(&attr)
-    defer { posix_spawnattr_destroy(&attr) }
-    
-    if setgroup {
-        posix_spawnattr_setpgroup(&attr, 0);
-        posix_spawnattr_setflags(&attr, Int16(POSIX_SPAWN_SETPGROUP))
-    }
-    
     let spawnStatus: Int32
     if #available(iOS 13, *) {
         if root {
+            var attr: posix_spawnattr_t?
+            posix_spawnattr_init(&attr)
+            defer { posix_spawnattr_destroy(&attr) }
             posix_spawnattr_set_persona_np(&attr, 99, UInt32(POSIX_SPAWN_PERSONA_FLAGS_OVERRIDE))
             posix_spawnattr_set_persona_uid_np(&attr, 0)
             posix_spawnattr_set_persona_gid_np(&attr, 0)
             spawnStatus = posix_spawn(&pid, command, &fileActions, &attr, argv + [nil], envp + [nil])
         } else {
-            spawnStatus = posix_spawn(&pid, command, &fileActions, &attr, argv + [nil], envp + [nil])
+            spawnStatus = posix_spawn(&pid, command, &fileActions, nil, argv + [nil], envp + [nil])
         }
     } else {
-        spawnStatus = posix_spawn(&pid, command, &fileActions, &attr, argv + [nil], envp + [nil])
+        spawnStatus = posix_spawn(&pid, command, &fileActions, nil, argv + [nil], envp + [nil])
     }
     #endif
     NSLog("SileoLog: spawn \(command) with \(args)")

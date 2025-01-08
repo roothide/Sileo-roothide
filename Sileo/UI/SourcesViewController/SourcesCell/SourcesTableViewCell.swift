@@ -40,6 +40,7 @@ class SourcesTableViewCell: BaseSubtitleTableViewCell {
         
 //        accessoryView = UIImageView(image: UIImage(named: "Chevron"))
         self.accessoryType = .disclosureIndicator
+        self.detailTextLabel?.adjustsFontSizeToFitWidth = true
         
         contentView.addSubview(installedLabel)
         installedLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -90,7 +91,7 @@ class SourcesTableViewCell: BaseSubtitleTableViewCell {
             }
             
             let fix3 = contentView.frame.size.width - (detailTextLabelFrame.origin.x+detailTextLabelFrame.size.width)
-            let detailTextLableWidthMax = contentView.frame.size.width - fix2 - fix
+            let detailTextLableWidthMax = contentView.frame.size.width - fix3 - fix
             if detailTextLabelFrame.size.width > detailTextLableWidthMax {
                 detailTextLabelFrame.size.width = detailTextLableWidthMax
                 detailTextLabelFrame.origin.x = fix

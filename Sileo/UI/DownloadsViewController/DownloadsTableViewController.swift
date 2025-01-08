@@ -37,7 +37,7 @@ class DownloadsTableViewController: SileoViewController {
     private var uninstalldeps: [DownloadPackage] = []
     private var errors: ContiguousArray<APTBrokenPackage> = []
     
-    private var actions = [InstallOperation]()
+    private var actions = [Action]()
     
     private var isFired = false
     private var isInstalling = false
@@ -51,22 +51,22 @@ class DownloadsTableViewController: SileoViewController {
     
     public var backgroundCallback: (() -> Void)?
     
-    public class InstallOperation {
+    public class Action {
         
         // swiftlint:disable nesting
-        public enum Operation {
+        public enum ActionType {
             case install
             case removal
         }
         
         var package: Package
-        var operation: Operation
+        var type: ActionType
         var progressCounter: CGFloat = 0.0
         var status: String?
         weak var cell: DownloadsTableViewCell?
         
         public var progress: CGFloat {
-            let progress = progressCounter / (operation == .install ? 6.0 : 3.0)
+            let progress = progressCounter / (type == .install ? 6.0 : 3.0)
             if progress > 1.0 {
                 return 1.0
             } else {
@@ -74,9 +74,9 @@ class DownloadsTableViewController: SileoViewController {
             }
         }
         
-        init(package: Package, operation: Operation) {
+        init(package: Package, type: ActionType) {
             self.package = package
-            self.operation = operation
+            self.type = type
             self.progressCounter = 0.0
         }
         
@@ -132,7 +132,8 @@ class DownloadsTableViewController: SileoViewController {
         cancelDownload?.tintAdjustmentMode = .normal
         
         tableView?.register(DownloadsTableViewCell.self, forCellReuseIdentifier: "DownloadsTableViewCell")
-        DownloadManager.shared.reloadData(recheckPackages: false)
+        
+        self.reloadData()
     }
     
     public override func viewDidLayoutSubviews() {
@@ -163,10 +164,7 @@ class DownloadsTableViewController: SileoViewController {
         hideDetailsButton?.isHighlighted = hideDetailsButton?.isHighlighted ?? false
     }
     
-    private func loadData(_ completion: @escaping () -> Void) {
-        if Thread.isMainThread {
-            fatalError("Wtf are you doing")
-        }
+    public func reloadData() {
         if !isInstalling {
             let manager = DownloadManager.shared
             let upgrades = manager.vars.upgrades.raw.sorted(by: { $0.package.name.lowercased() < $1.package.name.lowercased() })
@@ -175,31 +173,16 @@ class DownloadsTableViewController: SileoViewController {
             let installdeps = manager.vars.installdeps.raw.sorted(by: { $0.package.name.lowercased() < $1.package.name.lowercased() })
             let uninstalldeps = manager.vars.uninstalldeps.raw.sorted(by: { $0.package.name.lowercased() < $1.package.name.lowercased() })
             let errors = manager.vars.errors.raw
-            DispatchQueue.main.async { [self] in
-                self.upgrades = upgrades
-                self.installations = installations
-                self.uninstallations = uninstallations
-                self.installdeps = installdeps
-                self.uninstalldeps = uninstalldeps
-                self.errors = ContiguousArray<APTBrokenPackage>(errors)
-                completion()
-            }
-            return
+            
+            self.upgrades = upgrades
+            self.installations = installations
+            self.uninstallations = uninstallations
+            self.installdeps = installdeps
+            self.uninstalldeps = uninstalldeps
+            self.errors = ContiguousArray<APTBrokenPackage>(errors)
         }
-        DispatchQueue.main.async { completion() }
-    }
-    
-    public func reloadData() {
-        DownloadManager.aptQueue.async { [self] in
-            self.loadData() {
-                self.tableView?.reloadData()
-                self.reloadControlsOnly()
-            }
-            if isDownloading {
-                NSLog("SileoLog: startMoreDownloads (reloadData)")
-                DownloadManager.shared.startMoreDownloads()
-            }
-        }
+        self.tableView?.reloadData()
+        self.reloadControlsOnly()
     }
 
     //update state/UI and start the installation (if applicable)
@@ -245,7 +228,7 @@ class DownloadsTableViewController: SileoViewController {
             completeLaterButton?.isHidden = true
         }
         let manager = DownloadManager.shared
-        if manager.operationCount() > 0 && !manager.queueStarted && manager.vars.errors.isEmpty {
+        if manager.operationCount() > 0 && !manager.queueRunning && manager.vars.errors.isEmpty {
             FRUIView.animate(withDuration: 0.25) {
                 self.footerViewHeight?.constant = 128
                 self.footerView?.alpha = 1
@@ -266,17 +249,6 @@ class DownloadsTableViewController: SileoViewController {
                 self.footerView?.alpha = 0
             }
         }
-        if manager.operationCount() > 0 && manager.verifyComplete() && manager.queueStarted && manager.vars.errors.isEmpty {
-            manager.lockedForInstallation = true
-            isDownloading = false
-            cancelDownload?.isHidden = true
-            FRUIView.animate(withDuration: 0.25) {
-                self.footerViewHeight?.constant = 0
-                self.footerView?.alpha = 0
-            }
-            transferToInstall()
-            TabBarController.singleton?.presentPopupController()
-        }
         if manager.vars.errors.isEmpty {
             self.confirmButton?.isEnabled = true
             self.confirmButton?.alpha = 1
@@ -286,40 +258,55 @@ class DownloadsTableViewController: SileoViewController {
         }
     }
     
-    public func reloadDownload(package: Package?) {
+    private func checkReady() {
+        let manager = DownloadManager.shared
+        if manager.operationCount() > 0 && manager.verifyComplete() && manager.queueRunning && manager.vars.errors.isEmpty {
+            isDownloading = false
+            cancelDownload?.isHidden = true
+            FRUIView.animate(withDuration: 0.25) {
+                self.footerViewHeight?.constant = 0
+                self.footerView?.alpha = 0
+            }
+            transferToAction()
+            TabBarController.singleton?.presentPopupController()
+        }
+    }
+    
+    public func updateDownloadStatus(download: Download) {
         if !Thread.isMainThread {
             DispatchQueue.main.async { [self] in
-                self.reloadDownload(package: package)
+                self.updateDownloadStatus(download: download)
             }
             return
         }
-        guard let package = package else {
+        
+        NSLog("SileoLog: updateDownloadStatus \(download.package.package) download=\(download),\(download.progress)")
+        
+        guard download.session == DownloadManager.shared.currentDownloadSession else {
             return
         }
-        let dlPackage = DownloadPackage(package: package)
-        var rawIndexPath: IndexPath?
-        let installsAndDeps = installations + installdeps
-        if installsAndDeps.contains(dlPackage) {
-            rawIndexPath = IndexPath(row: installsAndDeps.firstIndex(of: dlPackage) ?? -1, section: 0)
-        } else if upgrades.contains(dlPackage) {
-            rawIndexPath = IndexPath(row: upgrades.firstIndex(of: dlPackage) ?? -1, section: 2)
+        
+        for cell in tableView?.loadedCells ?? [] {
+            if let cell = cell as? DownloadsTableViewCell {
+                if cell.package?.package == download.package.package {
+                    if cell.download == nil {
+                        cell.download = download
+                    }
+                    cell.updateStatus()
+                    TabBarController.singleton?.updatePopup()
+                    break
+                }
+            }
         }
-        guard let indexPath = rawIndexPath else {
-            return
-        }
-        guard let cell = self.tableView?.cellForRow(at: indexPath) as? DownloadsTableViewCell else {
-            return
-        }
-        cell.download = DownloadManager.shared.queuedDownload(package: package.package)
-        cell.layoutSubviews()
+        
+        self.checkReady()
     }
     
-    //DownloadManager.reloadData()->viewController.cancelDownload(nil)
     @IBAction public func cancelDownload(_ sender: Any?) {
         NSLog("SileoLog: ***cancelDownload \(sender)")
-//        if Thread.isMainThread {
-//            fatalError("Wtf are you doing")
-//        }
+        if !Thread.isMainThread {
+            fatalError("Wtf are you doing")
+        }
         
         if let sender = sender as? UIButton, sender.isHidden {
             return //UIKit bug: https://stackoverflow.com/questions/37916952/ios-why-does-hidden-button-still-receive-tap-events/37918283#37918283
@@ -331,15 +318,15 @@ class DownloadsTableViewController: SileoViewController {
         returnButtonAction = .back
         refreshSileo = false
         hasErrored = false
-        tableView?.setEditing(true, animated: true)
         self.actions.removeAll()
+        self.tableView?.setEditing(true, animated: true)
         
-        DownloadManager.shared.currentDownloadSession = 0
-        DownloadManager.shared.queueStarted = false
+        DownloadManager.shared.queueRunning = false
         DownloadManager.shared.cancelDownloads()
-        if sender != nil {
-            DownloadManager.shared.reloadData(recheckPackages: false)
-        }
+        NotificationCenter.default.post(name: DownloadManager.lockStateChangeNotification, object: nil)
+        
+        self.reloadData()
+        TabBarController.singleton?.updatePopup()
     }
     
     @IBAction private func cancelQueued(_ sender: Any?) {
@@ -350,10 +337,11 @@ class DownloadsTableViewController: SileoViewController {
         returnButtonAction = .back
         refreshSileo = false
         hasErrored = false
-        tableView?.setEditing(true, animated: true)
         self.actions.removeAll()
         
-        DownloadManager.shared.queueStarted = false
+        DownloadManager.shared.queueRunning = false
+        NotificationCenter.default.post(name: DownloadManager.lockStateChangeNotification, object: nil)
+        
         DownloadManager.aptQueue.async {
             DownloadManager.shared.removeAllItems()
             DownloadManager.shared.reloadData(recheckPackages: true)
@@ -390,13 +378,24 @@ class DownloadsTableViewController: SileoViewController {
         
         isDownloading = true
         
-        DownloadManager.shared.queueStarted = true
+        DownloadManager.shared.aptRunning = false
+        DownloadManager.shared.aptFinished = false
+        DownloadManager.shared.queueRunning = true
         DownloadManager.shared.currentDownloads = 0
-        DownloadManager.shared.currentDownloadSession = arc4random()
+        NotificationCenter.default.post(name: DownloadManager.lockStateChangeNotification, object: nil)
         
         NSLog("SileoLog: startMoreDownloads (confirmQueued)")
-        DownloadManager.shared.startMoreDownloads()
-        DownloadManager.shared.reloadData(recheckPackages: false)
+        DownloadManager.shared.startDownloads()
+        TabBarController.singleton?.updatePopup()
+        self.reloadData()
+        self.checkReady()
+        
+        tableView?.setEditing(false, animated: true)
+        for cell in tableView?.visibleCells ?? [] {
+            if let cell = cell as? DownloadsTableViewCell {
+                cell.setEditing(false, animated: true)
+            }
+        }
     }
     
     override func accessibilityPerformEscape() -> Bool {
@@ -404,8 +403,8 @@ class DownloadsTableViewController: SileoViewController {
         return true
     }
     
-    private func transferToInstall() {
-        NSLog("SileoLog: transferToInstall \(isInstalling)")
+    private func transferToAction() {
+        NSLog("SileoLog: transferToAction \(isInstalling)")
         if isInstalling {
             return
         }
@@ -415,11 +414,6 @@ class DownloadsTableViewController: SileoViewController {
             earlyBreak = true
             completion()
         }
-        tableView?.setEditing(false, animated: true)
-        
-        for cell in tableView?.visibleCells as? [DownloadsTableViewCell] ?? [] {
-            cell.setEditing(false, animated: true)
-        }
         
         detailsAttributedString = NSMutableAttributedString(string: "")
         let installs = installations + upgrades + installdeps
@@ -427,22 +421,21 @@ class DownloadsTableViewController: SileoViewController {
             CanisterResolver.shared.ingest(packages: installs.map { $0.package })
         }
         let removals = uninstallations + uninstalldeps
-        self.actions += installs.map { InstallOperation(package: $0.package, operation: .install) }
-        self.actions += removals.map { InstallOperation(package: $0.package, operation: .removal) }
+        self.actions += installs.map { Action(package: $0.package, type: .install) }
+        self.actions += removals.map { Action(package: $0.package, type: .removal) }
         
-        for cell in tableView?.visibleCells as? [DownloadsTableViewCell] ?? [] {
-            guard let action = actions.first(where: { $0.package.package == cell.package?.package.package }) else {
-                continue
+        for cell in tableView?.loadedCells ?? [] {
+            if let cell = cell as? DownloadsTableViewCell {
+                if let action = actions.first(where: { $0.package.package == cell.package?.package }) {
+                    cell.action = action
+                }
             }
-            cell.package = nil
-            cell.download = nil
-            cell.operation = action
-            cell.setEditing(false, animated: true)
         }
+        
         if !earlyBreak {
             //always startInstall after UI update is complete
 //            DispatchQueue.main.async {
-                self.startInstall()
+                self.startAction()
 //            }
         }
     }
@@ -466,7 +459,8 @@ class DownloadsTableViewController: SileoViewController {
         } else {
             action.status = status
         }
-        action.cell?.operation = action
+        NSLog("SileoLog: action=\(action) cell=\(action.cell)")
+        action.cell?.updateStatus()
     }
     
     private func queueCompleted() {
@@ -475,17 +469,17 @@ class DownloadsTableViewController: SileoViewController {
         returnButtonAction = .back
         refreshSileo = false
         hasErrored = false
-        tableView?.setEditing(true, animated: true)
         actions.removeAll()
 
         TabBarController.singleton?.popupContent?.popupInteractionStyle = .default
-        DownloadManager.shared.lockedForInstallation = false
-        DownloadManager.shared.queueStarted = false
+        DownloadManager.shared.queueRunning = false
         DownloadManager.aptQueue.async {
             DownloadManager.shared.removeAllItems()
             DownloadManager.shared.reloadData(recheckPackages: true)
         }
-        TabBarController.singleton?.dismissPopupController()
+        TabBarController.singleton?.dismissPopupController(completion: { [self] in
+            tableView?.setEditing(true, animated: true)
+        })
         TabBarController.singleton?.updatePopup(bypass: true)
     }
     
@@ -560,64 +554,23 @@ class DownloadsTableViewController: SileoViewController {
         return attributedString
     }
     
-    private func startInstall() {
-        NSLog("SileoLog: startInstall")
+    private func startAction() {
+        NSLog("SileoLog: startAction")
         func shouldShow(_ finish: APTWrapper.FINISH) -> Bool {
             finish == .reload || finish == .restart || finish == .reboot || finish == .usreboot
         }
         
-        #if targetEnvironment(simulator) || TARGET_SANDBOX
-//        // swiftlint:disable:next line_length
-//        let testAPTStatus = "pmstatus:dpkg-exec:0.0000:Running dpkg\npmstatus:com.daveapps.quitall:0.0000:Installing com.daveapps.quitall (iphoneos-arm)\npmstatus:com.daveapps.quitall:9.0909:Preparing com.daveapps.quitall (iphoneos-arm)\npmstatus:com.daveapps.quitall:18.1818:Unpacking com.daveapps.quitall (iphoneos-arm)\npmstatus:com.daveapps.quitall:27.2727:Preparing to configure com.daveapps.quitall (iphoneos-arm)\npmstatus:dpkg-exec:27.2727:Running dpkg\npmstatus:com.daveapps.quitall:27.2727:Configuring com.daveapps.quitall (iphoneos-arm)\npmstatus:com.daveapps.quitall:36.3636:Configuring com.daveapps.quitall (iphoneos-arm)\npmstatus:com.daveapps.quitall:45.4545:Installed com.daveapps.quitall (iphoneos-arm)\npmstatus:dpkg-exec:45.4545:Running dpkg\npmstatus:com.amywhile.macspoof:45.4545:Installing com.amywhile.macspoof (iphoneos-arm)\npmstatus:com.amywhile.macspoof:54.5455:Preparing com.amywhile.macspoof (iphoneos-arm)\npmstatus:com.amywhile.macspoof:63.6364:Unpacking com.amywhile.macspoof (iphoneos-arm)\npmstatus:com.amywhile.macspoof:72.7273:Preparing to configure com.amywhile.macspoof (iphoneos-arm)\npmstatus:dpkg-exec:72.7273:Running dpkg\npmstatus:com.amywhile.macspoof:72.7273:Configuring com.amywhile.macspoof (iphoneos-arm)\npmstatus:com.amywhile.macspoof:81.8182:Configuring com.amywhile.macspoof (iphoneos-arm)\npmstatus:com.amywhile.macspoof:90.9091:Installed com.amywhile.macspoof (iphoneos-arm)"
-//        DispatchQueue.global(qos: .default).async {
-//            let aptStatuses = testAPTStatus.components(separatedBy: "\n")
-//            for status in aptStatuses {
-//                let (statusValid, _, readableStatus, package) = APTWrapper.installProgress(aptStatus: status)
-//                if statusValid {
-//                    self.statusWork(package: package, status: readableStatus)
-//                }
-//                usleep(useconds_t(50 * USEC_PER_SEC/1000))
-//            }
-//            for file in DownloadManager.shared.cachedFiles.raw {
-//                deleteFileAsRoot(file)
-//            }
-//            PackageListManager.shared.installChange()
-//            DispatchQueue.main.async {
-//                NotificationCenter.default.post(name: PackageListManager.stateChange, object: nil)
-//                NotificationCenter.default.post(name: PackageListManager.installChange, object: nil)
-//
-//                let rawUpdates = PackageListManager.shared.availableUpdates()
-//                let updatesNotIgnored = rawUpdates.filter({ $0.1?.wantInfo != .hold })
-//                UIApplication.shared.applicationIconBadgeNumber = updatesNotIgnored.count
-//
-//                _ = self.actions.map { $0.progressCounter = 7 }
-//                for cell in (self.tableView?.visibleCells as? [DownloadsTableViewCell] ?? []) {
-//                    let operation = cell.operation
-//                    cell.operation = operation
-//                }
-//                self.returnButtonAction = .back
-//                self.updateCompleteButton()
-//                self.completeButton?.alpha = 1
-//                self.showDetailsButton?.isHidden = false
-//                self.completeLaterButton?.alpha = shouldShow(.back) ? 1 : 0
-//                self.refreshSileo = false
-//
-//                self.isFinishedInstalling = true
-//                self.reloadControlsOnly()
-//
-//                if !(TabBarController.singleton?.popupIsPresented ?? false) {
-//                    self.completeButtonTapped(nil)
-//                }
-//                NotificationCenter.default.post(name: NSNotification.Name("Sileo.CompleteInstall"), object: nil)
-//            }
-//        }
-        #else
-        
         if let detailsAttributedString = self.detailsAttributedString {
             detailsTextView?.attributedText = self.transform(attributedString: detailsAttributedString)
         }
+        
+        DownloadManager.shared.aptRunning = true
+        DownloadManager.shared.aptFinished = false
+        
+        TabBarController.singleton?.updatePopup()
 
         APTWrapper.performOperations(installs: installations + upgrades, removals: uninstallations, installDeps: installdeps, progressCallback: { _, statusValid, statusReadable, package in
+            NSLog("SileoLog: progressCallback \(statusValid) \(package) \(statusReadable)")
             if statusValid {
                 self.statusWork(package: package, status: statusReadable)
             }
@@ -653,6 +606,9 @@ class DownloadsTableViewController: SileoViewController {
             PackageListManager.shared.installChange()
             DispatchQueue.main.async {
                 
+                DownloadManager.shared.aptRunning = false
+                DownloadManager.shared.aptFinished = true
+                
                 NotificationCenter.default.post(name: PackageListManager.stateChange, object: nil)
                 NotificationCenter.default.post(name: PackageListManager.installChange, object: nil)
                 let rawUpdates = PackageListManager.shared.availableUpdates()
@@ -660,10 +616,8 @@ class DownloadsTableViewController: SileoViewController {
                 UIApplication.shared.applicationIconBadgeNumber = updatesNotIgnored.count
                 
                 _ = self.actions.map { $0.progressCounter = 7 }
-                for cell in (self.tableView?.visibleCells as? [DownloadsTableViewCell] ?? []) {
-                    let operation = cell.operation
-                    cell.operation = operation
-                }
+                self.tableView?.reloadData()
+                
                 self.returnButtonAction = finish
                 self.refreshSileo = refresh
                 self.updateCompleteButton()
@@ -673,6 +627,8 @@ class DownloadsTableViewController: SileoViewController {
                 
                 self.isFinishedInstalling = true
                 self.reloadControlsOnly()
+                
+                TabBarController.singleton?.updatePopup()
                 
                 if UserDefaults.standard.bool(forKey: "AlwaysShowLog") || self.hasErrored {
                     self.showDetails(nil)
@@ -685,7 +641,6 @@ class DownloadsTableViewController: SileoViewController {
                 NotificationCenter.default.post(name: NSNotification.Name("Sileo.CompleteInstall"), object: nil)
             }
         })
-        #endif
     }
         
     private func updateCompleteButton() {
@@ -844,15 +799,12 @@ extension DownloadsTableViewController: UITableViewDataSource {
         if indexPath.section == 3 {
             // Error listing
             let error = errors[indexPath.row]
-            let package = Package(package: error.packageID, version: "-1")
-            cell.package = DownloadPackage(package: package)
-            cell.title = error.packageID
+            cell.package = Package(package: error.packageID, version: "-1")
             var description = ""
             for (index, conflict) in error.conflictingPackages.enumerated() {
                 description += "\(conflict.conflict.rawValue) \(conflict.package)\(index == error.conflictingPackages.count - 1 ? "" : ", ")"
             }
             cell.errorDescription = description
-            cell.download = nil
         } else {
             // Normal operation listing
             var array: [DownloadPackage] = []
@@ -867,27 +819,20 @@ extension DownloadsTableViewController: UITableViewDataSource {
                 break
             }
             
-            if isInstalling {
-                guard let action = actions.first(where: { $0.package.package == array[indexPath.row].package.package }) else {
-                    return cell
-                }
-                cell.internalPackage = action.package
-                cell.operation = action
-                action.cell = cell
-            } else {
-                cell.package = array[indexPath.row]
-                cell.shouldHaveDownload = indexPath.section == 0 || indexPath.section == 2
-                cell.errorDescription = nil
-                cell.download = DownloadManager.shared.queuedDownload(package: cell.package!.package.package)
-            }
+            let package = array[indexPath.row].package
+            
+            cell.package = package
+            cell.download = DownloadManager.shared.queuedDownload(package: package.package)
+            cell.action = actions.first(where: { $0.package.package == package.package })
         }
+        cell.updateStatus()
         return cell
     }
 }
 
 extension DownloadsTableViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if indexPath.section == 3 || isInstalling {
+        if indexPath.section == 3 || isInstalling || isDownloading {
             return false
         }
         var array: [DownloadPackage] = []
@@ -931,9 +876,10 @@ extension DownloadsTableViewController: UITableViewDelegate {
                 fatalError("Invalid section/row (not editable)")
             }
             
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            
             let downloadManager = DownloadManager.shared
             downloadManager.remove(downloadPackage: array[indexPath.row], queue: queue)
-            tableView.deleteRows(at: [indexPath], with: .fade)
             downloadManager.reloadData(recheckPackages: true)
         }
     }

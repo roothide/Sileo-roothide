@@ -14,7 +14,7 @@ class PackageListHeader: UICollectionReusableView {
     @IBOutlet weak var upgradeButton: UIButton?
     @IBOutlet weak var sortIcon: UIImageView?
     @IBOutlet weak var sortHeader: UILabel?
-    @IBOutlet weak var separatorView: UIImageView?
+//    @IBOutlet weak var separatorView: UIImageView?
     @IBOutlet weak var sortContainer: UIControl?
     
     override func awakeFromNib() {
