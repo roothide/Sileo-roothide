@@ -39,9 +39,6 @@ class DepictionMarkdownViewSlow: DepictionBaseView, CSTextViewActionHandler {
         htmlString = markdown
 
         reloadMarkdown()
-        guard attributedString != nil else {
-            return nil
-        }
 
         textView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -91,12 +88,43 @@ class DepictionMarkdownViewSlow: DepictionBaseView, CSTextViewActionHandler {
         
         // swiftlint:disable:next line_length
         let htmlString = String(format: "<style>body{font-family: '-apple-system', 'HelveticaNeue'; font-size:12pt;\(textColorString)} a{text-decoration:none; color:rgba(%.0f,%.0f,%.0f,%.2f)}</style>", red, green, blue, alpha).appending(self.htmlString)
+        
+        loading(String(localizationKey: "Loading"))
+        
+        DispatchQueue.global().async {
+            self.reloadMarkdownInBackground(htmlString)
+        }
+    }
+    
+    func loading(_ str: String) {
+        let attributedString = NSMutableAttributedString(string: str)
+        let textColor: UIColor = UIColor.isDarkModeEnabled ? .white : .black
+        attributedString.addAttribute(.foregroundColor, value: textColor, range: NSRange(location: 0, length: attributedString.length))
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedString.length))
+
+        self.attributedString = attributedString
+        self.textView.attributedText = self.attributedString
+        self.textView.setNeedsDisplay()
+        super.subviewHeightChanged()
+    }
+    
+    func reloadMarkdownInBackground(_ htmlString: String) {
         // swiftlint:disable:next line_length
-        if let attributedString = try? NSMutableAttributedString(data: htmlString.data(using: .unicode) ?? "".data(using: .utf8)!, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil) {
+        do {
+            let attributedString = try NSMutableAttributedString(data: htmlString.data(using: .unicode) ?? "".data(using: .utf8)!, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html], documentAttributes: nil)
             attributedString.removeAttribute(NSAttributedString.Key("NSOriginalFont"), range: NSRange(location: 0, length: attributedString.length))
-            textView.attributedText = attributedString
-            self.attributedString = attributedString
-            textView.setNeedsDisplay()
+            DispatchQueue.main.async {
+                self.attributedString = attributedString
+                self.textView.attributedText = attributedString
+                super.subviewHeightChanged()
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.loading("\(error)")
+            }
         }
     }
 
