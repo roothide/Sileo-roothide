@@ -64,6 +64,7 @@ class DatabaseManager {
     }
     
     public func addToSaveQueue(packages: [Package]) {
+        NSLog("SileoLog: addToSaveQueue \(packages.map({"\($0.package)=\($0.version)"}))")
         self.packages += packages
     }
     

@@ -72,13 +72,11 @@ class PackageQueueButton: PackageButton {
         
         if package.fromStatusFile {
             for repo in RepoManager.shared.repoList {
-                if let repoPackage = PackageListManager.shared.newestPackage(identifier: package.package, repoContext: repo) {
-                    allPackages += repoPackage.allVersions
-                }
+                allPackages += repo.allVersions(identifier: package.package, ignoreArch: true)
             }
             allPackages = PackageListManager.shared.sortPackages(packages: allPackages, search: nil)
         } else {
-            allPackages = package.allVersions.sorted(by: { obj1, obj2 -> Bool in
+            allPackages = package.allVersions(ignoreArch: true).sorted(by: { obj1, obj2 -> Bool in
                 if DpkgWrapper.isVersion(obj1.version, greaterThan: obj2.version) {
                     return true
                 }
@@ -93,6 +91,7 @@ class PackageQueueButton: PackageButton {
                 self.requestQueuePackage(package: versionPackage, queue: .installations)
             })
             if package.fromStatusFile { versionAction.setValue(CATextLayerAlignmentMode.left, forKey: "titleTextAlignment") }
+            if !checkRootHide(versionPackage) { versionAction.setValue(UIColor.gray, forKey: "titleTextColor") }
             versionPrompt.addAction(versionAction)
             versioncount += 1
         }

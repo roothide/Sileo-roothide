@@ -395,7 +395,7 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
             
             var repoPackages: [Package] = []
             for repo in RepoManager.shared.repoList {
-                if let repoPackage = PackageListManager.shared.newestPackage(identifier: package.package, repoContext: repo) {
+                if let repoPackage = repo.newestPackage(identifier: package.package, ignoreArch: true) {
                     repoPackages.append(repoPackage)
                 }
             }

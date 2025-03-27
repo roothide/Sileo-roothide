@@ -179,22 +179,24 @@ extension NewsViewController { // Get Data
             
             // Going to take advantage of those sweet contexts and dictionaries for super speedy package loads
             var packages = [Int64: ContiguousArray<Package>]()
-            var packageCache: [String: [(String, Int64, Bool)]] = [:]
+            var packageCache: [String: [(String, Int64, Bool, String)]] = [:]
             for stub in stubs {
                 if var packages = packageCache[stub.repoURL] {
-                    packages.append((stub.package, stub.firstSeen ?? 0, stub.userReadDate == 1))
+                    packages.append((stub.package, stub.firstSeen ?? 0, stub.userReadDate == 1, stub.version))
                     packageCache[stub.repoURL] = packages
                 } else {
-                    packageCache[stub.repoURL] = [(stub.package, stub.firstSeen ?? 0, stub.userReadDate == 1)]
+                    packageCache[stub.repoURL] = [(stub.package, stub.firstSeen ?? 0, stub.userReadDate == 1, stub.version)]
                 }
             }
 
             // Find each package and organise into a nice dictionary
             for key in packageCache.keys {
-                let repo = RepoManager.shared.repoList.first(where: { $0.archAvailabile && RepoManager.shared.cacheFile(named: "Packages", for: $0).lastPathComponent == key })
+                guard let repo = RepoManager.shared.repoList.first(where: {
+                    $0.archAvailabile && RepoManager.shared.cacheFile(named: "Packages", for: $0).lastPathComponent == key
+                }) else { continue }
                 let localPackages = packageCache[key] ?? []
                 for package in localPackages {
-                    if let package2 = repo?.packageDict[package.0] {
+                    if let package2 = repo.getPackage(identifier: package.0, version: package.3, ignoreArch: true) {
                         package2.userRead = package.2
                         if var packages2 = packages[package.1] {
                             packages2.append(package2)

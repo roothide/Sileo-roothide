@@ -93,7 +93,7 @@ final class FeaturedViewController: SileoViewController, UIScrollViewDelegate, F
                 
                 DispatchQueue.global(qos: .default).async {
                     let (status, output, errorOutput) = spawnAsRoot(args: [CommandPath.dpkg, "--configure", "-a"])
-                    PackageListManager.shared.installChange()
+                    PackageListManager.shared.reloadInstalled()
                     DispatchQueue.main.async {
                         self.dismiss(animated: true) {
                             if status != 0 {

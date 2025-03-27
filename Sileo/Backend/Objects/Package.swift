@@ -34,9 +34,11 @@ final class Package: PackageProtocol {
     public var tags: PackageTags = .none
     public var origArchitecture: String?
     
-    public var allVersionsInternal = [String: Package]()
-    public var allVersions: [Package] {
-        [self] + Array(allVersionsInternal.values)
+    public func allVersions(ignoreArch: Bool = false) -> [Package] {
+        if let repo = self.sourceRepo {
+            return repo.allVersions(identifier: self.package, ignoreArch: ignoreArch)
+        }
+        return [self]
     }
     
     public var fromStatusFile = false
@@ -92,25 +94,6 @@ final class Package: PackageProtocol {
     
     public func hasIcon() -> Bool {
         icon != nil
-    }
-
-    public func addOld(_ packages: [Package]) {
-        for package in packages {
-            if package == self { continue }
-            allVersionsInternal[package.version] = package
-        }
-    }
-    
-    public func addOld(from package: Package) {
-        for package in package.allVersions {
-            if package == self { continue }
-            allVersionsInternal[package.version] = package
-        }
-    }
-    
-    public func getVersion(_ version: String) -> Package? {
-        if version == self.version { return self }
-        return allVersionsInternal[version]
     }
 }
 

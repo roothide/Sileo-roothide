@@ -6,6 +6,8 @@
 //  Copyright © 2022 Sileo Team. All rights reserved.
 //
 
+import UIKit
+
 struct PackageTags: OptionSet {
     let rawValue: Int
     

@@ -16,7 +16,7 @@ final class PackageListManager {
     static let stateChange = Notification.Name("SileoStateChanged")
     static let prefsNotification = Notification.Name("SileoPackagePrefsChanged")
     
-    private(set) var installedPackages: [String: Package] {
+    private(set) var installedPackages = [String: Package]() {
         didSet {
             NotificationCenter.default.post(name: RepoManager.progressNotification, object: installedPackages.count)
         }
@@ -55,7 +55,7 @@ final class PackageListManager {
     public static let shared = PackageListManager()
     
     init() {
-        self.installedPackages = PackageListManager.readPackages(installed: true)
+        self.reloadInstalled()
         operationQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.processorCount * 2)
         
         packageListQueue.async { [self] in
@@ -114,8 +114,17 @@ final class PackageListManager {
         }
     }
     
-    public func installChange() {
-        installedPackages = PackageListManager.readPackages(installed: true)
+    public func reloadInstalled() {
+        var installedPackages = [String: Package]()
+        let installedDict = PackageListManager.readPackages(installed: true)
+        for (arch, idDict) in installedDict {
+            for (identifier, versionPackages) in idDict {
+                for (version, package) in versionPackages {
+                    installedPackages[identifier] = package
+                }
+            }
+        }
+        self.installedPackages = installedPackages
         repoInstallChange()
     }
 
@@ -195,11 +204,11 @@ final class PackageListManager {
         return package
     }
 
-    public class func readPackages(repoContext: Repo? = nil, packagesFile: URL? = nil, installed: Bool = false) -> [String: Package] {
+    public class func readPackages(repoContext: Repo? = nil, packagesFile: URL? = nil, installed: Bool = false) -> [String?: [String: [String: Package]]] {
         let archs = DpkgWrapper.architecture
         var tmpPackagesFile: URL?
         var toWrite: URL?
-        var dict = [String: Package]()
+        var dict = [String?: [String: [String: Package]]]()
         if installed {
             tmpPackagesFile = CommandPath.dpkgDir.appendingPathComponent("status").resolvingSymlinksInPath()
             toWrite = tmpPackagesFile
@@ -302,24 +311,8 @@ final class PackageListManager {
                 let packageInstallPath = CommandPath.dpkgDir.appendingPathComponent("info/\(packageID).list")
                 let attr = try? FileManager.default.attributesOfItem(atPath: packageInstallPath.path)
                 package.installDate = attr?[FileAttributeKey.modificationDate] as? Date
-                dict[package.package] = package
-            } else {
-                if let otherPkg = dict[packageID] {
-                    //if DpkgWrapper.isVersion(package.version, greaterThan: otherPkg.version) {
-                    if preferredPackage(old: otherPkg, new: package) {
-                        if package.architecture==otherPkg.architecture {
-                            package.addOld(from: otherPkg)
-                        }
-                        dict[packageID] = package
-                    } else {
-                        if package.architecture==otherPkg.architecture {
-                            otherPkg.addOld(from: package)
-                        }
-                    }
-                } else {
-                    dict[packageID] = package
-                }
             }
+            dict[package.architecture, default: [:]][package.package, default: [:]][package.version] = package
         }
 
         return dict
@@ -504,24 +497,24 @@ final class PackageListManager {
     
     public func newestPackage(identifier: String, repoContext: Repo?=nil, packages: [Package]? = nil) -> Package? {
         if let repoContext = repoContext {
-            return repoContext.packageDict[identifier.lowercased()]
-        } else {
+            return repoContext.newestPackage(identifier: identifier)
+        } else if var packages = packages {
             var newestPackage: Package?
-            if var packages = packages {
-                packages = packages.filter { $0.package == identifier }
-                for package in packages {
-                    if let old = newestPackage {
-                        if preferredPackage(old: old, new: package) {
-                            newestPackage = package
-                        }
-                    } else {
+            packages = packages.filter { $0.package == identifier }
+            for package in packages {
+                if let old = newestPackage {
+                    if preferredPackage(old: old, new: package) {
                         newestPackage = package
                     }
+                } else {
+                    newestPackage = package
                 }
-                return newestPackage
             }
+            return newestPackage
+        } else {
+            var newestPackage: Package?
             for repo in RepoManager.shared.repoList {
-                if let package = repo.packageDict[identifier] {
+                if let package = repo.newestPackage(identifier: identifier) {
                     if let old = newestPackage {
                         if preferredPackage(old: old, new: package) {
                             newestPackage = package
@@ -536,7 +529,7 @@ final class PackageListManager {
     }
     
     public func installedPackage(identifier: String) -> Package? {
-        installedPackages[identifier.lowercased()]
+        installedPackages[identifier]
     }
     
     public func package(url: URL) -> Package? {
@@ -576,26 +569,6 @@ final class PackageListManager {
         } else {
             return identifiers.compactMap { newestPackage(identifier: $0, repoContext: nil) }
         }
-    }
-    
-    public func package(identifier: String, version: String, packages: [Package]? = nil) -> Package? {
-        if let packages = packages {
-            return packages.first(where: { $0.package == identifier && $0.version == version })
-        }
-        
-        //prefer using local packages
-        if let package = localPackages[identifier],
-           let version = package.getVersion(version) {
-            return version
-        }
-        
-        for repo in RepoManager.shared.repoList {
-            if let package = repo.packageDict[identifier],
-               let version = package.getVersion(version) {
-                return version
-            }
-        }
-        return nil
     }
 
     public func upgradeAll() {

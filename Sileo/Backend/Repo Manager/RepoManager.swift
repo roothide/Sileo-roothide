@@ -1106,9 +1106,9 @@ final class RepoManager {
 
                         if !skipPackages {
                             if !releaseFileContainsHashes || (releaseFileContainsHashes && isPackagesFileValid) {
-                                let packageDict = repo.packageDict
+                                let packageDict = repo.allNewestPackages
                                 repo.packageDict = PackageListManager.readPackages(repoContext: repo, packagesFile: packagesFile.url)
-                                let databaseChanges = Array(repo.packageDict.values).filter { package -> Bool in
+                                let databaseChanges = Array(repo.allNewestPackages.values).filter { package -> Bool in
                                     if let tmp = packageDict[package.package] {
                                         if tmp.version == package.version {
                                             return false

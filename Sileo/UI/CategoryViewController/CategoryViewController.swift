@@ -86,7 +86,7 @@ class CategoryViewController: SileoTableViewController {
             if let context = self.repoContext {
                 let betterContext = RepoManager.shared.repo(with: context) ?? context
                 packages =  betterContext.packageArray
-                installed = betterContext.installed
+                installed = betterContext.installedPackages
             } else {
                 packages = PackageListManager.shared.allPackagesArray
                 installed = nil

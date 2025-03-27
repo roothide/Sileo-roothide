@@ -508,7 +508,7 @@ final class DownloadManager {
                 hostLoop: for host in hosts {
                     // there may be multiple repos with the same host
                     for repo in RepoManager.shared.repoList where repo.url?.host == host {
-                        if let repoPackage = repo.packageDict[packageID]?.getVersion(packageVersion)
+                        if let repoPackage = repo.getPackage(identifier: packageID, version: packageVersion)
                         {
                             NSLog("SileoLog: using repoPackage=\(repoPackage.package),\(repoPackage.version),\(repoPackage.sourceRepo?.url)")
                             if checkRootHide(repoPackage) {
@@ -900,7 +900,7 @@ final class DownloadManager {
                     
                     let title = String(localizationKey: "Not Updated")
                     
-                    let msg = ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host) ? String(localizationKey: "please contact @roothideDev to update it") : String(localizationKey: "\(package.package)\n\nYou can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
+                    let msg = ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host) ? String(localizationKey: "please contact @roothideDev to update it") : String(localizationKey: "\(package.package)(\(package.version))\n\nYou can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
                     
                     let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
                     
@@ -1145,7 +1145,7 @@ final class DownloadManager {
         var inAllowedRepos = false
         var inDisallowedRepos = false
         for repo in RepoManager.shared.repoList where repo.packageArray.count > 0 {
-            if repo.packageDict[package.package] != nil {
+            if repo.newestPackage(identifier: package.package) != nil {
                 if let host=repo.url?.host, allowedHosts.contains(host) {
                     inAllowedRepos = true
                 } else {

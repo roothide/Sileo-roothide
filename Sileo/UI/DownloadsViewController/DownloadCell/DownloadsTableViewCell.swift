@@ -44,8 +44,8 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
     public var errorDescription: String? = nil {
         didSet {
             let errored = errorDescription != nil
-            self.textLabel?.textColor = errored ? .red : .sileoLabel
-            self.detailTextLabel?.textColor = errored ? .red : UIColor(red: 172.0/255.0, green: 184.0/255.0, blue: 193.0/255.0, alpha: 1)
+            self.textLabel?.textColor = errored ? UIColor(hue: 0.0, saturation: 0.8, brightness: 0.9, alpha: 0.8) : .sileoLabel
+            self.detailTextLabel?.textColor = errored ? UIColor(hue: 0.0, saturation: 1.0, brightness: 1.0, alpha: 1.0) : UIColor(red: 172.0/255.0, green: 184.0/255.0, blue: 193.0/255.0, alpha: 1)
         }
     }
     

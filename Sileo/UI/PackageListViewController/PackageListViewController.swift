@@ -123,7 +123,7 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     
     @objc func refreshInstalledPackages(_ sender: UIRefreshControl?) {
         sender?.beginRefreshing()
-        PackageListManager.shared.installChange()
+        PackageListManager.shared.reloadInstalled()
         NotificationCenter.default.post(name: PackageListManager.stateChange, object: nil)
         NotificationCenter.default.post(name: PackageListManager.installChange, object: nil)
         sender?.endRefreshing()
@@ -233,7 +233,7 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
             let packageMan = PackageListManager.shared
             
             if !self.showSearchField {
-                let pkgs = packageMan.packageList(identifier: self.packagesLoadIdentifier, sortPackages: true, repoContext: self.repoContext, packagePrepend: self.packagesLoadIdentifier=="--contextInstalled" ? (self.repoContext?.installed ?? []) : nil)
+                let pkgs = packageMan.packageList(identifier: self.packagesLoadIdentifier, sortPackages: true, repoContext: self.repoContext, packagePrepend: self.packagesLoadIdentifier=="--contextInstalled" ? (self.repoContext?.installedPackages ?? []) : nil)
                 self.packages = pkgs
                 self.searchCache[""] = pkgs
                 DispatchQueue.main.async { self.updateSearchResults(for: self.searchController) }
@@ -890,7 +890,7 @@ extension PackageListViewController: UISearchResultsUpdating {
                                                       sortPackages: true,
                                                       repoContext: nil,
                                                       lookupTable: self.searchCache,
-                                                      packagePrepend: betterContext.installed ?? [])
+                                                      packagePrepend: betterContext.installedPackages ?? [])
                 self.searchCache[query.lowercased()] = packages
             } else {
                 packages = packageManager.packageList(identifier: self.packagesLoadIdentifier,

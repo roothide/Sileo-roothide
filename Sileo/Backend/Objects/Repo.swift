@@ -79,24 +79,101 @@ final class Repo: Equatable {
     var releaseGPGProgress = CGFloat(0)
     var packagesProgress = CGFloat(0)
 
-    var packageDict: [String: Package] = [:] {
+    var allNewestPackages = [String: Package]()
+    var preferredNewestPackages = [String: Package]()
+    
+    var packageDict = [String?: [String: [String: Package]]]() {
         didSet {
+            
+            var allNewestPackages = [String: Package]()
+            var preferredNewestPackages = [String: Package]()
+            
+            for (arch, idDict) in packageDict {
+                for (identifier, versionPackages) in idDict {
+                    for (version, package) in versionPackages {
+                        if let oldpackage = preferredNewestPackages[identifier] {
+                            if preferredPackage(old: oldpackage, new: package) {
+                               preferredNewestPackages[identifier] = package
+                            }
+                        } else {
+                            preferredNewestPackages[identifier] = package
+                        }
+
+                        if let oldpackage = allNewestPackages[identifier] {
+                            if DpkgWrapper.isVersion(package.version, greaterThan: oldpackage.version) {
+                                allNewestPackages[identifier] = package
+                            }
+                        } else {
+                            allNewestPackages[identifier] = package
+                        }
+                    }
+                }
+                
+                self.allNewestPackages = allNewestPackages
+                self.preferredNewestPackages = preferredNewestPackages
+            }
+            
             reloadInstalled()
-            packagesProvides = Array(packageDict.values).filter { $0.rawControl["provides"] != nil }
+            packagesProvides = Array(preferredNewestPackages.values).filter { $0.rawControl["provides"] != nil }
         }
     }
     var packageArray: [Package] {
-        Array(packageDict.values)
+        Array(preferredNewestPackages.values)
     }
     var packagesProvides = [Package]()
-    var installed: [Package]?
+    var installedPackages: [Package]?
+    
+    public func getPackage(identifier: String, version: String, ignoreArch: Bool = false) -> Package?
+    {
+        //lookup preferred packages first
+        guard let package = preferredNewestPackages[identifier] else {
+            return nil
+        }
+        if version == package.version {
+            return package
+        } else if let package = packageDict[package.architecture]?[identifier]?[version] {
+            return package
+        }
+
+        if ignoreArch {
+            for (arch, idDict) in packageDict {
+                if let package = idDict[identifier]?[version] {
+                    return package
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    public func allVersions(identifier: String, ignoreArch: Bool = false) -> [Package] {
+        guard let package = preferredNewestPackages[identifier] else {
+            return []
+        }
+        
+        let allVersions = Array((packageDict[package.architecture]?[identifier] ?? [:]).values)
+        
+        if ignoreArch {
+            return allVersions + packageDict.values
+                .compactMap { $0[identifier] }
+                .flatMap { $0.values }
+                .filter { allVersions.map({$0.version}).contains($0.version) == false }
+        } else {
+            return allVersions
+        }
+    }
+    
+    public func newestPackage(identifier: String, ignoreArch: Bool = false) -> Package?
+    {
+        return ignoreArch ? allNewestPackages[identifier] : preferredNewestPackages[identifier]
+    }
     
     public func reloadInstalled() {
-        if packageDict.isEmpty { installed = nil }
-        let installed = packageDict.values //using repo packages instead of local installed packages
-        self.installed = installed.filter { installed -> Bool in
+        if packageDict.isEmpty { self.installedPackages = nil }
+        //using repo packages instead of local installed packages
+        self.installedPackages = preferredNewestPackages.values.filter { package -> Bool in
             //consistent with PackageListManager--contextInstalled
-            return PackageListManager.shared.installedPackages.keys.contains(installed.package)
+            return PackageListManager.shared.installedPackages.keys.contains(package.package)
         }
         NotificationCenter.default.post(name: RepoManager.progressNotification, object: self)
     }

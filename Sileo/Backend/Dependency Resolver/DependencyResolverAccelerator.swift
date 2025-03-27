@@ -184,7 +184,7 @@ class DependencyResolverAccelerator {
                 return
             }
         }
-        for packageVersion in package.allVersions {
+        for packageVersion in package.allVersions() {
             getDependenciesInternal2(package: packageVersion, sourceFileURL: url)
         }
     }
@@ -203,7 +203,7 @@ class DependencyResolverAccelerator {
         //also resolve the installed package itself
         //,but this doesn't make sense due the package is in an inconsistent state and dpkg cannot uninstall it
 //        for repo in RepoManager.shared.repoList {
-//            if let thePackage = repo.packageDict[package.package] {
+//            if let thePackage = repo.newestPackage(identifier: package.package) {
 //                getDependenciesInternal(package: thePackage)
 //            }
 //        }
@@ -215,7 +215,7 @@ class DependencyResolverAccelerator {
                 let packageIds = parseDependsString(depends: packagesData)
                 for repo in RepoManager.shared.repoList {
                     for packageID in packageIds {
-                        if let depPackage = repo.packageDict[packageID] {
+                        if let depPackage = repo.newestPackage(identifier: packageID) {
                             getDependenciesInternal(package: depPackage)
                         }
                     }

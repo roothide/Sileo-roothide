@@ -603,7 +603,7 @@ class DownloadsTableViewController: SileoViewController {
             }
         }, completionCallback: { status, finish, refresh in
             NSLog("SileoLog: apt completionCallback \(status) \(finish) \(refresh)")
-            PackageListManager.shared.installChange()
+            PackageListManager.shared.reloadInstalled()
             DispatchQueue.main.async {
                 
                 DownloadManager.shared.aptRunning = false
@@ -799,7 +799,12 @@ extension DownloadsTableViewController: UITableViewDataSource {
         if indexPath.section == 3 {
             // Error listing
             let error = errors[indexPath.row]
-            cell.package = Package(package: error.packageID, version: "-1")
+            let allpackages = upgrades+installations+installdeps+uninstallations+uninstalldeps
+            if let package = allpackages.first(where: { $0.package.package == error.packageID }) {
+                cell.package = package.package
+            } else {
+                cell.package = Package(package: error.packageID, version: "-1")
+            }
             var description = ""
             for (index, conflict) in error.conflictingPackages.enumerated() {
                 description += "\(conflict.conflict.rawValue) \(conflict.package)\(index == error.conflictingPackages.count - 1 ? "" : ", ")"
