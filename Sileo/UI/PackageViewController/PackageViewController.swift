@@ -455,7 +455,7 @@ class PackageViewController: SileoViewController, PackageQueueButtonDataProvider
         footerViews.append([
             "class": "DepictionSubheaderView",
             "alignment": 1,
-            "title": "\(package.package) (\(package.version))"
+            "title": package.fromStatusFile ? "\(package.package)" : "\(package.package) (\(package.version))"
         ])
         
         let footerDict = [

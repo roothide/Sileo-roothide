@@ -83,6 +83,7 @@
 		845FA84F2BE9AC8D009C564D /* AppFileShare.m in Sources */ = {isa = PBXBuildFile; fileRef = 845FA84E2BE9AC8D009C564D /* AppFileShare.m */; };
 		845FA8522BE9AF2E009C564D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845FA8512BE9AF2E009C564D /* MobileCoreServices.framework */; };
 		84941C712D26E7960037400E /* UITableView+loadedCells.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84941C702D26E7960037400E /* UITableView+loadedCells.swift */; };
+		84A551A12D9BF73C0015CE66 /* CopyableLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A551A02D9BF73C0015CE66 /* CopyableLabel.swift */; };
 		84B37E1F2AFFBDFD00B2400E /* Evander in Frameworks */ = {isa = PBXBuildFile; productRef = 84B37E1E2AFFBDFD00B2400E /* Evander */; };
 		A8A0EA4B2665AAC900CD772C /* libzstd.1.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A0EA492665AAC900CD772C /* libzstd.1.tbd */; settings = {ATTRIBUTES = (Required, ); }; };
 		C305468621D6900C003E73FC /* PackageListHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C305468521D6900C003E73FC /* PackageListHeader.xib */; };
@@ -1301,6 +1302,7 @@
 		845FA8502BE9ACA3009C564D /* AppFileShare.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppFileShare.h; sourceTree = "<group>"; };
 		845FA8512BE9AF2E009C564D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.0.sdk/System/iOSSupport/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		84941C702D26E7960037400E /* UITableView+loadedCells.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UITableView+loadedCells.swift"; sourceTree = "<group>"; };
+		84A551A02D9BF73C0015CE66 /* CopyableLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CopyableLabel.swift; sourceTree = "<group>"; };
 		84B37E1D2AFFBDDE00B2400E /* Evander */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Evander; path = Deps/Evander; sourceTree = "<group>"; };
 		84EC03382A51048500D3DDB3 /* libjbpath.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjbpath.dylib; path = ../jbpath/.theos/obj/debug/libjbpath.dylib; sourceTree = "<group>"; };
 		A8A0EA492665AAC900CD772C /* libzstd.1.tbd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.text-based-dylib-definition"; path = libzstd.1.tbd; sourceTree = "<group>"; };
@@ -2042,6 +2044,7 @@
 			children = (
 				E15A953D26B98163000DB10E /* LocalizationHelpers */,
 				F1AB912C22ED0D220054341B /* BaseSubtitleTableViewCell.swift */,
+				84A551A02D9BF73C0015CE66 /* CopyableLabel.swift */,
 				F1AB912622ED081E0054341B /* PackageIconView.swift */,
 				F1330EB02325644700971073 /* SileoContentView.swift */,
 				F1330EB32325673100971073 /* SileoLabelView.swift */,
@@ -4515,6 +4518,7 @@
 				F1C5D9D222D189650021BD89 /* FeaturedStackView.swift in Sources */,
 				84588F712CAD2B2C00EBCA16 /* DepictionTableTextButtonView.swift in Sources */,
 				F1D82F7C230959D400EECCAE /* FeaturedViewController.swift in Sources */,
+				84A551A12D9BF73C0015CE66 /* CopyableLabel.swift in Sources */,
 				E1C9025D263C852100569D1E /* DepictionFormTextView.swift in Sources */,
 				E13488E829CC842300B0A8D5 /* Maintainer.swift in Sources */,
 				F13AEE7C22F76DE6004BAA05 /* FileNode.swift in Sources */,
@@ -5195,7 +5199,7 @@
 					"$(PROJECT_DIR)/Deps/libzstd",
 					"$(PROJECT_DIR)/Deps/liblz4",
 				);
-				MARKETING_VERSION = "2.5.1-9";
+				MARKETING_VERSION = "2.5.1-10";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;
@@ -5647,7 +5651,7 @@
 					"$(PROJECT_DIR)/Deps/libzstd",
 					"$(PROJECT_DIR)/Deps/liblz4",
 				);
-				MARKETING_VERSION = "2.5.1-9";
+				MARKETING_VERSION = "2.5.1-10";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;
@@ -5712,7 +5716,7 @@
 					"$(PROJECT_DIR)/Deps/libzstd",
 					"$(PROJECT_DIR)/Deps/liblz4",
 				);
-				MARKETING_VERSION = "2.5.1-9";
+				MARKETING_VERSION = "2.5.1-10";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;

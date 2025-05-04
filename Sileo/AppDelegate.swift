@@ -289,7 +289,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     }
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        NSLog("SileoLog: openurl=\(url) options=\(options)")
+        //NSLog("SileoLog: openurl=\(url) options=\(options)") //crash on NSLog???
         guard let rootVC=self.window?.rootViewController else {
             return true
         }

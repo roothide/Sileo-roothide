@@ -9,7 +9,7 @@
 import Foundation
 
 class DepictionSubheaderView: DepictionBaseView {
-    var headerLabel: UILabel?
+    var headerLabel: CopyableLabel?
     let useMargins: Bool
     let useBottomMargin: Bool
 
@@ -20,7 +20,7 @@ class DepictionSubheaderView: DepictionBaseView {
         useMargins = (dictionary["useMargins"] as? Bool) ?? true
         useBottomMargin = (dictionary["useBottomMargin"] as? Bool) ?? true
 
-        headerLabel = UILabel(frame: .zero)
+        headerLabel = CopyableLabel(frame: .zero)
         super.init(dictionary: dictionary, viewController: viewController, tintColor: tintColor, isActionable: isActionable)
 
         let useBoldText = (dictionary["useBoldText"] as? Bool) ?? false
