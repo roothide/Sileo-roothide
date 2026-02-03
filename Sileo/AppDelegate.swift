@@ -329,8 +329,8 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                     } else {
                         guard let tabBarController = self.window?.rootViewController as? UITabBarController,
                               let sourcesSVC = tabBarController.viewControllers?[2] as? UISplitViewController,
-                              let sourcesNavNV = sourcesSVC.viewControllers[0] as? SileoNavigationController,
-                              let sourcesVC = sourcesNavNV.viewControllers[0] as? SourcesViewController,
+                              let sourcesNVC = sourcesSVC.viewControllers[0] as? SileoNavigationController,
+                              let sourcesVC = sourcesNVC.viewControllers[0] as? SourcesViewController,
                               url.startAccessingSecurityScopedResource() else {
                                   return
                               }
@@ -350,11 +350,12 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
         if url.host == "source" && url.scheme == "sileo" {
             guard let tabBarController = self.window?.rootViewController as? UITabBarController,
                 let sourcesSVC = tabBarController.viewControllers?[2] as? UISplitViewController,
-                let sourcesNavNV = sourcesSVC.viewControllers[0] as? SileoNavigationController,
-                let sourcesVC = sourcesNavNV.viewControllers[0] as? SourcesViewController else {
+                let sourcesNVC = sourcesSVC.viewControllers[0] as? SileoNavigationController,
+                let sourcesVC = sourcesNVC.viewControllers[0] as? SourcesViewController else {
                 return false
             }
             let newURL = url.absoluteURL
+            tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = sourcesSVC
             sourcesVC.presentAddSourceEntryField(url: newURL)
         }
@@ -388,6 +389,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                 return
             }
             
+            tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = packageListNVC
             
             let title = String(localizationKey: "Sileo")
@@ -409,12 +411,15 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                 })
             })
         } else if shortcutItem.type.hasSuffix(".Refresh") {
+            tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = sourcesSVC
             sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, completion: nil)
         } else if shortcutItem.type.hasSuffix(".AddSource") {
+            tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = sourcesSVC
             sourcesVC.addSource(nil)
         } else if shortcutItem.type.hasSuffix(".Packages") {
+            tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = packageListNVC
         }
     }

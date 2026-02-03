@@ -52,7 +52,7 @@ BOOL ShareFileToApp(NSString* bundleId, NSString* filePath)
 
     [op start];
     
-    NSLog(@"SileoLog: ShareFileToApp %@ %d %d %d %@", [app applicationIdentifier], [op isExecuting], [op isFinished], [op isConcurrent], filePath);
+    NSLog(@"SileoLog: ShareFileToApp %@ %d/%d/%d/%d %@", [app applicationIdentifier], [op isExecuting], [op isFinished], [op isConcurrent], [op isCancelled], filePath);
     
     return YES;
 }

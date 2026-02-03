@@ -633,11 +633,11 @@ final class DownloadManager {
             assert(queueRunning==false)
             
             do {
-                self.checkInstalled() //remove packages(status=unpacked) so that apt can correctly resolve the dependencies of the packages to be installed.
+                self.checkInstalled() /* remove packages(status=unpacked) first so that apt can correctly resolve the dependencies of the packages to be installed. */
                 try self.recheckTotalOps()
             } catch {
                 removeAllItems()
-                self.checkInstalled()
+                checkInstalled()
                 TabBarController.singleton?.displayError(error.localizedDescription)
             }
             
@@ -1095,7 +1095,7 @@ final class DownloadManager {
         allowedHosts = ["apt.procurs.us"]
         #else
         if Jailbreak.bootstrap == .procursus {
-            allowedHosts = ["apt.procurs.us", "roothide.github.io", "iosjb.top"]
+            allowedHosts = ["apt.procurs.us", "roothide.github.io"]
         } else {
             allowedHosts = [
                 "apt.bingner.com",

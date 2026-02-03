@@ -49,6 +49,8 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         }
     }
     
+    var dependPackageName: String? = nil
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         icon = nil
@@ -60,6 +62,9 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         action = nil
         action?.cell = nil
         errorDescription = nil
+        dependPackageName = nil
+        retryButton.isHidden = true
+        findDepButton.isHidden = true
     }
     
     public func updateStatus() {
@@ -68,6 +73,11 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         if let err = errorDescription {
             self.progress = 0
             self.subtitle = String(localizationKey: err)
+            
+            if err.hasPrefix("Depends ") {
+                findDepButton.isHidden = false;
+                dependPackageName = err.replacingOccurrences(of: "Depends ", with: "")
+            }
         } else if let action = self.action {
             var progress = action.progress
             progress = (progress / 1.0) * 0.3
@@ -89,9 +99,13 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
                 self.subtitle = String(format: String(localizationKey: "Error_Indicator", type: .error), failureReason)
             } else if download.started {
                 if download.totalBytesWritten > 0 {
-                    self.subtitle = String(format: String(localizationKey: "Download_Progress"),
-                                           ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesWritten), countStyle: .file),
-                                           ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesExpectedToWrite), countStyle: .file))
+                    if download.totalBytesExpectedToWrite==NSURLSessionTransferSizeUnknown {
+                        self.subtitle = ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesWritten), countStyle: .file) + " ..."
+                    } else {
+                        self.subtitle = String(format: String(localizationKey: "Download_Progress"),
+                                               ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesWritten), countStyle: .file),
+                                               ByteCountFormatter.string(fromByteCount: Int64(download.totalBytesExpectedToWrite), countStyle: .file))
+                    }
                 } else {
                     self.subtitle = String(localizationKey: "Download_Starting")
                 }
@@ -113,6 +127,7 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
     }
     
     public let retryButton = UIButton()
+    public let findDepButton = UIButton()
     
     @objc public func retryDownload() {
         
@@ -122,22 +137,71 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         DownloadManager.shared.retryDownload(package: self.package!.package)
     }
     
+    @objc public func findDepPackage() {
+        guard let tabBarController = TabBarController.singleton,
+              let controllers = tabBarController.viewControllers,
+              let searchPackageNVC = controllers[4] as? SileoNavigationController,
+              let searchPackageVC = searchPackageNVC.viewControllers[0] as? PackageListViewController
+        else {
+            return
+        }
+        
+        searchPackageVC.searchController.searchBar.text = self.dependPackageName
+        tabBarController.selectedViewController = searchPackageNVC
+        tabBarController.closePopup(animated: true)
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        guard var detailTextLabelFrame = self.detailTextLabel?.frame else {
+            return
+        }
+        
+        let padding:CGFloat = 30
+        
+        if UIView.userInterfaceLayoutDirection(for: self.semanticContentAttribute) == .leftToRight {
+            detailTextLabelFrame.size.width = contentView.frame.size.width - detailTextLabelFrame.origin.x  - padding
+        } else {
+            let fix = contentView.frame.size.width - (detailTextLabelFrame.origin.x+detailTextLabelFrame.size.width)
+            let detailTextLableWidthMax = contentView.frame.size.width - fix - padding
+            if detailTextLabelFrame.size.width > detailTextLableWidthMax {
+                detailTextLabelFrame.size.width = detailTextLableWidthMax
+                detailTextLabelFrame.origin.x = padding
+            }
+        }
+        
+        self.detailTextLabel?.frame = detailTextLabelFrame
+    }
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
         
         self.selectionStyle = .none
-        self.contentView.addSubview(retryButton)
         self.detailTextLabel?.adjustsFontSizeToFitWidth = true
-        retryButton.translatesAutoresizingMaskIntoConstraints = false
-        retryButton.heightAnchor.constraint(equalToConstant: 17.5).isActive = true
-        retryButton.widthAnchor.constraint(equalToConstant: 17.5).isActive = true
-        retryButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
-        contentView.trailingAnchor.constraint(equalTo: retryButton.trailingAnchor, constant: 15).isActive = true
         
+        self.contentView.addSubview(retryButton)
+        retryButton.translatesAutoresizingMaskIntoConstraints = false
+        retryButton.heightAnchor.constraint(equalToConstant: 27.5).isActive = true
+        retryButton.widthAnchor.constraint(equalToConstant: 27.5).isActive = true
+        retryButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        contentView.trailingAnchor.constraint(equalTo: retryButton.trailingAnchor, constant: 5).isActive = true
+
         retryButton.setImage(UIImage(named: "Refresh")?.withRenderingMode(.alwaysTemplate), for: .normal)
         retryButton.tintColor = .tintColor
         retryButton.addTarget(self, action: #selector(retryDownload), for: .touchUpInside)
         retryButton.isHidden = true
+        
+        self.contentView.addSubview(findDepButton)
+        findDepButton.translatesAutoresizingMaskIntoConstraints = false
+        findDepButton.heightAnchor.constraint(equalToConstant: 27.5).isActive = true
+        findDepButton.widthAnchor.constraint(equalToConstant: 27.5).isActive = true
+        findDepButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        contentView.trailingAnchor.constraint(equalTo: findDepButton.trailingAnchor, constant: 5).isActive = true
+        findDepButton.setImage(UIImage(systemName: "magnifyingglass")?.withRenderingMode(.alwaysTemplate), for: .normal)
+        findDepButton.tintColor = .tintColor
+        findDepButton.addTarget(self, action: #selector(findDepPackage), for: .touchUpInside)
+        findDepButton.isHidden = true
     }
     
     required public init?(coder aDecoder: NSCoder) {
