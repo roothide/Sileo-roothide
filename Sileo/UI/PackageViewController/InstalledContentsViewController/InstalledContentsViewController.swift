@@ -131,6 +131,12 @@ extension InstalledContentsViewController: LNZTreeViewDataSource {
         } else {
             cell.textLabel?.text = text
         }
+        
+        if Bootstrap.roothide {
+            if cell.textLabel?.text == "/" {
+                cell.textLabel?.text = "jbroot:/"
+            }
+        }
 
         return cell
     }
@@ -146,9 +152,12 @@ extension InstalledContentsViewController: LNZTreeViewDelegate {
     }
 
     func treeView(_ treeView: LNZTreeView, shouldShowMenuForRowAt indexPath: IndexPath, forParentNode parentNode: TreeNodeProtocol?) -> Bool {
+        /*
         let node = (self.treeView(treeView, nodeForRowAt: indexPath, forParentNode: parentNode) as? FileNode) ?? rootNode
         
         return !node.isExpandable
+        */
+        return true
     }
     
     func treeView(_ treeView: LNZTreeView, canPerformAction action: Selector, forRowAt indexPath: IndexPath, withSender sender: Any?, forParentNode parentNode: TreeNodeProtocol?) -> Bool {

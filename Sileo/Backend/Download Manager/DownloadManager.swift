@@ -581,8 +581,10 @@ final class DownloadManager {
                     }
                 }
             } else if package.eFlag == .ok {
+                
                 let downloadPackage = DownloadPackage(package: package)
-                if package.wantInfo == .deinstall || package.wantInfo == .purge || package.status == .halfconfigured || package.status == .unpacked {
+                
+                if package.wantInfo == .deinstall || package.wantInfo == .purge || package.status == .halfconfigured || package.status == .unpacked || package.status == .halfinstalled {
                     if !self.vars.installations.contains(downloadPackage) && !self.vars.uninstallations.contains(downloadPackage) {
                         NSLog("SileoLog: wantInfo \(downloadPackage.package.package) = \(downloadPackage.package.wantInfo.rawValue)")
                         self.vars.uninstallations.insert(downloadPackage)
@@ -647,6 +649,22 @@ final class DownloadManager {
                 NotificationCenter.default.post(name: PackageListManager.stateChange, object: nil)
             }
         }
+    }
+    
+    public func findDownloadPackage(package: Package) -> DownloadPackage? {
+        let downloadPackage = DownloadPackage(package: package)
+        if let found = self.vars.installations.filter( { $0.package.package == package.package }).first {
+            return found
+        } else if let found = self.vars.uninstallations.filter( { $0.package.package == package.package }).first {
+            return found
+        } else if let found = self.vars.upgrades.filter( { $0.package.package == package.package }).first {
+            return found
+        } else if let found = self.vars.installdeps.filter( { $0.package.package == package.package }).first {
+            return found
+        } else if let found = self.vars.uninstalldeps.filter( { $0.package.package == package.package }).first {
+            return found
+        }
+        return nil
     }
     
     public func find(package: Package) -> DownloadManagerQueue {

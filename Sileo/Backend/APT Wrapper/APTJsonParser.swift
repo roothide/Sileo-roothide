@@ -92,10 +92,12 @@ struct APTBrokenPackage: Decodable, Hashable {
         enum CodingKeys: String, CodingKey {
             case package = "Package"
             case conflict = "Type"
+            case versionSummary = "VersionSummary"
         }
 
         let package: String
         let conflict: Conflict
+        let versionSummary: String?
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(package)

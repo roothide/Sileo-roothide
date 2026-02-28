@@ -807,9 +807,17 @@ extension DownloadsTableViewController: UITableViewDataSource {
             }
             var description = ""
             for (index, conflict) in error.conflictingPackages.enumerated() {
-                description += "\(conflict.conflict.rawValue) \(conflict.package)\(index == error.conflictingPackages.count - 1 ? "" : ", ")"
+                var packagesDesc = "\(conflict.package)"
+                if let versionSummy = conflict.versionSummary {
+                    packagesDesc += "(\(versionSummy))"
+                }
+                if index != error.conflictingPackages.count - 1 {
+                    packagesDesc += ", "
+                }
+                description += "\(conflict.conflict.rawValue) \(packagesDesc)"
             }
             cell.errorDescription = description
+            cell.searchPackageKeyword = error.conflictingPackages.first?.package
         } else {
             // Normal operation listing
             var array: [DownloadPackage] = []

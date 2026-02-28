@@ -110,6 +110,38 @@ class PackageQueueButton: PackageButton {
         })
     }
     
+    func checkQueued(package: Package) -> Bool
+    {
+        let queueFound = DownloadManager.shared.find(package: package)
+        
+        if queueFound == .none {
+            return false
+        }
+        
+        if queueFound == .uninstallations && package.fromStatusFile {
+            return false
+        }
+        
+        if queueFound == .uninstalldeps || queueFound == .uninstallations {
+            return true
+        }
+        
+        let queuedDownloadPackage = DownloadManager.shared.findDownloadPackage(package: package)
+        if let queuedPackage = queuedDownloadPackage?.package {
+            if package.fromStatusFile != queuedPackage.fromStatusFile {
+                return false
+            }
+            else if package.local_deb != queuedPackage.local_deb {
+                return false
+            }
+            else if package.sourceRepo != queuedPackage.sourceRepo {
+                return false
+            }
+        }
+        
+        return true
+    }
+    
     @objc func updateInfo() {
 //        NSLog("SileoLog: updateInfo package=\(package?.package)")
         guard let package = package else {
@@ -131,11 +163,10 @@ class PackageQueueButton: PackageButton {
         let purchased = paymentInfo?.purchased ?? false
         
         //Competition with DependencyResolverAccelerator.shared.preflightInstalled()->init(){4 spawns} for aptQueue causes a two second lag
-        let queueFound = DownloadManager.shared.find(package: package)
         
         if !overrideTitle.isEmpty {
             self.updateButton(title: overrideTitle)
-        } else if queueFound != .none {
+        } else if checkQueued(package: package) {
             self.updateButton(title: String(localizationKey: "Package_Queue_Action"))
         } else if installedPackage != nil {
             self.updateButton(title: String(localizationKey: "Package_Modify_Action"))
@@ -262,9 +293,10 @@ class PackageQueueButton: PackageButton {
             return
         }
         self.hapticResponse()
+        
         let downloadManager = DownloadManager.shared
-        let queueFound = downloadManager.find(package: package)
-        if queueFound != .none {
+        
+        if(checkQueued(package: package)) {
             // but it's a already queued! user changed their mind about installing this new package => nuke it from the queue
             TabBarController.singleton?.presentPopupController()
             downloadManager.reloadData(recheckPackages: true)

@@ -49,7 +49,7 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         }
     }
     
-    var dependPackageName: String? = nil
+    var searchPackageKeyword: String? = nil
     
     override func prepareForReuse() {
         super.prepareForReuse()
@@ -62,7 +62,7 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
         action = nil
         action?.cell = nil
         errorDescription = nil
-        dependPackageName = nil
+        searchPackageKeyword = nil
         retryButton.isHidden = true
         findDepButton.isHidden = true
     }
@@ -74,9 +74,8 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
             self.progress = 0
             self.subtitle = String(localizationKey: err)
             
-            if err.hasPrefix("Depends ") {
-                findDepButton.isHidden = false;
-                dependPackageName = err.replacingOccurrences(of: "Depends ", with: "")
+            if searchPackageKeyword != nil {
+                findDepButton.isHidden = false
             }
         } else if let action = self.action {
             var progress = action.progress
@@ -146,8 +145,9 @@ class DownloadsTableViewCell: BaseSubtitleTableViewCell {
             return
         }
         
-        searchPackageVC.searchController.searchBar.text = self.dependPackageName
+        searchPackageVC.searchController.searchBar.text = self.searchPackageKeyword
         tabBarController.selectedViewController = searchPackageNVC
+        searchPackageNVC.popToRootViewController(animated: true)
         tabBarController.closePopup(animated: true)
     }
     
