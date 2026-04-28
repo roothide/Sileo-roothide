@@ -27,12 +27,26 @@ class TabBarController: UITabBarController, UITabBarControllerDelegate {
         queue.setSpecific(key: popupQueueKey, value: popupQueueContext)
         return queue
     }()
+
+    private func resetStalePopupStateIfNeeded() {
+        guard popupIsPresented, popupBar.superview == nil else {
+            return
+        }
+        NSLog("SileoLog: reset stale popupIsPresented state")
+        popupIsPresented = false
+    }
+
+    @objc private func handleApplicationDidBecomeActive() {
+        resetStalePopupStateIfNeeded()
+        updatePopup(animated: false)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         delegate = self
         TabBarController.singleton = self
+        NotificationCenter.default.addObserver(self, selector: #selector(handleApplicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         
         downloadsController = UINavigationController(rootViewController: DownloadManager.shared.viewController)
         downloadsController?.isNavigationBarHidden = true

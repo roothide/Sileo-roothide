@@ -62,6 +62,9 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     
     public var searchController = UISearchController(searchResultsController: nil)
     private var prevSearchText: String?
+    private var preservedSearchTextDuringProgrammaticDismiss: String?
+    private var pendingPackageControllerAfterSearchDismiss: PackageActions?
+    private var shouldPreserveSearchStateOnDismiss = false
     
     private let searchingQueue = DispatchQueue(label: "Sileo.PackageList.Searching", qos: .userInitiated)
     private var updatingCount = 0 {
@@ -85,6 +88,31 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
             textField.textColor = .sileoLabel
         }
     }
+
+    private func ensureSearchControllerAttached() {
+        guard isViewLoaded else {
+            return
+        }
+        if navigationItem.searchController !== searchController {
+            navigationItem.searchController = searchController
+        }
+        navigationItem.hidesSearchBarWhenScrolling = false
+    }
+
+    @objc private func dismissSearchControllerPreservingState() {
+        guard showSearchField else {
+            return
+        }
+        let currentSearchText = searchController.searchBar.text
+        guard searchController.isActive || (searchController.searchBar.isFirstResponder ?? false) else {
+            searchController.searchBar.resignFirstResponder()
+            ensureSearchControllerAttached()
+            return
+        }
+        shouldPreserveSearchStateOnDismiss = true
+        preservedSearchTextDuringProgrammaticDismiss = currentSearchText
+        searchController.isActive = false
+    }
     
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         updateSileoColors()
@@ -93,11 +121,13 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateSileoColors()
+        ensureSearchControllerAttached()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.navigationController?.navigationBar._hidesShadow = true
+        ensureSearchControllerAttached()
                 
         guard #available(iOS 13, *) else {
             if showSearchField {
@@ -184,14 +214,16 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
             textfieldOfSearchBar?.semanticContentAttribute = (LanguageHelper.shared.isRtl ?? false) ? .forceRightToLeft : .forceLeftToRight
         }
         searchController.searchBar.delegate = self
+        searchController.delegate = self
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.hidesNavigationBarDuringPresentation = true
+        // Search results are rendered by this controller itself; hiding the navigation bar
+        // during presentation causes the search bar to get lost after push/pop on iPad.
+        searchController.hidesNavigationBarDuringPresentation = false
         
         self.navigationController?.navigationBar.superview?.tag = WHITE_BLUR_TAG
         
-        self.navigationItem.hidesSearchBarWhenScrolling = false
-        self.navigationItem.searchController = searchController
+        ensureSearchControllerAttached()
         self.definesPresentationContext = true
         
         var sbTextField: UITextField?
@@ -202,7 +234,7 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
         }
         sbTextField?.font = UIFont.systemFont(ofSize: 13)
         
-        let tapRecognizer = UITapGestureRecognizer(target: searchController.searchBar, action: #selector(UISearchBar.resignFirstResponder))
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissSearchControllerPreservingState))
         tapRecognizer.cancelsTouchesInView = false
         tapRecognizer.delegate = self
         
@@ -260,7 +292,18 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        searchController.searchBar.isFirstResponder ?? false
+        guard showSearchField, searchController.isActive || (searchController.searchBar.isFirstResponder ?? false) else {
+            return false
+        }
+
+        var currentView: UIView? = touch.view
+        while let view = currentView {
+            if view is UICollectionViewCell || view is UICollectionReusableView || view is UIControl {
+                return false
+            }
+            currentView = view.superview
+        }
+        return true
     }
     
     func controller(package: Package) -> PackageActions {
@@ -631,6 +674,12 @@ extension PackageListViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         guard let pvc = self.controller(indexPath: indexPath) else { return }
+        if showSearchField && searchController.isActive {
+            pendingPackageControllerAfterSearchDismiss = pvc
+            dismissSearchControllerPreservingState()
+            return
+        }
+        searchController.searchBar.resignFirstResponder()
         self.navigationController?.pushViewController(pvc, animated: true)
         
         guard UserDefaults.standard.bool(forKey: "ShowSearchHistory", fallback: true) else { return }
@@ -681,6 +730,12 @@ extension PackageListViewController: UIViewControllerPreviewingDelegate {
     }
     
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController) {
+        if showSearchField && searchController.isActive {
+            pendingPackageControllerAfterSearchDismiss = viewControllerToCommit as? PackageActions
+            dismissSearchControllerPreservingState()
+            return
+        }
+        searchController.searchBar.resignFirstResponder()
         self.navigationController?.pushViewController(viewControllerToCommit, animated: true)
     }
 }
@@ -725,6 +780,9 @@ extension PackageListViewController: UISearchBarDelegate {
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         NSLog("SileoLog: searchBarCancelButtonClicked \(searchBar)")
+        if shouldPreserveSearchStateOnDismiss {
+            return
+        }
         self.provisionalPackages.removeAll()
         self.packages.removeAll()
         self.collectionView?.reloadData()
@@ -743,6 +801,7 @@ extension PackageListViewController: UISearchBarDelegate {
         if UserDefaults.standard.bool(forKey: "ShowSearchHistory", fallback: true) {
             searchHistory.insert(text, at: 0)
         }
+        searchBar.resignFirstResponder()
         
         CanisterResolver.shared.fetch(text) { change in
             guard change else { return }
@@ -818,7 +877,23 @@ extension PackageListViewController: UISearchBarDelegate {
        } else {
            return .refresh
        }
-   }
+    }
+}
+
+extension PackageListViewController: UISearchControllerDelegate {
+    func didDismissSearchController(_ searchController: UISearchController) {
+        ensureSearchControllerAttached()
+        if shouldPreserveSearchStateOnDismiss {
+            shouldPreserveSearchStateOnDismiss = false
+            searchController.searchBar.text = preservedSearchTextDuringProgrammaticDismiss
+            preservedSearchTextDuringProgrammaticDismiss = nil
+            updateSearchResults(for: searchController)
+        }
+        if let pendingController = pendingPackageControllerAfterSearchDismiss {
+            pendingPackageControllerAfterSearchDismiss = nil
+            navigationController?.pushViewController(pendingController, animated: true)
+        }
+    }
 }
 
 extension PackageListViewController: UISearchResultsUpdating {
@@ -827,6 +902,13 @@ extension PackageListViewController: UISearchResultsUpdating {
         if !Thread.isMainThread {
             DispatchQueue.main.async { [weak self] in
                 self?.updateSearchResults(for: searchController)
+            }
+            return
+        }
+        if shouldPreserveSearchStateOnDismiss {
+            if let preservedTextDuringDismiss = preservedSearchTextDuringProgrammaticDismiss,
+               (searchController.searchBar.text ?? "").isEmpty {
+                searchController.searchBar.text = preservedTextDuringDismiss
             }
             return
         }
