@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "ソース管理";
+"Source_Management_Short" = "管理";
+"Source_Refresh_Timeout" = "ソース更新タイムアウト";
+"Source_Refresh_Concurrency" = "ソース更新の同時実行数";
+"Source_Auto_Disable_On_Timeouts" = "タイムアウト時に自動で無効化";
+"Source_Auto_Disable_After_Timeouts" = "タイムアウト後に自動で無効化";
+"Source_Auto_Disable_On_HTTP_Errors" = "ウェブサイトエラー時に自動で無効化";
+"Source_Auto_Disable_After_HTTP_Errors" = "ウェブサイトエラー後に自動で無効化";
+"Source_Search.Placeholder" = "ソース名またはURLを検索";
+"Disabled_Sources" = "無効化されたソース";
+"Refresh_Active_Sources" = "有効なソースを更新";
+"Refresh_All_Sources" = "すべてのソースを更新";
+"Source_Management_Timeout_Prompt" = "更新のタイムアウト時間を秒単位で設定します。";
+"Source_Management_Concurrency_Prompt" = "同時に更新するソース数の上限を設定します。0 は自動です。";
+"Source_Management_Auto_Disable_Prompt" = "何回連続でタイムアウトしたら自動で無効化するか設定します。0 は無効です。";
+"Source_Management_HTTP_Error_Prompt" = "何回連続でウェブサイトの状態エラーが発生したらソースを自動で無効化するか設定します。0 は無効です。HTTP 400、401、403、404、410、451 に適用されます。";
+"Source_Disabled_Manual" = "手動で無効化";
+"Source_Disabled_AutoTimeout" = "%d 回連続でタイムアウトしたため自動で無効化";
+"Source_Disabled_AutoHTTPStatus" = "%d 回連続でウェブサイトエラーが発生したため自動で無効化（最後: HTTP %d）";
+"Source_Disabled_AutoHTTPStatus_Generic" = "%d 回連続でウェブサイトエラーが発生したため自動で無効化";
+"Disabled_Sources_Manual_Section" = "手動で無効化";
+"Disabled_Sources_Auto_Timeout_Section" = "自動で無効化 - タイムアウト";
+"Disabled_Sources_Auto_HTTP_Section" = "自動で無効化 - ウェブサイトエラー";
+"Disabled_Sources_Empty" = "無効化されたソースはありません";

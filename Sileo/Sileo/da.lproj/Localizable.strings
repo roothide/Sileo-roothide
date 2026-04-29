@@ -180,3 +180,29 @@
 
 // Depcitions
 "View_Depiction" = "View Depiction";
+
+// Source Management
+"Source_Management" = "Kildehåndtering";
+"Source_Management_Short" = "Administrer";
+"Source_Refresh_Timeout" = "Tidsgrænse for kildeopdatering";
+"Source_Refresh_Concurrency" = "Samtidige kildeopdateringer";
+"Source_Auto_Disable_On_Timeouts" = "Deaktiver automatisk ved timeout";
+"Source_Auto_Disable_After_Timeouts" = "Deaktiver automatisk efter timeout";
+"Source_Auto_Disable_On_HTTP_Errors" = "Deaktiver automatisk ved webstedsfejl";
+"Source_Auto_Disable_After_HTTP_Errors" = "Deaktiver automatisk efter webstedsfejl";
+"Source_Search.Placeholder" = "Søg efter kildenavn eller URL";
+"Disabled_Sources" = "Deaktiverede kilder";
+"Refresh_Active_Sources" = "Opdater aktive kilder";
+"Refresh_All_Sources" = "Opdater alle kilder";
+"Source_Management_Timeout_Prompt" = "Angiv opdateringens tidsgrænse i sekunder.";
+"Source_Management_Concurrency_Prompt" = "Angiv det maksimale antal samtidige kildeopdateringer. Brug 0 for Automatisk.";
+"Source_Management_Auto_Disable_Prompt" = "Angiv hvor mange timeout i træk der skal udløse automatisk deaktivering. Brug 0 for Aldrig.";
+"Source_Management_HTTP_Error_Prompt" = "Angiv hvor mange webstedsstatusfejl i træk der skal deaktivere en kilde automatisk. Brug 0 for Aldrig. Gælder for HTTP 400, 401, 403, 404, 410 og 451.";
+"Source_Disabled_Manual" = "Deaktiveret manuelt";
+"Source_Disabled_AutoTimeout" = "Automatisk deaktiveret efter %d timeout i træk";
+"Source_Disabled_AutoHTTPStatus" = "Automatisk deaktiveret efter %d webstedsfejl i træk (seneste: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automatisk deaktiveret efter %d webstedsfejl i træk";
+"Disabled_Sources_Manual_Section" = "Manuelt deaktiverede";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatisk deaktiverede - timeout";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatisk deaktiverede - webstedsfejl";
+"Disabled_Sources_Empty" = "Ingen deaktiverede kilder";

@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Kaynak Yönetimi";
+"Source_Management_Short" = "Yönet";
+"Source_Refresh_Timeout" = "Kaynak yenileme zaman aşımı";
+"Source_Refresh_Concurrency" = "Kaynak yenileme eşzamanlılığı";
+"Source_Auto_Disable_On_Timeouts" = "Zaman aşımında otomatik devre dışı bırak";
+"Source_Auto_Disable_After_Timeouts" = "Zaman aşımlarından sonra otomatik devre dışı bırak";
+"Source_Auto_Disable_On_HTTP_Errors" = "Web sitesi hatalarında otomatik devre dışı bırak";
+"Source_Auto_Disable_After_HTTP_Errors" = "Web sitesi hatalarından sonra otomatik devre dışı bırak";
+"Source_Search.Placeholder" = "Kaynak adı veya URL ara";
+"Disabled_Sources" = "Devre dışı bırakılan kaynaklar";
+"Refresh_Active_Sources" = "Etkin kaynakları yenile";
+"Refresh_All_Sources" = "Tüm kaynakları yenile";
+"Source_Management_Timeout_Prompt" = "Yenileme zaman aşımını saniye cinsinden ayarlayın.";
+"Source_Management_Concurrency_Prompt" = "Eşzamanlı kaynak yenilemelerinin en yüksek sayısını ayarlayın. Otomatik için 0 kullanın.";
+"Source_Management_Auto_Disable_Prompt" = "Kaç ardışık zaman aşımının otomatik devre dışı bırakmayı tetikleyeceğini ayarlayın. Asla için 0 kullanın.";
+"Source_Management_HTTP_Error_Prompt" = "Kaç ardışık web sitesi durum hatasının bir kaynağı otomatik olarak devre dışı bırakacağını ayarlayın. Asla için 0 kullanın. HTTP 400, 401, 403, 404, 410 ve 451 için geçerlidir.";
+"Source_Disabled_Manual" = "Elle devre dışı bırakıldı";
+"Source_Disabled_AutoTimeout" = "%d ardışık zaman aşımından sonra otomatik olarak devre dışı bırakıldı";
+"Source_Disabled_AutoHTTPStatus" = "%d ardışık web sitesi hatasından sonra otomatik olarak devre dışı bırakıldı (son: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "%d ardışık web sitesi hatasından sonra otomatik olarak devre dışı bırakıldı";
+"Disabled_Sources_Manual_Section" = "Elle devre dışı bırakılanlar";
+"Disabled_Sources_Auto_Timeout_Section" = "Otomatik devre dışı bırakılanlar - zaman aşımı";
+"Disabled_Sources_Auto_HTTP_Section" = "Otomatik devre dışı bırakılanlar - web sitesi hataları";
+"Disabled_Sources_Empty" = "Devre dışı bırakılan kaynak yok";

@@ -244,3 +244,29 @@
 "Whats_Collected" = "مالذي يتم جمعه";
 "Non_Identifying" = "فقط معلومات عن الحزم وبعض المعلومات عن الجهاز غير الحساسة هي التي يتم جمعها.";
 "Privacy_Policy" = "سياسة الخصوصية";
+
+// Source Management
+"Source_Management" = "إدارة المصادر";
+"Source_Management_Short" = "إدارة";
+"Source_Refresh_Timeout" = "مهلة تحديث المصادر";
+"Source_Refresh_Concurrency" = "عدد تحديثات المصادر المتزامنة";
+"Source_Auto_Disable_On_Timeouts" = "تعطيل تلقائي عند انتهاء المهلة";
+"Source_Auto_Disable_After_Timeouts" = "تعطيل تلقائي بعد انتهاء المهلة";
+"Source_Auto_Disable_On_HTTP_Errors" = "تعطيل تلقائي عند أخطاء الموقع";
+"Source_Auto_Disable_After_HTTP_Errors" = "تعطيل تلقائي بعد أخطاء الموقع";
+"Source_Search.Placeholder" = "ابحث عن اسم المصدر أو عنوان URL";
+"Disabled_Sources" = "المصادر المعطلة";
+"Refresh_Active_Sources" = "تحديث المصادر النشطة";
+"Refresh_All_Sources" = "تحديث كل المصادر";
+"Source_Management_Timeout_Prompt" = "حدد مهلة التحديث بالثواني.";
+"Source_Management_Concurrency_Prompt" = "حدد الحد الأقصى لعدد تحديثات المصادر المتزامنة. استخدم 0 للوضع التلقائي.";
+"Source_Management_Auto_Disable_Prompt" = "حدد عدد مرات انتهاء المهلة المتتالية التي تؤدي إلى التعطيل التلقائي. استخدم 0 لعدم التعطيل.";
+"Source_Management_HTTP_Error_Prompt" = "حدد عدد أخطاء حالة الموقع المتتالية التي تؤدي إلى تعطيل المصدر تلقائيًا. استخدم 0 لعدم التعطيل. ينطبق على HTTP 400 و401 و403 و404 و410 و451.";
+"Source_Disabled_Manual" = "معطل يدويًا";
+"Source_Disabled_AutoTimeout" = "تم تعطيله تلقائيًا بعد %d مرات انتهاء مهلة متتالية";
+"Source_Disabled_AutoHTTPStatus" = "تم تعطيله تلقائيًا بعد %d أخطاء موقع متتالية (الأخير: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "تم تعطيله تلقائيًا بعد %d أخطاء موقع متتالية";
+"Disabled_Sources_Manual_Section" = "معطلة يدويًا";
+"Disabled_Sources_Auto_Timeout_Section" = "معطلة تلقائيًا - انتهاء المهلة";
+"Disabled_Sources_Auto_HTTP_Section" = "معطلة تلقائيًا - أخطاء الموقع";
+"Disabled_Sources_Empty" = "لا توجد مصادر معطلة";

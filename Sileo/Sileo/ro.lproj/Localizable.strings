@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Gestionarea surselor";
+"Source_Management_Short" = "Gestionează";
+"Source_Refresh_Timeout" = "Timp de expirare pentru actualizarea surselor";
+"Source_Refresh_Concurrency" = "Concurența actualizării surselor";
+"Source_Auto_Disable_On_Timeouts" = "Dezactivează automat la expirarea timpului";
+"Source_Auto_Disable_After_Timeouts" = "Dezactivează automat după expirări";
+"Source_Auto_Disable_On_HTTP_Errors" = "Dezactivează automat la erori ale site-ului";
+"Source_Auto_Disable_After_HTTP_Errors" = "Dezactivează automat după erori ale site-ului";
+"Source_Search.Placeholder" = "Caută numele sursei sau URL-ul";
+"Disabled_Sources" = "Surse dezactivate";
+"Refresh_Active_Sources" = "Actualizează sursele active";
+"Refresh_All_Sources" = "Actualizează toate sursele";
+"Source_Management_Timeout_Prompt" = "Setați timpul de expirare a actualizării în secunde.";
+"Source_Management_Concurrency_Prompt" = "Setați numărul maxim de actualizări simultane ale surselor. Folosiți 0 pentru Automat.";
+"Source_Management_Auto_Disable_Prompt" = "Setați câte expirări consecutive declanșează dezactivarea automată. Folosiți 0 pentru Niciodată.";
+"Source_Management_HTTP_Error_Prompt" = "Setați câte erori consecutive de stare ale site-ului dezactivează automat o sursă. Folosiți 0 pentru Niciodată. Se aplică pentru HTTP 400, 401, 403, 404, 410 și 451.";
+"Source_Disabled_Manual" = "Dezactivată manual";
+"Source_Disabled_AutoTimeout" = "Dezactivată automat după %d expirări consecutive";
+"Source_Disabled_AutoHTTPStatus" = "Dezactivată automat după %d erori consecutive ale site-ului (ultima: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Dezactivată automat după %d erori consecutive ale site-ului";
+"Disabled_Sources_Manual_Section" = "Dezactivate manual";
+"Disabled_Sources_Auto_Timeout_Section" = "Dezactivate automat - expirări";
+"Disabled_Sources_Auto_HTTP_Section" = "Dezactivate automat - erori ale site-ului";
+"Disabled_Sources_Empty" = "Nu există surse dezactivate";

@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "소스 관리";
+"Source_Management_Short" = "관리";
+"Source_Refresh_Timeout" = "소스 새로고침 시간 초과";
+"Source_Refresh_Concurrency" = "소스 새로고침 동시 실행 수";
+"Source_Auto_Disable_On_Timeouts" = "시간 초과 시 자동 비활성화";
+"Source_Auto_Disable_After_Timeouts" = "시간 초과 후 자동 비활성화";
+"Source_Auto_Disable_On_HTTP_Errors" = "웹사이트 오류 시 자동 비활성화";
+"Source_Auto_Disable_After_HTTP_Errors" = "웹사이트 오류 후 자동 비활성화";
+"Source_Search.Placeholder" = "소스 이름 또는 URL 검색";
+"Disabled_Sources" = "비활성화된 소스";
+"Refresh_Active_Sources" = "활성 소스 새로고침";
+"Refresh_All_Sources" = "모든 소스 새로고침";
+"Source_Management_Timeout_Prompt" = "새로고침 시간 초과를 초 단위로 설정합니다.";
+"Source_Management_Concurrency_Prompt" = "동시에 새로고침할 소스의 최대 개수를 설정합니다. 0은 자동입니다.";
+"Source_Management_Auto_Disable_Prompt" = "몇 번 연속 시간 초과되면 자동으로 비활성화할지 설정합니다. 0은 사용 안 함입니다.";
+"Source_Management_HTTP_Error_Prompt" = "몇 번 연속 웹사이트 상태 오류가 발생하면 소스를 자동으로 비활성화할지 설정합니다. 0은 사용 안 함입니다. HTTP 400, 401, 403, 404, 410 및 451에 적용됩니다.";
+"Source_Disabled_Manual" = "수동으로 비활성화됨";
+"Source_Disabled_AutoTimeout" = "%d회 연속 시간 초과되어 자동으로 비활성화됨";
+"Source_Disabled_AutoHTTPStatus" = "%d회 연속 웹사이트 오류로 자동으로 비활성화됨 (마지막: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "%d회 연속 웹사이트 오류로 자동으로 비활성화됨";
+"Disabled_Sources_Manual_Section" = "수동 비활성화";
+"Disabled_Sources_Auto_Timeout_Section" = "자동 비활성화 - 시간 초과";
+"Disabled_Sources_Auto_HTTP_Section" = "자동 비활성화 - 웹사이트 오류";
+"Disabled_Sources_Empty" = "비활성화된 소스가 없습니다";

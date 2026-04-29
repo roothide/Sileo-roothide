@@ -244,3 +244,29 @@
 "Whats_Collected" = "Jakie dane zbieramy";
 "Non_Identifying" = "Gromadzone są jedynie dane o pakietach i nieidentyfikujące informacje.";
 "Privacy_Policy" = "Polityka Prywatności";
+
+// Source Management
+"Source_Management" = "Zarządzanie źródłami";
+"Source_Management_Short" = "Zarządzaj";
+"Source_Refresh_Timeout" = "Limit czasu odświeżania źródeł";
+"Source_Refresh_Concurrency" = "Współbieżność odświeżania źródeł";
+"Source_Auto_Disable_On_Timeouts" = "Automatycznie wyłączaj przy przekroczeniu limitu czasu";
+"Source_Auto_Disable_After_Timeouts" = "Automatycznie wyłączaj po przekroczeniach limitu czasu";
+"Source_Auto_Disable_On_HTTP_Errors" = "Automatycznie wyłączaj przy błędach strony";
+"Source_Auto_Disable_After_HTTP_Errors" = "Automatycznie wyłączaj po błędach strony";
+"Source_Search.Placeholder" = "Szukaj nazwy źródła lub adresu URL";
+"Disabled_Sources" = "Wyłączone źródła";
+"Refresh_Active_Sources" = "Odśwież aktywne źródła";
+"Refresh_All_Sources" = "Odśwież wszystkie źródła";
+"Source_Management_Timeout_Prompt" = "Ustaw limit czasu odświeżania w sekundach.";
+"Source_Management_Concurrency_Prompt" = "Ustaw maksymalną liczbę jednoczesnych odświeżeń źródeł. Użyj 0 dla trybu Automatycznie.";
+"Source_Management_Auto_Disable_Prompt" = "Ustaw, po ilu kolejnych przekroczeniach limitu czasu ma nastąpić automatyczne wyłączenie. Użyj 0 dla Nigdy.";
+"Source_Management_HTTP_Error_Prompt" = "Ustaw, po ilu kolejnych błędach statusu strony źródło ma zostać automatycznie wyłączone. Użyj 0 dla Nigdy. Dotyczy HTTP 400, 401, 403, 404, 410 i 451.";
+"Source_Disabled_Manual" = "Wyłączono ręcznie";
+"Source_Disabled_AutoTimeout" = "Wyłączono automatycznie po %d kolejnych przekroczeniach limitu czasu";
+"Source_Disabled_AutoHTTPStatus" = "Wyłączono automatycznie po %d kolejnych błędach strony (ostatni: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Wyłączono automatycznie po %d kolejnych błędach strony";
+"Disabled_Sources_Manual_Section" = "Wyłączone ręcznie";
+"Disabled_Sources_Auto_Timeout_Section" = "Wyłączone automatycznie - przekroczenia limitu czasu";
+"Disabled_Sources_Auto_HTTP_Section" = "Wyłączone automatycznie - błędy strony";
+"Disabled_Sources_Empty" = "Brak wyłączonych źródeł";

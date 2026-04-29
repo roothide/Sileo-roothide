@@ -22,7 +22,7 @@ int order(char ch) {
 int validate(char *string, int *length) {
     for (int i = 0; i < *length; i++) {
         char character = string[i];
-        if (!(isdigit(character) || isalpha(character) || strrchr(".-+~:", character))) {
+        if (!(isdigit(character) || isalpha(character) || strchr(".-+~:", character))) {
             return 1;
         }
     }

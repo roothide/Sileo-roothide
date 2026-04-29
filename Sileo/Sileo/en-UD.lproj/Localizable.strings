@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Source Management";
+"Source_Management_Short" = "Manage";
+"Source_Refresh_Timeout" = "Source Refresh Timeout";
+"Source_Refresh_Concurrency" = "Source Refresh Concurrency";
+"Source_Auto_Disable_On_Timeouts" = "Auto Disable on Timeouts";
+"Source_Auto_Disable_After_Timeouts" = "Auto Disable After Timeouts";
+"Source_Auto_Disable_On_HTTP_Errors" = "Auto Disable on Website Errors";
+"Source_Auto_Disable_After_HTTP_Errors" = "Auto Disable After Website Errors";
+"Source_Search.Placeholder" = "Search source name or URL";
+"Disabled_Sources" = "Disabled Sources";
+"Refresh_Active_Sources" = "Refresh Active Sources";
+"Refresh_All_Sources" = "Refresh All Sources";
+"Source_Management_Timeout_Prompt" = "Set the refresh timeout in seconds.";
+"Source_Management_Concurrency_Prompt" = "Set the maximum concurrent source refreshes. Use 0 for Auto.";
+"Source_Management_Auto_Disable_Prompt" = "Set how many consecutive timeouts trigger auto-disable. Use 0 for Never.";
+"Source_Management_HTTP_Error_Prompt" = "Set how many consecutive website status errors auto-disable a source. Use 0 for Never. Applies to HTTP 400, 401, 403, 404, 410, and 451.";
+"Source_Disabled_Manual" = "Manually disabled";
+"Source_Disabled_AutoTimeout" = "Automatically disabled after %d consecutive timeouts";
+"Source_Disabled_AutoHTTPStatus" = "Automatically disabled after %d consecutive website errors (last: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automatically disabled after %d consecutive website errors";
+"Disabled_Sources_Manual_Section" = "Manually Disabled";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatically Disabled - Timeouts";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatically Disabled - Website Errors";
+"Disabled_Sources_Empty" = "No disabled sources";

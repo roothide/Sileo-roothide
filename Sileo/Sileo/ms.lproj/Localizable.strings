@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Pengurusan Sumber";
+"Source_Management_Short" = "Urus";
+"Source_Refresh_Timeout" = "Had masa muat semula sumber";
+"Source_Refresh_Concurrency" = "Keserentakan muat semula sumber";
+"Source_Auto_Disable_On_Timeouts" = "Lumpuhkan automatik apabila tamat masa";
+"Source_Auto_Disable_After_Timeouts" = "Lumpuhkan automatik selepas tamat masa";
+"Source_Auto_Disable_On_HTTP_Errors" = "Lumpuhkan automatik apabila berlaku ralat laman web";
+"Source_Auto_Disable_After_HTTP_Errors" = "Lumpuhkan automatik selepas ralat laman web";
+"Source_Search.Placeholder" = "Cari nama sumber atau URL";
+"Disabled_Sources" = "Sumber yang dilumpuhkan";
+"Refresh_Active_Sources" = "Muat semula sumber aktif";
+"Refresh_All_Sources" = "Muat semula semua sumber";
+"Source_Management_Timeout_Prompt" = "Tetapkan had masa muat semula dalam saat.";
+"Source_Management_Concurrency_Prompt" = "Tetapkan bilangan maksimum muat semula sumber serentak. Gunakan 0 untuk Automatik.";
+"Source_Management_Auto_Disable_Prompt" = "Tetapkan berapa banyak tamat masa berturut-turut yang akan mencetuskan pelumpuhan automatik. Gunakan 0 untuk Jangan sekali-kali.";
+"Source_Management_HTTP_Error_Prompt" = "Tetapkan berapa banyak ralat status laman web berturut-turut yang akan melumpuhkan sumber secara automatik. Gunakan 0 untuk Jangan sekali-kali. Digunakan untuk HTTP 400, 401, 403, 404, 410, dan 451.";
+"Source_Disabled_Manual" = "Dilumpuhkan secara manual";
+"Source_Disabled_AutoTimeout" = "Dilumpuhkan secara automatik selepas %d tamat masa berturut-turut";
+"Source_Disabled_AutoHTTPStatus" = "Dilumpuhkan secara automatik selepas %d ralat laman web berturut-turut (terakhir: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Dilumpuhkan secara automatik selepas %d ralat laman web berturut-turut";
+"Disabled_Sources_Manual_Section" = "Dilumpuhkan secara manual";
+"Disabled_Sources_Auto_Timeout_Section" = "Dilumpuhkan secara automatik - tamat masa";
+"Disabled_Sources_Auto_HTTP_Section" = "Dilumpuhkan secara automatik - ralat laman web";
+"Disabled_Sources_Empty" = "Tiada sumber yang dilumpuhkan";

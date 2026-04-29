@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Správa zdrojů";
+"Source_Management_Short" = "Správa";
+"Source_Refresh_Timeout" = "Časový limit obnovení zdrojů";
+"Source_Refresh_Concurrency" = "Souběžné obnovování zdrojů";
+"Source_Auto_Disable_On_Timeouts" = "Automaticky zakázat při časových limitech";
+"Source_Auto_Disable_After_Timeouts" = "Automaticky zakázat po časových limitech";
+"Source_Auto_Disable_On_HTTP_Errors" = "Automaticky zakázat při chybách webu";
+"Source_Auto_Disable_After_HTTP_Errors" = "Automaticky zakázat po chybách webu";
+"Source_Search.Placeholder" = "Hledat název zdroje nebo URL";
+"Disabled_Sources" = "Zakázané zdroje";
+"Refresh_Active_Sources" = "Obnovit aktivní zdroje";
+"Refresh_All_Sources" = "Obnovit všechny zdroje";
+"Source_Management_Timeout_Prompt" = "Nastavte časový limit obnovení v sekundách.";
+"Source_Management_Concurrency_Prompt" = "Nastavte maximální počet souběžných obnovení zdrojů. Použijte 0 pro Automaticky.";
+"Source_Management_Auto_Disable_Prompt" = "Nastavte, po kolika po sobě jdoucích časových limitech se má zdroj automaticky zakázat. Použijte 0 pro Nikdy.";
+"Source_Management_HTTP_Error_Prompt" = "Nastavte, po kolika po sobě jdoucích chybách stavu webu se má zdroj automaticky zakázat. Použijte 0 pro Nikdy. Platí pro HTTP 400, 401, 403, 404, 410 a 451.";
+"Source_Disabled_Manual" = "Zakázáno ručně";
+"Source_Disabled_AutoTimeout" = "Automaticky zakázáno po %d po sobě jdoucích časových limitech";
+"Source_Disabled_AutoHTTPStatus" = "Automaticky zakázáno po %d po sobě jdoucích chybách webu (poslední: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automaticky zakázáno po %d po sobě jdoucích chybách webu";
+"Disabled_Sources_Manual_Section" = "Ručně zakázané";
+"Disabled_Sources_Auto_Timeout_Section" = "Automaticky zakázané - časové limity";
+"Disabled_Sources_Auto_HTTP_Section" = "Automaticky zakázané - chyby webu";
+"Disabled_Sources_Empty" = "Žádné zakázané zdroje";

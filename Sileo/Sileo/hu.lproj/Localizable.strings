@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Forráskezelés";
+"Source_Management_Short" = "Kezelés";
+"Source_Refresh_Timeout" = "Forrásfrissítési időkorlát";
+"Source_Refresh_Concurrency" = "Forrásfrissítések párhuzamossága";
+"Source_Auto_Disable_On_Timeouts" = "Automatikus letiltás időtúllépéskor";
+"Source_Auto_Disable_After_Timeouts" = "Automatikus letiltás időtúllépések után";
+"Source_Auto_Disable_On_HTTP_Errors" = "Automatikus letiltás webhelyhibáknál";
+"Source_Auto_Disable_After_HTTP_Errors" = "Automatikus letiltás webhelyhibák után";
+"Source_Search.Placeholder" = "Forrásnév vagy URL keresése";
+"Disabled_Sources" = "Letiltott források";
+"Refresh_Active_Sources" = "Aktív források frissítése";
+"Refresh_All_Sources" = "Összes forrás frissítése";
+"Source_Management_Timeout_Prompt" = "Állítsa be a frissítési időkorlátot másodpercben.";
+"Source_Management_Concurrency_Prompt" = "Állítsa be a párhuzamos forrásfrissítések maximális számát. Használja a 0 értéket az Automatikus beállításhoz.";
+"Source_Management_Auto_Disable_Prompt" = "Állítsa be, hogy hány egymást követő időtúllépés után történjen automatikus letiltás. Használja a 0 értéket a Soha beállításhoz.";
+"Source_Management_HTTP_Error_Prompt" = "Állítsa be, hogy hány egymást követő webhelyállapot-hiba tiltsa le automatikusan a forrást. Használja a 0 értéket a Soha beállításhoz. A következőkre vonatkozik: HTTP 400, 401, 403, 404, 410 és 451.";
+"Source_Disabled_Manual" = "Kézzel letiltva";
+"Source_Disabled_AutoTimeout" = "Automatikusan letiltva %d egymást követő időtúllépés után";
+"Source_Disabled_AutoHTTPStatus" = "Automatikusan letiltva %d egymást követő webhelyhiba után (utolsó: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automatikusan letiltva %d egymást követő webhelyhiba után";
+"Disabled_Sources_Manual_Section" = "Kézzel letiltva";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatikusan letiltva - időtúllépések";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatikusan letiltva - webhelyhibák";
+"Disabled_Sources_Empty" = "Nincsenek letiltott források";

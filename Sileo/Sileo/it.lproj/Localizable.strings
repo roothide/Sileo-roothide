@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Gestione sorgenti";
+"Source_Management_Short" = "Gestisci";
+"Source_Refresh_Timeout" = "Timeout di aggiornamento delle sorgenti";
+"Source_Refresh_Concurrency" = "Concorrenza di aggiornamento delle sorgenti";
+"Source_Auto_Disable_On_Timeouts" = "Disattiva automaticamente per timeout";
+"Source_Auto_Disable_After_Timeouts" = "Disattiva automaticamente dopo i timeout";
+"Source_Auto_Disable_On_HTTP_Errors" = "Disattiva automaticamente per errori del sito web";
+"Source_Auto_Disable_After_HTTP_Errors" = "Disattiva automaticamente dopo gli errori del sito web";
+"Source_Search.Placeholder" = "Cerca nome sorgente o URL";
+"Disabled_Sources" = "Sorgenti disattivate";
+"Refresh_Active_Sources" = "Aggiorna sorgenti attive";
+"Refresh_All_Sources" = "Aggiorna tutte le sorgenti";
+"Source_Management_Timeout_Prompt" = "Imposta il timeout di aggiornamento in secondi.";
+"Source_Management_Concurrency_Prompt" = "Imposta il numero massimo di aggiornamenti simultanei delle sorgenti. Usa 0 per Automatico.";
+"Source_Management_Auto_Disable_Prompt" = "Imposta quanti timeout consecutivi attivano la disattivazione automatica. Usa 0 per Mai.";
+"Source_Management_HTTP_Error_Prompt" = "Imposta quanti errori di stato del sito web consecutivi disattivano automaticamente una sorgente. Usa 0 per Mai. Si applica a HTTP 400, 401, 403, 404, 410 e 451.";
+"Source_Disabled_Manual" = "Disattivata manualmente";
+"Source_Disabled_AutoTimeout" = "Disattivata automaticamente dopo %d timeout consecutivi";
+"Source_Disabled_AutoHTTPStatus" = "Disattivata automaticamente dopo %d errori consecutivi del sito web (ultimo: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Disattivata automaticamente dopo %d errori consecutivi del sito web";
+"Disabled_Sources_Manual_Section" = "Disattivate manualmente";
+"Disabled_Sources_Auto_Timeout_Section" = "Disattivate automaticamente - timeout";
+"Disabled_Sources_Auto_HTTP_Section" = "Disattivate automaticamente - errori del sito web";
+"Disabled_Sources_Empty" = "Nessuna sorgente disattivata";

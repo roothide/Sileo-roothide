@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "ניהול מקורות";
+"Source_Management_Short" = "ניהול";
+"Source_Refresh_Timeout" = "פסק זמן לרענון מקורות";
+"Source_Refresh_Concurrency" = "מספר רענוני מקורות במקביל";
+"Source_Auto_Disable_On_Timeouts" = "השבתה אוטומטית בעת פסקי זמן";
+"Source_Auto_Disable_After_Timeouts" = "השבתה אוטומטית לאחר פסקי זמן";
+"Source_Auto_Disable_On_HTTP_Errors" = "השבתה אוטומטית בעת שגיאות אתר";
+"Source_Auto_Disable_After_HTTP_Errors" = "השבתה אוטומטית לאחר שגיאות אתר";
+"Source_Search.Placeholder" = "חפש שם מקור או URL";
+"Disabled_Sources" = "מקורות מושבתים";
+"Refresh_Active_Sources" = "רענן מקורות פעילים";
+"Refresh_All_Sources" = "רענן את כל המקורות";
+"Source_Management_Timeout_Prompt" = "הגדר את פסק הזמן לרענון בשניות.";
+"Source_Management_Concurrency_Prompt" = "הגדר את המספר המרבי של רענוני מקורות במקביל. השתמש ב-0 עבור אוטומטי.";
+"Source_Management_Auto_Disable_Prompt" = "הגדר כמה פסקי זמן רצופים יפעילו השבתה אוטומטית. השתמש ב-0 עבור לעולם לא.";
+"Source_Management_HTTP_Error_Prompt" = "הגדר כמה שגיאות מצב אתר רצופות ישביתו מקור אוטומטית. השתמש ב-0 עבור לעולם לא. חל על HTTP 400, 401, 403, 404, 410 ו-451.";
+"Source_Disabled_Manual" = "הושבת ידנית";
+"Source_Disabled_AutoTimeout" = "הושבת אוטומטית לאחר %d פסקי זמן רצופים";
+"Source_Disabled_AutoHTTPStatus" = "הושבת אוטומטית לאחר %d שגיאות אתר רצופות (אחרונה: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "הושבת אוטומטית לאחר %d שגיאות אתר רצופות";
+"Disabled_Sources_Manual_Section" = "מושבתים ידנית";
+"Disabled_Sources_Auto_Timeout_Section" = "מושבתים אוטומטית - פסקי זמן";
+"Disabled_Sources_Auto_HTTP_Section" = "מושבתים אוטומטית - שגיאות אתר";
+"Disabled_Sources_Empty" = "אין מקורות מושבתים";

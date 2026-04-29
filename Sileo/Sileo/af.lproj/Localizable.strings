@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Bronbestuur";
+"Source_Management_Short" = "Bestuur";
+"Source_Refresh_Timeout" = "Bronverfris wagtyd";
+"Source_Refresh_Concurrency" = "Gelyktydige bronverfrissings";
+"Source_Auto_Disable_On_Timeouts" = "Deaktiveer outomaties by wagtydverstryking";
+"Source_Auto_Disable_After_Timeouts" = "Outomaties deaktiveer ná wagtydverstryking";
+"Source_Auto_Disable_On_HTTP_Errors" = "Deaktiveer outomaties by webwerf-foute";
+"Source_Auto_Disable_After_HTTP_Errors" = "Outomaties deaktiveer ná webwerf-foute";
+"Source_Search.Placeholder" = "Soek bronnaam of URL";
+"Disabled_Sources" = "Gedeaktiveerde bronne";
+"Refresh_Active_Sources" = "Verfris aktiewe bronne";
+"Refresh_All_Sources" = "Verfris alle bronne";
+"Source_Management_Timeout_Prompt" = "Stel die verfris wagtyd in sekondes.";
+"Source_Management_Concurrency_Prompt" = "Stel die maksimum gelyktydige bronverfrissings. Gebruik 0 vir Outomaties.";
+"Source_Management_Auto_Disable_Prompt" = "Stel hoeveel opeenvolgende wagtydverstrykinge outomatiese deaktivering veroorsaak. Gebruik 0 vir Nooit.";
+"Source_Management_HTTP_Error_Prompt" = "Stel hoeveel opeenvolgende webwerfstatusfoute 'n bron outomaties deaktiveer. Gebruik 0 vir Nooit. Geld vir HTTP 400, 401, 403, 404, 410 en 451.";
+"Source_Disabled_Manual" = "Handmatig gedeaktiveer";
+"Source_Disabled_AutoTimeout" = "Outomaties gedeaktiveer na %d opeenvolgende wagtydverstrykinge";
+"Source_Disabled_AutoHTTPStatus" = "Outomaties gedeaktiveer na %d opeenvolgende webwerf-foute (laaste: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Outomaties gedeaktiveer na %d opeenvolgende webwerf-foute";
+"Disabled_Sources_Manual_Section" = "Handmatig gedeaktiveer";
+"Disabled_Sources_Auto_Timeout_Section" = "Outomaties gedeaktiveer - wagtydverstrykinge";
+"Disabled_Sources_Auto_HTTP_Section" = "Outomaties gedeaktiveer - webwerf-foute";
+"Disabled_Sources_Empty" = "Geen gedeaktiveerde bronne nie";

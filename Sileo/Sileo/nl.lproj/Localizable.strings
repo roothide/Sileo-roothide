@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Bronbeheer";
+"Source_Management_Short" = "Beheren";
+"Source_Refresh_Timeout" = "Time-out voor bronverversing";
+"Source_Refresh_Concurrency" = "Gelijktijdige bronverversingen";
+"Source_Auto_Disable_On_Timeouts" = "Automatisch uitschakelen bij time-outs";
+"Source_Auto_Disable_After_Timeouts" = "Automatisch uitschakelen na time-outs";
+"Source_Auto_Disable_On_HTTP_Errors" = "Automatisch uitschakelen bij websitefouten";
+"Source_Auto_Disable_After_HTTP_Errors" = "Automatisch uitschakelen na websitefouten";
+"Source_Search.Placeholder" = "Zoek naar bronnaam of URL";
+"Disabled_Sources" = "Uitgeschakelde bronnen";
+"Refresh_Active_Sources" = "Actieve bronnen verversen";
+"Refresh_All_Sources" = "Alle bronnen verversen";
+"Source_Management_Timeout_Prompt" = "Stel de verversingstime-out in seconden in.";
+"Source_Management_Concurrency_Prompt" = "Stel het maximale aantal gelijktijdige bronverversingen in. Gebruik 0 voor Automatisch.";
+"Source_Management_Auto_Disable_Prompt" = "Stel in na hoeveel opeenvolgende time-outs automatisch wordt uitgeschakeld. Gebruik 0 voor Nooit.";
+"Source_Management_HTTP_Error_Prompt" = "Stel in na hoeveel opeenvolgende statusfouten van de website een bron automatisch wordt uitgeschakeld. Gebruik 0 voor Nooit. Van toepassing op HTTP 400, 401, 403, 404, 410 en 451.";
+"Source_Disabled_Manual" = "Handmatig uitgeschakeld";
+"Source_Disabled_AutoTimeout" = "Automatisch uitgeschakeld na %d opeenvolgende time-outs";
+"Source_Disabled_AutoHTTPStatus" = "Automatisch uitgeschakeld na %d opeenvolgende websitefouten (laatste: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automatisch uitgeschakeld na %d opeenvolgende websitefouten";
+"Disabled_Sources_Manual_Section" = "Handmatig uitgeschakeld";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatisch uitgeschakeld - time-outs";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatisch uitgeschakeld - websitefouten";
+"Disabled_Sources_Empty" = "Geen uitgeschakelde bronnen";

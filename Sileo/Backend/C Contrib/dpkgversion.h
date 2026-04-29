@@ -10,6 +10,7 @@
 #define dpkgversion_h
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@
 struct DpkgVersion {
     char *version;
     char *revision;
-    uint epoch;
+    unsigned int epoch;
     uint8_t requiresFree;
 };
 

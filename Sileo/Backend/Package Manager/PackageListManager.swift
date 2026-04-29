@@ -65,6 +65,7 @@ final class PackageListManager {
             let operations: [BlockOperation] = repoList.map { repo in
                 return BlockOperation {
                     repo.packageDict = PackageListManager.readPackages(repoContext: repo)
+                    repoMan.applyStoredState(to: repo)
                 }
             }
             self.operationQueue.addOperations(operations, waitUntilFinished: true)

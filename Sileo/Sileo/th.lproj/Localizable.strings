@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "การจัดการแหล่งซอฟต์แวร์";
+"Source_Management_Short" = "จัดการ";
+"Source_Refresh_Timeout" = "หมดเวลาการรีเฟรชแหล่งซอฟต์แวร์";
+"Source_Refresh_Concurrency" = "จำนวนการรีเฟรชแหล่งซอฟต์แวร์พร้อมกัน";
+"Source_Auto_Disable_On_Timeouts" = "ปิดใช้งานอัตโนมัติเมื่อหมดเวลา";
+"Source_Auto_Disable_After_Timeouts" = "ปิดใช้งานอัตโนมัติหลังหมดเวลา";
+"Source_Auto_Disable_On_HTTP_Errors" = "ปิดใช้งานอัตโนมัติเมื่อเกิดข้อผิดพลาดของเว็บไซต์";
+"Source_Auto_Disable_After_HTTP_Errors" = "ปิดใช้งานอัตโนมัติหลังเกิดข้อผิดพลาดของเว็บไซต์";
+"Source_Search.Placeholder" = "ค้นหาชื่อแหล่งซอฟต์แวร์หรือ URL";
+"Disabled_Sources" = "แหล่งซอฟต์แวร์ที่ถูกปิดใช้งาน";
+"Refresh_Active_Sources" = "รีเฟรชแหล่งซอฟต์แวร์ที่ใช้งานอยู่";
+"Refresh_All_Sources" = "รีเฟรชแหล่งซอฟต์แวร์ทั้งหมด";
+"Source_Management_Timeout_Prompt" = "ตั้งค่าระยะหมดเวลาการรีเฟรชเป็นวินาที";
+"Source_Management_Concurrency_Prompt" = "ตั้งค่าจำนวนสูงสุดของการรีเฟรชแหล่งซอฟต์แวร์พร้อมกัน ใช้ 0 สำหรับอัตโนมัติ";
+"Source_Management_Auto_Disable_Prompt" = "ตั้งค่าว่าต้องหมดเวลากี่ครั้งติดต่อกันจึงจะปิดใช้งานอัตโนมัติ ใช้ 0 สำหรับไม่ปิดใช้งาน";
+"Source_Management_HTTP_Error_Prompt" = "ตั้งค่าว่าข้อผิดพลาดสถานะเว็บไซต์กี่ครั้งติดต่อกันจึงจะปิดใช้งานแหล่งซอฟต์แวร์อัตโนมัติ ใช้ 0 สำหรับไม่ปิดใช้งาน ใช้กับ HTTP 400, 401, 403, 404, 410 และ 451";
+"Source_Disabled_Manual" = "ปิดใช้งานด้วยตนเอง";
+"Source_Disabled_AutoTimeout" = "ถูกปิดใช้งานอัตโนมัติหลังหมดเวลา %d ครั้งติดต่อกัน";
+"Source_Disabled_AutoHTTPStatus" = "ถูกปิดใช้งานอัตโนมัติหลังเกิดข้อผิดพลาดของเว็บไซต์ %d ครั้งติดต่อกัน (ล่าสุด: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "ถูกปิดใช้งานอัตโนมัติหลังเกิดข้อผิดพลาดของเว็บไซต์ %d ครั้งติดต่อกัน";
+"Disabled_Sources_Manual_Section" = "ปิดใช้งานด้วยตนเอง";
+"Disabled_Sources_Auto_Timeout_Section" = "ปิดใช้งานอัตโนมัติ - หมดเวลา";
+"Disabled_Sources_Auto_HTTP_Section" = "ปิดใช้งานอัตโนมัติ - ข้อผิดพลาดของเว็บไซต์";
+"Disabled_Sources_Empty" = "ไม่มีแหล่งซอฟต์แวร์ที่ถูกปิดใช้งาน";

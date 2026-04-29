@@ -28,6 +28,14 @@ public extension UserDefaults {
     func bool(forKey key: String, fallback: Bool = false) -> Bool {
         self.object(forKey: key) as? Bool ?? fallback
     }
+
+    func integer(forKey key: String, fallback: Int = 0) -> Int {
+        self.object(forKey: key) as? Int ?? fallback
+    }
+
+    func double(forKey key: String, fallback: Double = 0) -> Double {
+        self.object(forKey: key) as? Double ?? fallback
+    }
     
     func checkRegister(object: Any, for key: String) {
         if self.data(forKey: key) == nil {

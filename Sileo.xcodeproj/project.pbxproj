@@ -78,7 +78,7 @@
 		49FB3894266074B90029CAFF /* SileoRootWrapper.bundle in Embed PlugIns */ = {isa = PBXBuildFile; fileRef = 49FB388B2660745F0029CAFF /* SileoRootWrapper.bundle */; platformFilter = maccatalyst; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		56A5989B214657A700677FCA /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = 56A5989A214657A700677FCA /* ZKSwizzle.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		56A5989D214657BB00677FCA /* WhiteBlur.m in Sources */ = {isa = PBXBuildFile; fileRef = 56A5989C214657BB00677FCA /* WhiteBlur.m */; };
-		842F23EF2AA3251B00EE2E9A /* libroothide.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 842F23ED2AA3250800EE2E9A /* libroothide.tbd */; };
+		84D9A0012E10F00100A1B2C3 /* RootHideCompat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 84D9A0022E10F00100A1B2C3 /* RootHideCompat.mm */; };
 		84588F712CAD2B2C00EBCA16 /* DepictionTableTextButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84588F702CAD2B2C00EBCA16 /* DepictionTableTextButtonView.swift */; };
 		845FA84F2BE9AC8D009C564D /* AppFileShare.m in Sources */ = {isa = PBXBuildFile; fileRef = 845FA84E2BE9AC8D009C564D /* AppFileShare.m */; };
 		845FA8522BE9AF2E009C564D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 845FA8512BE9AF2E009C564D /* MobileCoreServices.framework */; };
@@ -1297,6 +1297,7 @@
 		56A5989E2146584800677FCA /* WhiteBlur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WhiteBlur.h; sourceTree = "<group>"; };
 		842F23ED2AA3250800EE2E9A /* libroothide.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; path = libroothide.tbd; sourceTree = "<group>"; };
 		842F23EE2AA3250800EE2E9A /* roothide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = roothide.h; sourceTree = "<group>"; };
+		84D9A0022E10F00100A1B2C3 /* RootHideCompat.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RootHideCompat.mm; sourceTree = "<group>"; };
 		84588F702CAD2B2C00EBCA16 /* DepictionTableTextButtonView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DepictionTableTextButtonView.swift; sourceTree = "<group>"; };
 		845FA84E2BE9AC8D009C564D /* AppFileShare.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppFileShare.m; sourceTree = "<group>"; };
 		845FA8502BE9ACA3009C564D /* AppFileShare.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppFileShare.h; sourceTree = "<group>"; };
@@ -1725,7 +1726,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				845FA8522BE9AF2E009C564D /* MobileCoreServices.framework in Frameworks */,
-				842F23EF2AA3251B00EE2E9A /* libroothide.tbd in Frameworks */,
 				E14C5ED126680E030080BFCE /* libz.tbd in Frameworks */,
 				E14C5EC7266803EA0080BFCE /* libbz2.tbd in Frameworks */,
 				E13638F22614F6C000698D55 /* SQLite in Frameworks */,
@@ -1738,9 +1738,7 @@
 				E162DA0627BE78CF00DDD3E4 /* Alderis in Frameworks */,
 				E172ACE7279490DF0066933E /* Down in Frameworks */,
 				84B37E1F2AFFBDFD00B2400E /* Evander in Frameworks */,
-				E1C92EE5294B5B8B007079E8 /* liblzma.5.tbd in Frameworks */,
 				E1D90DC02A30E77400F8CBAF /* Onboarding in Frameworks */,
-				A8A0EA4B2665AAC900CD772C /* libzstd.1.tbd in Frameworks */,
 				E19F95A0269245E4002ABB8C /* LNPopupController-Static in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2552,6 +2550,7 @@
 				E1A0646229EB05CD00B9E0B1 /* Jailbreak.swift */,
 				E1A0646629EB16C400B9E0B1 /* Bootstrap.swift */,
 				E1A0646A29EB25CF00B9E0B1 /* CommandPaths.swift */,
+				84D9A0022E10F00100A1B2C3 /* RootHideCompat.mm */,
 			);
 			path = "Root Wrapper";
 			sourceTree = "<group>";
@@ -4596,6 +4595,7 @@
 				FBBD003A240C31B4008E11B2 /* NewsArticleCollectionViewCell.swift in Sources */,
 				370531E0282059BB00B67743 /* ThemesSectionViewController.swift in Sources */,
 				FBDE129B24A91A2800138A7E /* PaymentAuthenticator.swift in Sources */,
+				84D9A0012E10F00100A1B2C3 /* RootHideCompat.mm in Sources */,
 				F170DD7D22CFE79800196FDA /* RootWrapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5202,6 +5202,8 @@
 				MARKETING_VERSION = "2.5.1-12";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "$(inherited) -lroothide $(PROJECT_DIR)/Deps/liblzma/liblzma.5.tbd $(PROJECT_DIR)/Deps/libzstd/libzstd.1.tbd";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "$(inherited) $(SDKROOT)/usr/lib/liblzma.5.tbd";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = sileo;
 				PRODUCT_MODULE_NAME = Sileo;
@@ -5654,6 +5656,8 @@
 				MARKETING_VERSION = "2.5.1-12";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "$(inherited) -lroothide $(PROJECT_DIR)/Deps/liblzma/liblzma.5.tbd $(PROJECT_DIR)/Deps/libzstd/libzstd.1.tbd";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "$(inherited) $(SDKROOT)/usr/lib/liblzma.5.tbd";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = sileo;
 				PRODUCT_MODULE_NAME = Sileo;
@@ -5719,6 +5723,8 @@
 				MARKETING_VERSION = "2.5.1-12";
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "$(inherited) -lroothide $(PROJECT_DIR)/Deps/liblzma/liblzma.5.tbd $(PROJECT_DIR)/Deps/libzstd/libzstd.1.tbd";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "$(inherited) $(SDKROOT)/usr/lib/liblzma.5.tbd";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amywhile.sileo;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = sileo;
 				PRODUCT_MODULE_NAME = Sileo;

@@ -246,3 +246,29 @@ Die Quelle ist möglicherweise offline oder du hast sie falsch eingegeben. Möch
 "Whats_Collected" = "Was wurde gesammelt";
 "Non_Identifying" = "Es werden nur Paket- und nicht identifizierende Geräteinformationen gesammelt.";
 "Privacy_Policy" = "Datenschutzerklärung";
+
+// Source Management
+"Source_Management" = "Quellenverwaltung";
+"Source_Management_Short" = "Verwalten";
+"Source_Refresh_Timeout" = "Zeitlimit für Quellenaktualisierung";
+"Source_Refresh_Concurrency" = "Gleichzeitige Quellenaktualisierungen";
+"Source_Auto_Disable_On_Timeouts" = "Bei Zeitüberschreitung automatisch deaktivieren";
+"Source_Auto_Disable_After_Timeouts" = "Nach Zeitüberschreitungen automatisch deaktivieren";
+"Source_Auto_Disable_On_HTTP_Errors" = "Bei Website-Fehlern automatisch deaktivieren";
+"Source_Auto_Disable_After_HTTP_Errors" = "Nach Website-Fehlern automatisch deaktivieren";
+"Source_Search.Placeholder" = "Nach Quellenname oder URL suchen";
+"Disabled_Sources" = "Deaktivierte Quellen";
+"Refresh_Active_Sources" = "Aktive Quellen aktualisieren";
+"Refresh_All_Sources" = "Alle Quellen aktualisieren";
+"Source_Management_Timeout_Prompt" = "Legen Sie das Zeitlimit für die Aktualisierung in Sekunden fest.";
+"Source_Management_Concurrency_Prompt" = "Legen Sie die maximale Anzahl gleichzeitiger Quellenaktualisierungen fest. Verwenden Sie 0 für Automatisch.";
+"Source_Management_Auto_Disable_Prompt" = "Legen Sie fest, nach wie vielen aufeinanderfolgenden Zeitüberschreitungen automatisch deaktiviert wird. Verwenden Sie 0 für Nie.";
+"Source_Management_HTTP_Error_Prompt" = "Legen Sie fest, nach wie vielen aufeinanderfolgenden Website-Statusfehlern eine Quelle automatisch deaktiviert wird. Verwenden Sie 0 für Nie. Gilt für HTTP 400, 401, 403, 404, 410 und 451.";
+"Source_Disabled_Manual" = "Manuell deaktiviert";
+"Source_Disabled_AutoTimeout" = "Nach %d aufeinanderfolgenden Zeitüberschreitungen automatisch deaktiviert";
+"Source_Disabled_AutoHTTPStatus" = "Nach %d aufeinanderfolgenden Website-Fehlern automatisch deaktiviert (zuletzt: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Nach %d aufeinanderfolgenden Website-Fehlern automatisch deaktiviert";
+"Disabled_Sources_Manual_Section" = "Manuell deaktiviert";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatisch deaktiviert - Zeitüberschreitungen";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatisch deaktiviert - Website-Fehler";
+"Disabled_Sources_Empty" = "Keine deaktivierten Quellen";

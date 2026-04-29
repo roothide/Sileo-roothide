@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Управление источниками";
+"Source_Management_Short" = "Управлять";
+"Source_Refresh_Timeout" = "Тайм-аут обновления источников";
+"Source_Refresh_Concurrency" = "Параллельное обновление источников";
+"Source_Auto_Disable_On_Timeouts" = "Автоматически отключать при тайм-ауте";
+"Source_Auto_Disable_After_Timeouts" = "Автоматически отключать после тайм-аутов";
+"Source_Auto_Disable_On_HTTP_Errors" = "Автоматически отключать при ошибках сайта";
+"Source_Auto_Disable_After_HTTP_Errors" = "Автоматически отключать после ошибок сайта";
+"Source_Search.Placeholder" = "Искать имя источника или URL";
+"Disabled_Sources" = "Отключенные источники";
+"Refresh_Active_Sources" = "Обновить активные источники";
+"Refresh_All_Sources" = "Обновить все источники";
+"Source_Management_Timeout_Prompt" = "Укажите тайм-аут обновления в секундах.";
+"Source_Management_Concurrency_Prompt" = "Укажите максимальное число одновременных обновлений источников. Используйте 0 для Авто.";
+"Source_Management_Auto_Disable_Prompt" = "Укажите, сколько последовательных тайм-аутов запускают автоматическое отключение. Используйте 0 для Никогда.";
+"Source_Management_HTTP_Error_Prompt" = "Укажите, сколько последовательных ошибок статуса сайта автоматически отключают источник. Используйте 0 для Никогда. Применяется к HTTP 400, 401, 403, 404, 410 и 451.";
+"Source_Disabled_Manual" = "Отключено вручную";
+"Source_Disabled_AutoTimeout" = "Автоматически отключено после %d последовательных тайм-аутов";
+"Source_Disabled_AutoHTTPStatus" = "Автоматически отключено после %d последовательных ошибок сайта (последняя: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Автоматически отключено после %d последовательных ошибок сайта";
+"Disabled_Sources_Manual_Section" = "Отключенные вручную";
+"Disabled_Sources_Auto_Timeout_Section" = "Автоматически отключенные - тайм-ауты";
+"Disabled_Sources_Auto_HTTP_Section" = "Автоматически отключенные - ошибки сайта";
+"Disabled_Sources_Empty" = "Нет отключенных источников";

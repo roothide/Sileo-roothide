@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Gestion des sources";
+"Source_Management_Short" = "Gérer";
+"Source_Refresh_Timeout" = "Délai d'actualisation des sources";
+"Source_Refresh_Concurrency" = "Concurrence d'actualisation des sources";
+"Source_Auto_Disable_On_Timeouts" = "Désactiver automatiquement en cas de délai d'expiration";
+"Source_Auto_Disable_After_Timeouts" = "Désactiver automatiquement après des délais d'expiration";
+"Source_Auto_Disable_On_HTTP_Errors" = "Désactiver automatiquement en cas d'erreurs du site web";
+"Source_Auto_Disable_After_HTTP_Errors" = "Désactiver automatiquement après des erreurs du site web";
+"Source_Search.Placeholder" = "Rechercher le nom ou l'URL de la source";
+"Disabled_Sources" = "Sources désactivées";
+"Refresh_Active_Sources" = "Actualiser les sources actives";
+"Refresh_All_Sources" = "Actualiser toutes les sources";
+"Source_Management_Timeout_Prompt" = "Définissez le délai d'actualisation en secondes.";
+"Source_Management_Concurrency_Prompt" = "Définissez le nombre maximal d'actualisations de sources simultanées. Utilisez 0 pour Automatique.";
+"Source_Management_Auto_Disable_Prompt" = "Définissez le nombre de délais d'expiration consécutifs qui déclenchent la désactivation automatique. Utilisez 0 pour Jamais.";
+"Source_Management_HTTP_Error_Prompt" = "Définissez le nombre d'erreurs d'état du site web consécutives qui désactivent automatiquement une source. Utilisez 0 pour Jamais. S'applique aux HTTP 400, 401, 403, 404, 410 et 451.";
+"Source_Disabled_Manual" = "Désactivée manuellement";
+"Source_Disabled_AutoTimeout" = "Désactivée automatiquement après %d délais d'expiration consécutifs";
+"Source_Disabled_AutoHTTPStatus" = "Désactivée automatiquement après %d erreurs de site web consécutives (dernière : HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Désactivée automatiquement après %d erreurs de site web consécutives";
+"Disabled_Sources_Manual_Section" = "Désactivées manuellement";
+"Disabled_Sources_Auto_Timeout_Section" = "Désactivées automatiquement - délais d'expiration";
+"Disabled_Sources_Auto_HTTP_Section" = "Désactivées automatiquement - erreurs du site web";
+"Disabled_Sources_Empty" = "Aucune source désactivée";

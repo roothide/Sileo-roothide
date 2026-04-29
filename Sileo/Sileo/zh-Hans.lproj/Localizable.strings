@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "软件源管理";
+"Source_Management_Short" = "管理";
+"Source_Refresh_Timeout" = "软件源刷新超时";
+"Source_Refresh_Concurrency" = "软件源刷新并发数";
+"Source_Auto_Disable_On_Timeouts" = "超时时自动禁用";
+"Source_Auto_Disable_After_Timeouts" = "超时后自动禁用";
+"Source_Auto_Disable_On_HTTP_Errors" = "网站错误时自动禁用";
+"Source_Auto_Disable_After_HTTP_Errors" = "网站错误后自动禁用";
+"Source_Search.Placeholder" = "搜索源名称或 URL";
+"Disabled_Sources" = "已禁用的软件源";
+"Refresh_Active_Sources" = "刷新启用中的软件源";
+"Refresh_All_Sources" = "刷新所有软件源";
+"Source_Management_Timeout_Prompt" = "设置刷新超时时间（秒）。";
+"Source_Management_Concurrency_Prompt" = "设置软件源刷新的最大并发数。0 表示自动。";
+"Source_Management_Auto_Disable_Prompt" = "设置连续超时多少次后自动禁用。0 表示永不。";
+"Source_Management_HTTP_Error_Prompt" = "设置连续网站状态错误多少次后自动禁用。0 表示永不。适用于 HTTP 400、401、403、404、410、451 和 522。";
+"Source_Disabled_Manual" = "手动禁用";
+"Source_Disabled_AutoTimeout" = "连续超时 %d 次后自动禁用";
+"Source_Disabled_AutoHTTPStatus" = "连续网站错误 %d 次后自动禁用（最后一次：HTTP %d）";
+"Source_Disabled_AutoHTTPStatus_Generic" = "连续网站错误 %d 次后自动禁用";
+"Disabled_Sources_Manual_Section" = "手动禁用";
+"Disabled_Sources_Auto_Timeout_Section" = "自动禁用 - 超时";
+"Disabled_Sources_Auto_HTTP_Section" = "自动禁用 - 网站错误";
+"Disabled_Sources_Empty" = "没有已禁用的软件源";

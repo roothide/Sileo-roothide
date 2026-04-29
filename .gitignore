@@ -9,3 +9,12 @@
 
 /giveMeRoot/bin/
 /packages/
+
+.serena
+outputs
+docs/plans
+
+docs/requirements
+
+.vibeskills
+docs/analysis

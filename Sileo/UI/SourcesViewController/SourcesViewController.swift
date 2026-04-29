@@ -11,6 +11,7 @@ import Evander
 
 final class SourcesViewController: SileoViewController {
     private var sortedRepoList: [Repo] = []
+    private var filteredRepoList: [Repo] = []
     var updatingRepoList: [Repo] = []
     
     var presentRepoUrl: URL?
@@ -18,6 +19,7 @@ final class SourcesViewController: SileoViewController {
     var detailedPageUserPresent = false
     
     private var tableView = SileoTableView(frame: .zero, style: .plain)
+    private let searchController = UISearchController(searchResultsController: nil)
     public var refreshControl = UIRefreshControl()
     private var inRefreshing = false
     
@@ -36,7 +38,7 @@ final class SourcesViewController: SileoViewController {
                                                object: nil)
         
         NotificationCenter.default.addObserver(forName: SourcesViewController.refreshReposNotification, object: nil, queue: .main) { _ in
-            self.refreshSources(forceUpdate: false, forceReload: false, isBackground: true, useRefreshControl: false, useErrorScreen: false, completion: nil)
+            self.refreshSources(forceUpdate: false, forceReload: false, isBackground: true, useRefreshControl: false, useErrorScreen: false, includeAutoDisabled: false, completion: nil)
         }
         
         NotificationCenter.default.addObserver(forName: SourcesViewController.reloadDataNotification, object: nil, queue: .main) { _ in
@@ -45,11 +47,9 @@ final class SourcesViewController: SileoViewController {
     }
     
     func canEditRow(indexPath: IndexPath) -> Bool {
-        if indexPath.section == 0 {
+        guard let repo = repo(at: indexPath) else {
             return false
         }
-        
-        let repo = sortedRepoList[indexPath.row]
         if Jailbreak.bootstrap == .procursus {
             return repo.entryFile.hasSuffix("/sileo.sources")
         }
@@ -60,8 +60,7 @@ final class SourcesViewController: SileoViewController {
         let categoryVC = CategoryViewController(style: .plain)
         categoryVC.title = String(localizationKey: "All_Packages.Title")
         
-        if indexPath.section == 1 {
-            let repo = sortedRepoList[indexPath.row]
+        if let repo = repo(at: indexPath) {
             categoryVC.repoContext = repo
             categoryVC.title = repo.repoName
         }
@@ -72,8 +71,151 @@ final class SourcesViewController: SileoViewController {
         return categoryVC
     }
 
+    private var currentSearchText: String {
+        searchController.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private var isFilteringRepos: Bool {
+        !currentSearchText.isEmpty
+    }
+
+    private var displayedRepoList: [Repo] {
+        isFilteringRepos ? filteredRepoList : sortedRepoList
+    }
+
+    private var repoSection: Int {
+        isFilteringRepos ? 0 : 1
+    }
+
+    private func ensureSearchControllerAttached() {
+        if navigationItem.searchController !== searchController {
+            navigationItem.searchController = searchController
+        }
+    }
+
+    private func configureSearchController() {
+        searchController.searchBar.placeholder = String(localizationKey: "Source_Search.Placeholder")
+        if #available(iOS 13.0, *) {
+            searchController.searchBar.searchTextField.semanticContentAttribute = (LanguageHelper.shared.isRtl ?? false) ? .forceRightToLeft : .forceLeftToRight
+        } else {
+            let textField = searchController.searchBar.value(forKey: "searchField") as? UITextField
+            textField?.semanticContentAttribute = (LanguageHelper.shared.isRtl ?? false) ? .forceRightToLeft : .forceLeftToRight
+        }
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.hidesNavigationBarDuringPresentation = false
+        ensureSearchControllerAttached()
+        navigationItem.hidesSearchBarWhenScrolling = true
+        definesPresentationContext = true
+    }
+
+    private func applySearchFilter() {
+        let query = currentSearchText
+        guard !query.isEmpty else {
+            filteredRepoList.removeAll()
+            return
+        }
+        filteredRepoList = sortedRepoList.filter { repo in
+            repo.displayName.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil ||
+            repo.displayURL.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+        }
+    }
+
+    private func repo(at indexPath: IndexPath) -> Repo? {
+        guard indexPath.section == repoSection, displayedRepoList.indices.contains(indexPath.row) else {
+            return nil
+        }
+        return displayedRepoList[indexPath.row]
+    }
+
+    private func indexPath(for repo: Repo) -> IndexPath? {
+        guard let row = displayedRepoList.firstIndex(of: repo) else {
+            return nil
+        }
+        return IndexPath(row: row, section: repoSection)
+    }
+
     @objc func detailedPageUserInteracted() {
         self.detailedPageUserPresent = true
+    }
+
+    private func makeRefreshBarButtonItem() -> UIBarButtonItem {
+        UIBarButtonItem(title: String(localizationKey: "Refresh"),
+                        style: .plain,
+                        target: self,
+                        action: #selector(showRefreshOptions(_:)))
+    }
+
+    private func makeSourceManagementBarButtonItem() -> UIBarButtonItem {
+        if #available(iOS 13.0, *) {
+            let item = UIBarButtonItem(image: UIImage(systemName: "slider.horizontal.3"),
+                                       style: .plain,
+                                       target: self,
+                                       action: #selector(showSourceManagement(_:)))
+            item.accessibilityLabel = String(localizationKey: "Source_Management")
+            return item
+        }
+        return UIBarButtonItem(title: String(localizationKey: "Source_Management_Short"),
+                               style: .plain,
+                               target: self,
+                               action: #selector(showSourceManagement(_:)))
+    }
+
+    private func makeSearchBarButtonItem() -> UIBarButtonItem {
+        if #available(iOS 13.0, *) {
+            let item = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"),
+                                       style: .plain,
+                                       target: self,
+                                       action: #selector(activateSearch(_:)))
+            item.accessibilityLabel = String(localizationKey: "Search_Page")
+            return item
+        }
+        return UIBarButtonItem(title: String(localizationKey: "Search_Page"),
+                               style: .plain,
+                               target: self,
+                               action: #selector(activateSearch(_:)))
+    }
+
+    private func makeAddBarButtonItem() -> UIBarButtonItem {
+        if #available(iOS 14.0, *) {
+            let promptAddRepoAction = UIAction(title: "Add Repo", image: .init(systemName: "plus.circle")) { _ in
+                self.addSource(nil)
+            }
+
+            let importReposAction = UIAction(title: "Import Repos", image: .init(systemName: "archivebox")) { _ in
+                self.promptImportRepos()
+            }
+
+            let menu = UIMenu(title: "Add Repos", children: [promptAddRepoAction, importReposAction])
+            return UIBarButtonItem(systemItem: .add, primaryAction: promptAddRepoAction, menu: menu)
+        }
+        return UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(self.addSource(_:)))
+    }
+
+    private func updateNavigationButtons(for editing: Bool) {
+        let nav = self.navigationItem
+        if editing {
+            nav.searchController = nil
+            let exportTitle = String(localizationKey: "Export")
+            nav.leftBarButtonItems = [UIBarButtonItem(title: String(localizationKey: "Done"),
+                                                      style: .done,
+                                                      target: self,
+                                                      action: #selector(self.toggleEditing(_:)))]
+            nav.rightBarButtonItems = [UIBarButtonItem(title: exportTitle,
+                                                       style: .plain,
+                                                       target: self,
+                                                       action: #selector(self.exportSources(_:)))]
+            return
+        }
+
+        ensureSearchControllerAttached()
+        #if targetEnvironment(macCatalyst)
+        nav.leftBarButtonItems = [makeRefreshBarButtonItem()]
+        nav.rightBarButtonItems = [makeAddBarButtonItem(), makeSourceManagementBarButtonItem()]
+        #else
+        nav.leftBarButtonItems = [makeSourceManagementBarButtonItem()]
+        nav.rightBarButtonItems = [makeAddBarButtonItem(), makeRefreshBarButtonItem()]
+        #endif
     }
 
     override func viewDidLoad() {
@@ -105,13 +247,11 @@ final class SourcesViewController: SileoViewController {
         self.tableView.separatorInset = UIEdgeInsets(top: 72, left: 0, bottom: 0, right: 0)
         self.tableView.separatorColor = UIColor(white: 0, alpha: 0.2)
         self.setEditing(false, animated: false)
+        configureSearchController()
+        reloadData()
         
         self.navigationController?.navigationBar.superview?.tag = WHITE_BLUR_TAG
-        #if targetEnvironment(macCatalyst)
-        let nav = self.navigationItem
-        nav.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addSource(_:)))
-        nav.leftBarButtonItem = UIBarButtonItem(title: "Refresh", style: .done, target: self, action: #selector(refreshSources(_:)))
-        #endif
+        updateNavigationButtons(for: false)
     
         NotificationCenter.default.addObserver(weakSelf as Any, selector: #selector(handleImageUpdate(_:)), name: SourcesTableViewCell.repoImageUpdate, object: nil)
         
@@ -123,6 +263,9 @@ final class SourcesViewController: SileoViewController {
 
     private func presentDefaultPage() {
         NSLog("SileoLog: presentDefaultPage \(self.splitViewController) \(self.splitViewController?.isCollapsed)")
+        guard !isFilteringRepos else {
+            return
+        }
         if self.splitViewController?.isCollapsed == false {
             let indexPath = IndexPath(row: 0, section: 0)
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
@@ -164,9 +307,9 @@ final class SourcesViewController: SileoViewController {
                 return
             }
 
-            let sourceSection = 1
+            let sourceSection = repoSection
             for i in 0..<tableView.numberOfRows(inSection: sourceSection) {
-                let repo = sortedRepoList[i]
+                let repo = displayedRepoList[i]
                 if repo.url == self.presentRepoUrl {
                     let indexPath = IndexPath(row: i, section: sourceSection)
                     tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
@@ -207,6 +350,7 @@ final class SourcesViewController: SileoViewController {
         NSLog("SileoLog: SourcesViewController.viewWillAppear")
         super.viewWillAppear(animated)
         updateSileoColors()
+        ensureSearchControllerAttached()
         
         if inRefreshing {
             if let refreshControl = tableView.refreshControl {
@@ -245,6 +389,14 @@ final class SourcesViewController: SileoViewController {
     @objc func toggleEditing(_ sender: Any?) {
         self.setEditing(!self.isEditing, animated: true)
     }
+
+    @objc private func activateSearch(_ sender: Any?) {
+        ensureSearchControllerAttached()
+        searchController.isActive = true
+        DispatchQueue.main.async {
+            self.searchController.searchBar.becomeFirstResponder()
+        }
+    }
     
     #if !targetEnvironment(macCatalyst)
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -252,30 +404,7 @@ final class SourcesViewController: SileoViewController {
         self.tableView.setEditing(editing, animated: animated)
         
         FRUIView.animate(withDuration: animated ? 0.2 : 0.0) {
-            let nav = self.navigationItem
-            
-            if editing {
-                let exportTitle = String(localizationKey: "Export")
-                nav.leftBarButtonItem = UIBarButtonItem(title: String(localizationKey: "Done"), style: .done, target: self, action: #selector(self.toggleEditing(_:)))
-                nav.rightBarButtonItem = UIBarButtonItem(title: exportTitle, style: .plain, target: self, action: #selector(self.exportSources(_:)))
-            } else {
-                nav.leftBarButtonItem = UIBarButtonItem(title: String(localizationKey: "Edit"), style: .done, target: self, action: #selector(self.toggleEditing(_:)))
-                if #available(iOS 14.0, *) {
-                    let promptAddRepoAction = UIAction(title: "Add Repo", image: .init(systemName: "plus.circle")) { _ in
-                        self.addSource(nil)
-                    }
-                    
-                    let importReposAction = UIAction(title: "Import Repos", image: .init(systemName: "archivebox")) { _ in
-                        self.promptImportRepos()
-                    }
-                    
-                    let menu = UIMenu(title: "Add Repos", children: [promptAddRepoAction, importReposAction])
-                    nav.rightBarButtonItem = UIBarButtonItem(systemItem: .add, primaryAction: promptAddRepoAction, menu: menu)
-                } else {
-                    nav.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(self.addSource(_:)))
-                }
-            }
-            
+            self.updateNavigationButtons(for: editing)
         }
     }
     #endif
@@ -351,19 +480,52 @@ final class SourcesViewController: SileoViewController {
     @objc func refreshSources(_ sender: UIRefreshControl?) {
         self.refreshSources(forceUpdate: false, forceReload: true)
     }
+
+    @objc private func refreshAllSources(_ sender: Any?) {
+        self.refreshSources(forceUpdate: false, forceReload: true, includeAutoDisabled: true)
+    }
     
     func refreshSources(forceUpdate: Bool, forceReload: Bool) {
-        self.refreshSources(forceUpdate: forceUpdate, forceReload: forceReload, isBackground: false, useRefreshControl: false, useErrorScreen: true, completion: nil)
+        self.refreshSources(forceUpdate: forceUpdate, forceReload: forceReload, isBackground: false, useRefreshControl: false, useErrorScreen: true, includeAutoDisabled: false, completion: nil)
+    }
+
+    func refreshSources(forceUpdate: Bool, forceReload: Bool, includeAutoDisabled: Bool) {
+        self.refreshSources(forceUpdate: forceUpdate, forceReload: forceReload, isBackground: false, useRefreshControl: false, useErrorScreen: true, includeAutoDisabled: includeAutoDisabled, completion: nil)
+    }
+
+    @objc private func showRefreshOptions(_ sender: Any?) {
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Refresh_Active_Sources"), style: .default) { _ in
+            self.refreshSources(forceUpdate: false, forceReload: true, includeAutoDisabled: false)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Refresh_All_Sources"), style: .default) { _ in
+            self.refreshAllSources(sender)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Cancel"), style: .cancel))
+        if let popover = alert.popoverPresentationController {
+            if let barButtonItem = sender as? UIBarButtonItem {
+                popover.barButtonItem = barButtonItem
+            } else {
+                popover.sourceView = self.view
+                popover.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+            }
+        }
+        self.present(alert, animated: true)
+    }
+
+    @objc private func showSourceManagement(_ sender: Any?) {
+        let sourceManagementVC = SourceManagementSettingsViewController(style: .grouped)
+        self.navigationController?.pushViewController(sourceManagementVC, animated: true)
     }
     
     private func addToQueue(_ repo: Repo) {
-        if !updatingRepoList.contains(where: { $0.rawURL == repo.rawURL }) {
+        if !updatingRepoList.contains(where: { $0.refreshStateKey == repo.refreshStateKey }) {
             updatingRepoList.append(repo)
         }
     }
     
     private func removeFromQueue(_ repo: Repo) {
-        if let index = updatingRepoList.firstIndex(where: { $0.rawURL == repo.rawURL }) {
+        if let index = updatingRepoList.firstIndex(where: { $0.refreshStateKey == repo.refreshStateKey }) {
             updatingRepoList.remove(at: index)
         }
     }
@@ -384,8 +546,15 @@ final class SourcesViewController: SileoViewController {
         item?.badgeValue = nil
     }
     
-    func refreshSources(forceUpdate: Bool, forceReload: Bool, isBackground: Bool, useRefreshControl: Bool, useErrorScreen: Bool, completion: ((Bool, NSAttributedString) -> Void)?) {
+    func refreshSources(forceUpdate: Bool, forceReload: Bool, isBackground: Bool, useRefreshControl: Bool, useErrorScreen: Bool, includeAutoDisabled: Bool, completion: ((Bool, NSAttributedString) -> Void)?) {
         NSLog("SileoLog: refreshSources \(forceUpdate) \(forceReload) \(isBackground) \(useRefreshControl) \(useErrorScreen)")
+        let reposToRefresh = includeAutoDisabled
+            ? RepoManager.shared.refreshAllCandidateRepoList()
+            : RepoManager.shared.activeRepoList()
+        guard !reposToRefresh.isEmpty else {
+            completion?(false, NSAttributedString())
+            return
+        }
         let item = self.splitViewController?.tabBarItem
         item?.badgeValue = ""
         guard let style = UIActivityIndicatorView.Style(rawValue: 5) else {
@@ -405,12 +574,17 @@ final class SourcesViewController: SileoViewController {
             }
         }
         
-        for repo in sortedRepoList {
+        for repo in reposToRefresh {
             addToQueue(repo)
         }
-        RepoManager.shared.update(force: forceUpdate, forceReload: forceReload, isBackground: isBackground, completion: { didFindErrors, errorOutput in
+        RepoManager.shared.update(force: forceUpdate,
+                                  forceReload: forceReload,
+                                  isBackground: isBackground,
+                                  selectionMode: includeAutoDisabled ? .activeAndAutoDisabled : .activeOnly,
+                                  repos: reposToRefresh,
+                                  completion: { didFindErrors, errorOutput in
             NSLog("SileoLog: useErrorScreen=\(useErrorScreen) didFindErrors=\(didFindErrors):\(errorOutput)")
-            for repo in self.sortedRepoList {
+            for repo in reposToRefresh {
                 self.removeFromQueue(repo)
             }
             self.killIndicator()
@@ -440,8 +614,14 @@ final class SourcesViewController: SileoViewController {
             indicatorView.startAnimating()
             badge?.addSubview(indicatorView)
         }
+        addToQueue(repo)
         
-        RepoManager.shared.update(force: true, forceReload: true, isBackground: false, repos: [repo], completion: { didFindErrors, errorOutput in
+        RepoManager.shared.update(force: true,
+                                  forceReload: true,
+                                  isBackground: false,
+                                  selectionMode: .explicit,
+                                  repos: [repo],
+                                  completion: { didFindErrors, errorOutput in
             self.removeFromQueue(repo)
             if self.updatingRepoList.isEmpty {
                 self.killIndicator()
@@ -472,7 +652,11 @@ final class SourcesViewController: SileoViewController {
             addToQueue(repo)
         }
         
-        RepoManager.shared.update(force: true, forceReload: true, isBackground: false, repos: repos) { [weak self] didFindErrors, errorOutput in
+        RepoManager.shared.update(force: true,
+                                  forceReload: true,
+                                  isBackground: false,
+                                  selectionMode: .explicit,
+                                  repos: repos) { [weak self] didFindErrors, errorOutput in
             guard let strongSelf = self else { return }
             for repo in repos {
                 strongSelf.removeFromQueue(repo)
@@ -496,20 +680,45 @@ final class SourcesViewController: SileoViewController {
     }
     
     func reSortList() {
-        sortedRepoList = RepoManager.shared.sortedRepoList()
+        sortedRepoList = RepoManager.shared.sortedRepoList(repos: RepoManager.shared.activeRepoList())
+        applySearchFilter()
     }
-    
+
+    private func disableRepo(_ repo: Repo) {
+        if DownloadManager.shared.queueRunning {
+            TabBarController.singleton?.presentPopupController()
+            return
+        }
+
+        RepoManager.shared.disableRepo(repo, reason: .manual)
+        updatingRepoList.removeAll { $0 == repo }
+        self.reloadData()
+
+        if repo.url == self.presentRepoUrl {
+            presentDefaultPage()
+        }
+    }
+
+    private func disableRepo(at indexPath: IndexPath) {
+        guard let repo = repo(at: indexPath) else {
+            return
+        }
+        disableRepo(repo)
+    }
+
     private func deleteRepo(at indexPath: IndexPath) {
         if DownloadManager.shared.queueRunning {
             TabBarController.singleton?.presentPopupController()
             return
         }
         
-        let repo = self.sortedRepoList[indexPath.row]
+        guard let repo = repo(at: indexPath) else {
+            return
+        }
         RepoManager.shared.remove(repo: repo)
-        tableView.deleteRows(at: [indexPath], with: .fade)
         self.reSortList()
         updatingRepoList.removeAll { $0 == repo }
+        self.tableView.reloadData()
         self.updateFooterCount()
         NotificationCenter.default.post(name: PackageListManager.reloadNotification, object: nil)
         
@@ -526,8 +735,8 @@ final class SourcesViewController: SileoViewController {
             return
         }
         if let repo = notification.object as? Repo {
-            guard let idx = sortedRepoList.firstIndex(of: repo),
-            let cell = self.tableView.cellForRow(at: IndexPath(row: idx, section: 1)) as? SourcesTableViewCell else {
+            guard let indexPath = indexPath(for: repo),
+                  let cell = self.tableView.cellForRow(at: indexPath) as? SourcesTableViewCell else {
                 return
             }
             let cellRepo = cell.repo
@@ -535,6 +744,7 @@ final class SourcesViewController: SileoViewController {
             cell.layoutSubviews()
         } else if let count = notification.object as? Int {
             DispatchQueue.main.async {
+                guard !self.isFilteringRepos else { return }
                 guard let cell = self.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? SourcesTableViewCell else { return }
                 cell.installedLabel.text = "\(count)"
             }
@@ -552,6 +762,7 @@ final class SourcesViewController: SileoViewController {
     func reloadData() {
         self.reSortList()
         self.tableView.reloadData()
+        self.updateFooterCount()
     }
     
     @objc func exportSources(_ sender: Any?) {
@@ -814,20 +1025,18 @@ final class SourcesViewController: SileoViewController {
 
 extension SourcesViewController: UITableViewDataSource { // UITableViewDataSource
     func numberOfSections(in tableView: UITableView) -> Int {
-        2
+        isFilteringRepos ? 1 : 2
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
+        if !isFilteringRepos && section == 0 {
             return 1
-        } else {
-            self.reSortList()
-            return sortedRepoList.count
         }
+        return displayedRepoList.count
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return (section == 1) ? String(localizationKey: "Repos") : nil
+        return (section == repoSection) ? String(localizationKey: "Repos") : nil
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -862,6 +1071,9 @@ extension SourcesViewController: UITableViewDataSource { // UITableViewDataSourc
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if isFilteringRepos {
+            return section == 0 ? 44 : 0
+        }
         switch section {
         case 0:
             return 5
@@ -873,26 +1085,22 @@ extension SourcesViewController: UITableViewDataSource { // UITableViewDataSourc
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        guard section == 1 else { return UIView() }
+        guard section == repoSection else { return UIView() }
         
         let footerView = SourcesTableViewFooter(reuseIdentifier: "Sileo.SourcesTableViewFooter")
-        footerView.setCount(sortedRepoList.count)
+        footerView.setCount(displayedRepoList.count)
         return footerView
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return (section == 0) ? 2 : 30
+        return (!isFilteringRepos && section == 0) ? 2 : 30
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = (tableView.dequeueReusableCell(withIdentifier: "SourcesViewControllerCellidentifier") as? SourcesTableViewCell) ??
             SourcesTableViewCell(style: .subtitle, reuseIdentifier: "SourcesViewControllerCellidentifier")
 
-        if indexPath.section == 0 {
-            cell.repo = nil
-        } else {
-            cell.repo = sortedRepoList[indexPath.row]
-        }
+        cell.repo = repo(at: indexPath)
         return cell
     }
     
@@ -901,15 +1109,15 @@ extension SourcesViewController: UITableViewDataSource { // UITableViewDataSourc
     }
     
     private func updateFooterCount() {
-        if let footerView = tableView.footerView(forSection: 1) as? SourcesTableViewFooter {
-            footerView.setCount(sortedRepoList.count)
+        if let footerView = tableView.footerView(forSection: repoSection) as? SourcesTableViewFooter {
+            footerView.setCount(displayedRepoList.count)
         }
     }
 }
 
 extension SourcesViewController: UITableViewDelegate { // UITableViewDelegate
     func tableView(_ tableView: UITableView, shouldShowMenuForRowAt indexPath: IndexPath) -> Bool {
-        indexPath.section > 0
+        repo(at: indexPath) != nil
     }
     
     #if !targetEnvironment(macCatalyst)
@@ -922,27 +1130,34 @@ extension SourcesViewController: UITableViewDelegate { // UITableViewDelegate
             return
         }
         
-        let repo = sortedRepoList[indexPath.row]
-        UIPasteboard.general.string = repo.aptSource
+        UIPasteboard.general.string = repo(at: indexPath)?.aptSource
     }
     #else
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        guard let repo = repo(at: indexPath) else {
+            return nil
+        }
         UIContextMenuConfiguration(identifier: nil,
                                    previewProvider: nil) { [weak self] _ in
             let copyAction = UIAction(title: "Copy") { [weak self] _ in
-                let repo = self?.sortedRepoList[indexPath.row]
-                UIPasteboard.general.string = repo?.aptSource
+                UIPasteboard.general.string = self?.repo(at: indexPath)?.aptSource
             }
             let deleteAction = UIAction(title: "Remove") { [weak self] _ in
                 guard let strong = self else { return }
                 strong.deleteRepo(at: indexPath)
             }
+            let disableAction = UIAction(title: String(localizationKey: "Disable")) { [weak self] _ in
+                self?.disableRepo(at: indexPath)
+            }
             let refreshAction = UIAction(title: "Refresh") { [weak self] _ in
                 guard let strong = self else { return }
-                let repo = strong.sortedRepoList[indexPath.row]
                 strong.updateSpecific([repo])
             }
-            return UIMenu(title: "", children: [copyAction, deleteAction, refreshAction])
+            var actions = [copyAction, disableAction, refreshAction]
+            if self?.canEditRow(indexPath: indexPath) == true {
+                actions.insert(deleteAction, at: 1)
+            }
+            return UIMenu(title: "", children: actions)
         }
     }
     #endif
@@ -977,7 +1192,7 @@ extension SourcesViewController: UITableViewDelegate { // UITableViewDelegate
         
         self.detailedPageUserPresent = true
         
-        if indexPath.section==0 && indexPath.row==0 {
+        if !isFilteringRepos && indexPath.section == 0 && indexPath.row == 0 {
             self.defaultPagePresent = true
         }
 
@@ -989,20 +1204,40 @@ extension SourcesViewController: UITableViewDelegate { // UITableViewDelegate
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         // We don't want to be able to delete the top section so we just return early here
-        if indexPath.section == 0 { return nil }
+        guard let repo = repo(at: indexPath) else { return nil }
         let refresh = UIContextualAction(style: .normal, title: String(localizationKey: "Refresh")) { _, _, completionHandler in
-            self.updateSingleRepo(self.sortedRepoList[indexPath.row])
+            self.updateSingleRepo(repo)
             completionHandler(true)
         }
         refresh.backgroundColor = .systemGreen
-        if !self.canEditRow(indexPath: indexPath) {
-            return UISwipeActionsConfiguration(actions: [refresh])
+        let disable = UIContextualAction(style: .normal, title: String(localizationKey: "Disable")) { _, _, completionHandler in
+            self.disableRepo(at: indexPath)
+            completionHandler(true)
         }
+        disable.backgroundColor = .systemOrange
         let remove = UIContextualAction(style: .destructive, title: String(localizationKey: "Remove")) { [weak self] _, _, completionHandler in
             self?.deleteRepo(at: indexPath)
             completionHandler(true)
         }
-        return UISwipeActionsConfiguration(actions: [remove, refresh])
+        if !self.canEditRow(indexPath: indexPath) {
+            return UISwipeActionsConfiguration(actions: [disable, refresh])
+        }
+        return UISwipeActionsConfiguration(actions: [remove, disable, refresh])
+    }
+}
+
+extension SourcesViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.updateSearchResults(for: searchController)
+            }
+            return
+        }
+
+        applySearchFilter()
+        tableView.reloadData()
+        updateFooterCount()
     }
 }
 

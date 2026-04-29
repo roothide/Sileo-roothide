@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <TargetConditionals.h>
 
 #import <bzlib.h>
 #import <stdint.h>
@@ -191,7 +192,7 @@ cleanup:
     return error;
 }
 
-#if !TARGET_SANDBOX
+#if !TARGET_OS_SIMULATOR && !TARGET_SANDBOX
 uint8_t decompressZst(FILE *input, FILE *output) {
     size_t buffInSize = ZSTD_DStreamInSize();
     size_t buffOutSize = ZSTD_DStreamOutSize();

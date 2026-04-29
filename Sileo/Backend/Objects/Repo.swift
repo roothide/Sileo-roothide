@@ -214,6 +214,28 @@ final class Repo: Equatable {
     var repoURL: String {
         url?.absoluteString ?? ""
     }
+
+    var refreshStateKey: String {
+        let normalizedURL = rawURL.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedSuite = suite.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedComponents = components
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return "\(normalizedURL)|\(normalizedSuite)|\(normalizedComponents)"
+    }
+
+    var isDisabled: Bool {
+        RepoManager.shared.isRepoDisabled(self)
+    }
+
+    var isAutoDisabled: Bool {
+        RepoManager.shared.isRepoAutoDisabled(self)
+    }
+
+    var isManuallyDisabled: Bool {
+        RepoManager.shared.isRepoManuallyDisabled(self)
+    }
     
     var displayURL: String {
         rawURL

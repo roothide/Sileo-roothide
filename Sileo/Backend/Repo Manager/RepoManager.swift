@@ -9,8 +9,161 @@
 import UIKit
 import Evander
 
+enum RepoRefreshSettings {
+    static let timeoutKey = "RepoRefreshTimeoutSeconds"
+    static let concurrencyOverrideKey = "RepoRefreshConcurrencyOverride"
+    static let timeoutAutoDisableEnabledKey = "RepoTimeoutAutoDisableEnabled"
+    static let autoDisableAfterTimeoutsKey = "RepoAutoDisableAfterTimeouts"
+    static let httpErrorAutoDisableEnabledKey = "RepoHTTPErrorAutoDisableEnabled"
+    static let autoDisableAfterHTTPErrorsKey = "RepoAutoDisableAfterHTTPErrors"
+
+    static let defaultTimeoutSeconds = 20
+    static let defaultConcurrencyOverride = 0
+    static let defaultTimeoutAutoDisableEnabled = true
+    static let defaultAutoDisableAfterTimeouts = 3
+    static let defaultHTTPErrorAutoDisableEnabled = true
+    static let defaultAutoDisableAfterHTTPErrors = 1
+
+    static var timeoutSeconds: TimeInterval {
+        let rawValue = UserDefaults.standard.integer(forKey: timeoutKey, fallback: defaultTimeoutSeconds)
+        return TimeInterval(max(1, rawValue))
+    }
+
+    static var concurrencyOverride: Int {
+        let rawValue = UserDefaults.standard.integer(forKey: concurrencyOverrideKey, fallback: defaultConcurrencyOverride)
+        return max(0, rawValue)
+    }
+
+    static var timeoutAutoDisableEnabled: Bool {
+        UserDefaults.standard.bool(forKey: timeoutAutoDisableEnabledKey, fallback: defaultTimeoutAutoDisableEnabled)
+    }
+
+    static var autoDisableAfterTimeouts: Int {
+        let rawValue = UserDefaults.standard.integer(forKey: autoDisableAfterTimeoutsKey, fallback: defaultAutoDisableAfterTimeouts)
+        return max(0, rawValue)
+    }
+
+    static var httpErrorAutoDisableEnabled: Bool {
+        UserDefaults.standard.bool(forKey: httpErrorAutoDisableEnabledKey, fallback: defaultHTTPErrorAutoDisableEnabled)
+    }
+
+    static var autoDisableAfterHTTPErrors: Int {
+        let rawValue = UserDefaults.standard.integer(forKey: autoDisableAfterHTTPErrorsKey, fallback: defaultAutoDisableAfterHTTPErrors)
+        return max(0, rawValue)
+    }
+
+    static func setTimeoutSeconds(_ value: Int) {
+        UserDefaults.standard.set(max(1, value), forKey: timeoutKey)
+        UserDefaults.standard.synchronize()
+    }
+
+    static func setConcurrencyOverride(_ value: Int) {
+        UserDefaults.standard.set(max(0, value), forKey: concurrencyOverrideKey)
+        UserDefaults.standard.synchronize()
+    }
+
+    static func setTimeoutAutoDisableEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: timeoutAutoDisableEnabledKey)
+        UserDefaults.standard.synchronize()
+    }
+
+    static func setAutoDisableAfterTimeouts(_ value: Int) {
+        UserDefaults.standard.set(max(0, value), forKey: autoDisableAfterTimeoutsKey)
+        UserDefaults.standard.synchronize()
+    }
+
+    static func setHTTPErrorAutoDisableEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: httpErrorAutoDisableEnabledKey)
+        UserDefaults.standard.synchronize()
+    }
+
+    static func setAutoDisableAfterHTTPErrors(_ value: Int) {
+        UserDefaults.standard.set(max(0, value), forKey: autoDisableAfterHTTPErrorsKey)
+        UserDefaults.standard.synchronize()
+    }
+}
+
 // swiftlint:disable:next type_body_length
 final class RepoManager {
+
+    enum RepoDisableReason: String, Codable {
+        case manual
+        case autoTimeout
+        case autoHTTPError
+    }
+
+    private enum RefreshFailureKind {
+        case other
+        case timeout
+        case httpStatus(Int)
+    }
+
+    enum RefreshSelectionMode {
+        case activeOnly
+        case activeAndAutoDisabled
+        case explicit
+    }
+
+    struct RepoRefreshState: Codable {
+        var disableReason: RepoDisableReason?
+        var consecutiveTimeoutCount: Int = 0
+        var consecutiveHTTPErrorCount: Int = 0
+        var lastHTTPStatusCode: Int?
+        var lastRefreshAt: Date?
+        var lastSuccessAt: Date?
+        var lastFailureReason: String?
+        var disabledAt: Date?
+
+        init() {}
+
+        private enum CodingKeys: String, CodingKey {
+            case disableReason
+            case consecutiveTimeoutCount
+            case consecutiveHTTPErrorCount
+            case lastHTTPStatusCode
+            case lastRefreshAt
+            case lastSuccessAt
+            case lastFailureReason
+            case disabledAt
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            disableReason = try container.decodeIfPresent(RepoDisableReason.self, forKey: .disableReason)
+            consecutiveTimeoutCount = try container.decodeIfPresent(Int.self, forKey: .consecutiveTimeoutCount) ?? 0
+            consecutiveHTTPErrorCount = try container.decodeIfPresent(Int.self, forKey: .consecutiveHTTPErrorCount) ?? 0
+            lastHTTPStatusCode = try container.decodeIfPresent(Int.self, forKey: .lastHTTPStatusCode)
+            lastRefreshAt = try container.decodeIfPresent(Date.self, forKey: .lastRefreshAt)
+            lastSuccessAt = try container.decodeIfPresent(Date.self, forKey: .lastSuccessAt)
+            lastFailureReason = try container.decodeIfPresent(String.self, forKey: .lastFailureReason)
+            disabledAt = try container.decodeIfPresent(Date.self, forKey: .disabledAt)
+        }
+
+        var isDisabled: Bool {
+            disableReason != nil
+        }
+
+        var isAutoDisabled: Bool {
+            disableReason == .autoTimeout || disableReason == .autoHTTPError
+        }
+
+        var isTimeoutAutoDisabled: Bool {
+            disableReason == .autoTimeout
+        }
+
+        var isHTTPErrorAutoDisabled: Bool {
+            disableReason == .autoHTTPError
+        }
+
+        var isManualDisabled: Bool {
+            disableReason == .manual
+        }
+    }
+
+    private enum RepoRefreshOutcome {
+        case success
+        case failure(kind: RefreshFailureKind, reason: String?)
+    }
     
     private let NO_PGP = true
     private var hasDuplicateRepo = false
@@ -34,9 +187,12 @@ final class RepoManager {
 
     private(set) var repoList: [Repo] = []
     private var repoListLock = DispatchSemaphore(value: 1)
+    private var refreshStates = [String: RepoRefreshState]()
+    private let refreshStateLock = DispatchSemaphore(value: 1)
+    private let autoDisableHTTPStatusCodes: Set<Int> = [400, 401, 403, 404, 410, 451, 522]
     
     public func sortedRepoList(repos: [Repo]?=nil) -> [Repo] {
-        let repos = repos ?? repoList
+        let repos = repos ?? repoListSnapshot()
         return repos.sorted(by: { obj1, obj2 -> Bool in
             return obj1.repoName.localizedCaseInsensitiveCompare(obj2.repoName) == .orderedAscending
         })
@@ -71,7 +227,12 @@ final class RepoManager {
     }
     #endif
 
+    private var refreshStateURL: URL {
+        FileManager.default.documentDirectory.appendingPathComponent("repo-refresh-state.json")
+    }
+
     init() {
+        loadRefreshStates()
         #if targetEnvironment(simulator) || TARGET_SANDBOX
         parseSourcesFile(at: sourcesURL)
         #else
@@ -98,6 +259,7 @@ final class RepoManager {
                 URL(string: "https://repo.chariz.com")!,
             ])
         }
+        pruneRefreshStates()
     }
     
     private func normalizeURL(_ url: URL) -> URL? {
@@ -106,6 +268,322 @@ final class RepoManager {
             normalizedStr.append("/")
         }
         return URL(string: normalizedStr)
+    }
+
+    private func repoListSnapshot() -> [Repo] {
+        defer { repoListLock.signal() }
+        repoListLock.wait()
+        return repoList
+    }
+
+    private func loadRefreshStates() {
+        guard let data = try? Data(contentsOf: refreshStateURL) else {
+            return
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let states = try? decoder.decode([String: RepoRefreshState].self, from: data) else {
+            return
+        }
+        refreshStates = states
+    }
+
+    private func saveRefreshStatesLocked() {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(refreshStates) else {
+            return
+        }
+        try? data.write(to: refreshStateURL, options: .atomic)
+    }
+
+    private func pruneRefreshStates() {
+        let validKeys = Set(repoListSnapshot().map { $0.refreshStateKey })
+        refreshStateLock.wait()
+        refreshStates = Dictionary(uniqueKeysWithValues: refreshStates.filter { validKeys.contains($0.key) })
+        saveRefreshStatesLocked()
+        refreshStateLock.signal()
+    }
+
+    func refreshState(for repo: Repo) -> RepoRefreshState {
+        defer { refreshStateLock.signal() }
+        refreshStateLock.wait()
+        return refreshStates[repo.refreshStateKey] ?? RepoRefreshState()
+    }
+
+    private func updateRefreshState(for repo: Repo, mutate: (inout RepoRefreshState) -> Void) -> (RepoRefreshState, RepoRefreshState) {
+        refreshStateLock.wait()
+        let key = repo.refreshStateKey
+        let previousState = refreshStates[key] ?? RepoRefreshState()
+        var nextState = previousState
+        mutate(&nextState)
+        refreshStates[key] = nextState
+        saveRefreshStatesLocked()
+        refreshStateLock.signal()
+        return (previousState, nextState)
+    }
+
+    private func clearRefreshState(for repo: Repo) {
+        refreshStateLock.wait()
+        refreshStates.removeValue(forKey: repo.refreshStateKey)
+        saveRefreshStatesLocked()
+        refreshStateLock.signal()
+    }
+
+    func isRepoDisabled(_ repo: Repo) -> Bool {
+        refreshState(for: repo).isDisabled
+    }
+
+    func isRepoAutoDisabled(_ repo: Repo) -> Bool {
+        refreshState(for: repo).isAutoDisabled
+    }
+
+    func isRepoManuallyDisabled(_ repo: Repo) -> Bool {
+        refreshState(for: repo).isManualDisabled
+    }
+
+    func activeRepoList() -> [Repo] {
+        repoListSnapshot().filter { !isRepoDisabled($0) }
+    }
+
+    func refreshAllCandidateRepoList() -> [Repo] {
+        repoListSnapshot().filter { !isRepoManuallyDisabled($0) }
+    }
+
+    func disabledRepoList() -> [Repo] {
+        repoListSnapshot().filter { isRepoDisabled($0) }
+    }
+
+    func effectiveRefreshConcurrency(isBackground: Bool, repoCount: Int) -> Int {
+        let override = RepoRefreshSettings.concurrencyOverride
+        if override > 0 {
+            return min(repoCount, max(1, override))
+        }
+        return min(repoCount, ProcessInfo.processInfo.processorCount * 2 * (isBackground ? 1 : 2))
+    }
+
+    private func restoreCachedPackagesIfNeeded(for repo: Repo) {
+        guard !isRepoDisabled(repo),
+              repo.packageDict.isEmpty,
+              repo.packagesExist else {
+            return
+        }
+        repo.packageDict = PackageListManager.readPackages(repoContext: repo)
+        update(repo)
+    }
+
+    private func notifyRepoVisibilityDidChange() {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: SourcesViewController.reloadDataNotification, object: nil)
+            NotificationCenter.default.post(name: PackageListManager.reloadNotification, object: nil)
+            NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
+            if !DownloadManager.shared.queueRunning {
+                DownloadManager.shared.reloadData(recheckPackages: true)
+            }
+        }
+    }
+
+    private func applyDisabledState(to repo: Repo) {
+        repo.packageDict = [:]
+        repo.releaseProgress = 0
+        repo.packagesProgress = 0
+        repo.releaseGPGProgress = 0
+        repo.startedRefresh = false
+        postProgressNotification(repo)
+    }
+
+    func disableRepo(_ repo: Repo, reason: RepoDisableReason) {
+        let (previousState, nextState) = updateRefreshState(for: repo) { state in
+            state.disableReason = reason
+            state.disabledAt = Date()
+            if reason == .manual {
+                state.consecutiveTimeoutCount = 0
+                state.consecutiveHTTPErrorCount = 0
+                state.lastHTTPStatusCode = nil
+            }
+        }
+        applyDisabledState(to: repo)
+        if previousState.disableReason != nextState.disableReason || previousState.isDisabled != nextState.isDisabled {
+            notifyRepoVisibilityDidChange()
+        }
+    }
+
+    func enableRepo(_ repo: Repo) {
+        let (previousState, nextState) = updateRefreshState(for: repo) { state in
+            state.disableReason = nil
+            state.disabledAt = nil
+            state.consecutiveTimeoutCount = 0
+            state.consecutiveHTTPErrorCount = 0
+            state.lastHTTPStatusCode = nil
+            state.lastFailureReason = nil
+        }
+        restoreCachedPackagesIfNeeded(for: repo)
+        if previousState.isDisabled != nextState.isDisabled {
+            notifyRepoVisibilityDidChange()
+        }
+    }
+
+    func applyStoredState(to repo: Repo) {
+        guard isRepoDisabled(repo) else {
+            return
+        }
+        applyDisabledState(to: repo)
+    }
+
+    private func recordRefreshSuccess(for repo: Repo, allowAutoEnable: Bool) {
+        let (previousState, nextState) = updateRefreshState(for: repo) { state in
+            state.lastRefreshAt = Date()
+            state.lastSuccessAt = state.lastRefreshAt
+            state.lastFailureReason = nil
+            state.consecutiveTimeoutCount = 0
+            state.consecutiveHTTPErrorCount = 0
+            state.lastHTTPStatusCode = nil
+            if allowAutoEnable && state.isAutoDisabled {
+                state.disableReason = nil
+                state.disabledAt = nil
+            }
+        }
+        if previousState.isAutoDisabled && !nextState.isDisabled {
+            restoreCachedPackagesIfNeeded(for: repo)
+            notifyRepoVisibilityDidChange()
+        }
+    }
+
+    private func isAutoDisableHTTPStatusCode(_ statusCode: Int) -> Bool {
+        autoDisableHTTPStatusCodes.contains(statusCode)
+    }
+
+    private func clearAutoDisableState(for repo: Repo, reason: RepoDisableReason) -> Bool {
+        let (previousState, nextState) = updateRefreshState(for: repo) { state in
+            switch reason {
+            case .autoTimeout:
+                state.consecutiveTimeoutCount = 0
+                if state.disableReason == .autoTimeout {
+                    state.disableReason = nil
+                    state.disabledAt = nil
+                    state.lastFailureReason = nil
+                }
+            case .autoHTTPError:
+                state.consecutiveHTTPErrorCount = 0
+                state.lastHTTPStatusCode = nil
+                if state.disableReason == .autoHTTPError {
+                    state.disableReason = nil
+                    state.disabledAt = nil
+                    state.lastFailureReason = nil
+                }
+            case .manual:
+                break
+            }
+        }
+
+        if previousState.isDisabled && !nextState.isDisabled {
+            restoreCachedPackagesIfNeeded(for: repo)
+            return true
+        }
+        return false
+    }
+
+    func updateAutoDisablePreference(for reason: RepoDisableReason, enabled: Bool) {
+        guard reason == .autoTimeout || reason == .autoHTTPError else {
+            return
+        }
+        guard !enabled else {
+            return
+        }
+
+        let repos = repoListSnapshot()
+        var didChangeVisibility = false
+        for repo in repos {
+            if clearAutoDisableState(for: repo, reason: reason) {
+                didChangeVisibility = true
+            }
+        }
+        if didChangeVisibility {
+            notifyRepoVisibilityDidChange()
+        }
+    }
+
+    private func recordRefreshFailure(for repo: Repo, kind: RefreshFailureKind, reason: String?) {
+        let timeoutAutoDisableEnabled = RepoRefreshSettings.timeoutAutoDisableEnabled
+        let httpErrorAutoDisableEnabled = RepoRefreshSettings.httpErrorAutoDisableEnabled
+        let timeoutThreshold = timeoutAutoDisableEnabled ? RepoRefreshSettings.autoDisableAfterTimeouts : 0
+        let httpThreshold = httpErrorAutoDisableEnabled ? RepoRefreshSettings.autoDisableAfterHTTPErrors : 0
+        let (previousState, nextState) = updateRefreshState(for: repo) { state in
+            state.lastRefreshAt = Date()
+            state.lastFailureReason = reason
+            switch kind {
+            case .timeout:
+                if timeoutAutoDisableEnabled {
+                    state.consecutiveTimeoutCount += 1
+                } else {
+                    state.consecutiveTimeoutCount = 0
+                }
+                state.consecutiveHTTPErrorCount = 0
+                state.lastHTTPStatusCode = nil
+                if timeoutThreshold > 0,
+                   state.disableReason != .manual,
+                   state.consecutiveTimeoutCount >= timeoutThreshold {
+                    if state.disableReason != .autoTimeout {
+                        state.disabledAt = Date()
+                    }
+                    state.disableReason = .autoTimeout
+                }
+            case .httpStatus(let statusCode):
+                state.consecutiveTimeoutCount = 0
+                if httpErrorAutoDisableEnabled && isAutoDisableHTTPStatusCode(statusCode) {
+                    state.lastHTTPStatusCode = statusCode
+                    state.consecutiveHTTPErrorCount += 1
+                    if httpThreshold > 0,
+                       state.disableReason != .manual,
+                       state.consecutiveHTTPErrorCount >= httpThreshold {
+                        if state.disableReason != .autoHTTPError {
+                            state.disabledAt = Date()
+                        }
+                        state.disableReason = .autoHTTPError
+                    }
+                } else {
+                    state.consecutiveHTTPErrorCount = 0
+                    state.lastHTTPStatusCode = nil
+                }
+            case .other:
+                state.consecutiveTimeoutCount = 0
+                state.consecutiveHTTPErrorCount = 0
+                state.lastHTTPStatusCode = nil
+            }
+        }
+        if previousState.disableReason != nextState.disableReason && nextState.isAutoDisabled {
+            applyDisabledState(to: repo)
+            notifyRepoVisibilityDidChange()
+        }
+    }
+
+    private func finalizeRefresh(for repo: Repo, outcome: RepoRefreshOutcome, selectionMode: RefreshSelectionMode) {
+        switch outcome {
+        case .success:
+            recordRefreshSuccess(for: repo, allowAutoEnable: selectionMode != .activeOnly)
+        case .failure(let kind, let reason):
+            recordRefreshFailure(for: repo, kind: kind, reason: reason)
+        }
+    }
+
+    private func refreshableRepos(from repos: [Repo], selectionMode: RefreshSelectionMode) -> [Repo] {
+        switch selectionMode {
+        case .activeOnly:
+            return repos.filter { !isRepoDisabled($0) }
+        case .activeAndAutoDisabled:
+            return repos.filter { !isRepoManuallyDisabled($0) }
+        case .explicit:
+            return repos
+        }
+    }
+
+    private func isTimeoutError(_ error: Error?) -> Bool {
+        if let urlError = error as? URLError {
+            return urlError.code == .timedOut
+        }
+        let nsError = error as NSError?
+        return nsError?.domain == NSURLErrorDomain && nsError?.code == URLError.timedOut.rawValue
     }
 
     @discardableResult func addRepos(with urls: [URL]) -> [Repo] {
@@ -252,6 +730,7 @@ final class RepoManager {
         repoListLock.signal()
         writeListToFile()
         for repo in repos {
+            clearRefreshState(for: repo)
             UserDefaults.standard.removeObject(forKey: "preferredArch_\(repo.url!)")
             UserDefaults.standard.synchronize()
             DatabaseManager.shared.deleteRepo(repo: repo)
@@ -635,6 +1114,7 @@ final class RepoManager {
         force: Bool,
         forceReload: Bool,
         isBackground: Bool,
+        selectionMode: RefreshSelectionMode,
         repos: [Repo],
         completion: @escaping (Bool, NSAttributedString) -> Void
     ) {
@@ -665,14 +1145,14 @@ final class RepoManager {
 
         var errorsFound = false
         let listlock = NSLock()
-        var repos = self.sortedRepoList(repos: repos)
+        var repos = self.sortedRepoList(repos: refreshableRepos(from: repos, selectionMode: selectionMode))
         
         for repo in repos {
             repo.startedRefresh = true
             self.postProgressNotification(repo)
         }
 
-        for iqueue in 0..<min(repos.count, ProcessInfo.processInfo.processorCount * 2 * (isBackground ? 1 : 2)) {
+        for iqueue in 0..<effectiveRefreshConcurrency(isBackground: isBackground, repoCount: repos.count) {
             updateGroup.enter() //enter group before async block
             let repoQueue = DispatchQueue(label: "repo-update-queue-\(iqueue)")
             repoQueue.async {
@@ -688,6 +1168,23 @@ final class RepoManager {
                     let ReleaseFileSemaphore = DispatchSemaphore(value: 0)
                     let PackagesFileSemaphore = DispatchSemaphore(value: 0)
                     let ReleaseGPGFileSemaphore = DispatchSemaphore(value: 0)
+                    let refreshTimeout = RepoRefreshSettings.timeoutSeconds
+                    var refreshOutcome = RepoRefreshOutcome.failure(kind: .other, reason: "Refresh did not complete for \(repo.repoURL)")
+                    var timeoutReason: String?
+                    var failureReason: String?
+                    var currentFailureKind: RefreshFailureKind = .other
+                    func failureKind(for status: Int, error: Error?) -> RefreshFailureKind {
+                        if self.isTimeoutError(error) {
+                            return .timeout
+                        }
+                        if status > 0 {
+                            return .httpStatus(status)
+                        }
+                        return .other
+                    }
+                    defer {
+                        self.finalizeRefresh(for: repo, outcome: refreshOutcome, selectionMode: selectionMode)
+                    }
 
                     var preferredArch: String?
                     var optReleaseFile: (url: URL, dict: [String: String])?
@@ -702,10 +1199,10 @@ final class RepoManager {
                             repo.releaseProgress = CGFloat(progress.fractionCompleted)
                             self.postProgressNotification(repo)
                         },
-                        success: { task, status, fileURL in
-                            defer {
-                                ReleaseFileSemaphore.signal()
-                            }
+                            success: { task, status, fileURL in
+                                defer {
+                                    ReleaseFileSemaphore.signal()
+                                }
 
                             guard let releaseContents = fileURL.aptContents else {
                                 log("Could not parse release file from \(releaseURL)", type: .error)
@@ -757,21 +1254,26 @@ final class RepoManager {
                             repo.releaseProgress = 1
                             self.postProgressNotification(repo)
                         },
-                        failure: { task, status, error in
-                            defer {
-                                ReleaseFileSemaphore.signal()
-                            }
+                            failure: { task, status, error in
+                                defer {
+                                    ReleaseFileSemaphore.signal()
+                                }
 
-                            log("\(releaseURL) returned status \(status). \(error?.localizedDescription ?? "")", type: .error)
-                            errorsFound = true
+                                let message = "\(releaseURL) returned status \(status). \(error?.localizedDescription ?? "")"
+                                failureReason = message
+                                currentFailureKind = failureKind(for: status, error: error)
+                                if self.isTimeoutError(error) {
+                                    timeoutReason = message
+                                }
+                                log(message, type: .error)
+                                errorsFound = true
 //                            repo.releaseProgress = 1
 //                            self.postProgressNotification(repo)
-                        }
-                    )
+                            }
+                        )
                     releaseTask?.resume()
                     
                     var startTime = Date()
-                    let refreshTimeout: TimeInterval = isBackground ? 10 : 20
                     
                     var releaseGPGTask: EvanderDownloader? = nil
                     defer { releaseGPGTask?.cancel() }
@@ -798,7 +1300,13 @@ final class RepoManager {
                                 }
 
                                 if FileManager.default.fileExists(atPath: releaseGPGFileDst.path) {
-                                    log("\(releaseGPGURL) returned status \(status). \(error?.localizedDescription ?? "")", type: .error)
+                                    let message = "\(releaseGPGURL) returned status \(status). \(error?.localizedDescription ?? "")"
+                                    failureReason = message
+                                    currentFailureKind = failureKind(for: status, error: error)
+                                    if self.isTimeoutError(error) {
+                                        timeoutReason = message
+                                    }
+                                    log(message, type: .error)
                                     errorsFound = true
                                 }
     //                            repo.releaseGPGProgress = 1
@@ -813,13 +1321,16 @@ final class RepoManager {
                     
                     //stage 2
                     
-                    if ReleaseFileSemaphore.wait(timeout: .now() + refreshTimeout - Date().timeIntervalSince(startTime)) != .success {
+                    if ReleaseFileSemaphore.wait(timeout: .now() + max(0, refreshTimeout - Date().timeIntervalSince(startTime))) != .success {
+                        timeoutReason = "Timed out waiting for Release from \(repo.repoURL)"
                         releaseTask?.cancel()
                     }
                     
                     guard let releaseFile = optReleaseFile else {
                         NSLog("SileoLog: optReleaseFile=\(optReleaseFile)")
-                        log("Could not find release file for \(repo.repoURL)", type: .error)
+                        let message = timeoutReason ?? failureReason ?? "Could not find release file for \(repo.repoURL)"
+                        refreshOutcome = .failure(kind: timeoutReason != nil ? .timeout : currentFailureKind, reason: message)
+                        log(message, type: .error)
                         errorsFound = true
 //                        reposUpdated += 1
                         self.checkUpdatesInBackground(repo)
@@ -901,7 +1412,9 @@ final class RepoManager {
                     }
 
                     if repo.isFlat==false && preferredArch==nil {
-                        log("Could not find preferredArch for \(repo.repoURL)", type: .error)
+                        let message = "Could not find preferredArch for \(repo.repoURL)"
+                        refreshOutcome = .failure(kind: .other, reason: message)
+                        log(message, type: .error)
                         errorsFound = true
 //                        reposUpdated += 1
                         self.checkUpdatesInBackground(repo)
@@ -964,7 +1477,13 @@ final class RepoManager {
                                 defer {
                                     PackagesFileSemaphore.signal()
                                 }
-                                log("\(packagesUrl) returned status \(status). \(error?.localizedDescription ?? "")", type: .error)
+                                let message = "\(packagesUrl) returned status \(status). \(error?.localizedDescription ?? "")"
+                                failureReason = message
+                                currentFailureKind = failureKind(for: status, error: error)
+                                if self.isTimeoutError(error) {
+                                    timeoutReason = message
+                                }
+                                log(message, type: .error)
                                 errorsFound = true
 //                                repo.packagesProgress = 0
 //                                self.postProgressNotification(repo)
@@ -975,7 +1494,8 @@ final class RepoManager {
                     //verify GPG
                     var isReleaseGPGValid = false
                     if !self.NO_PGP {
-                        if ReleaseGPGFileSemaphore.wait(timeout: .now() + refreshTimeout - Date().timeIntervalSince(startTime))  != .success {
+                        if ReleaseGPGFileSemaphore.wait(timeout: .now() + max(0, refreshTimeout - Date().timeIntervalSince(startTime)))  != .success {
+                            timeoutReason = "Timed out waiting for Release.gpg from \(repo.repoURL)"
                             releaseGPGTask?.cancel()
                         }
                         if let releaseGPGFileURL = releaseGPGFileURL {
@@ -987,6 +1507,7 @@ final class RepoManager {
                                     log("Invalid GPG signature at \(releaseGPGURL)", type: .error)
                                     errorsFound = true
                                     #if targetEnvironment(macCatalyst)
+                                    refreshOutcome = .failure(kind: .other, reason: "Invalid GPG signature at \(releaseGPGURL)")
                                     repo.packageDict = [:]
 //                                    reposUpdated += 1
                                     self.checkUpdatesInBackground(repo)
@@ -1002,7 +1523,9 @@ final class RepoManager {
                         if !isReleaseGPGValid {
                             repo.packageDict = [:]
                             errorsFound = true
-                            log("\(repo.repoURL) had no valid GPG signature", type: .error)
+                            let message = "\(repo.repoURL) had no valid GPG signature"
+                            refreshOutcome = .failure(kind: .other, reason: message)
+                            log(message, type: .error)
 //                            reposUpdated += 1
                             self.checkUpdatesInBackground(repo)
                             continue
@@ -1013,6 +1536,7 @@ final class RepoManager {
                     //wait for Packages File
                     if !breakOff {
                         if PackagesFileSemaphore.wait(timeout: .now() + refreshTimeout) != .success {
+                            timeoutReason = "Timed out waiting for Packages from \(repo.repoURL)"
                             packagesTask?.cancel()
                         }
                     }
@@ -1022,7 +1546,9 @@ final class RepoManager {
                     var skipPackages = false
                     if !breakOff {
                         guard var packagesFile = optPackagesFile else {
-                            log("Could not find packages file for \(repo.repoURL)", type: .error)
+                            let message = timeoutReason ?? failureReason ?? "Could not find packages file for \(repo.repoURL)"
+                            refreshOutcome = .failure(kind: timeoutReason != nil ? .timeout : currentFailureKind, reason: message)
+                            log(message, type: .error)
                             errorsFound = true
 //                            reposUpdated += 1
                             self.checkUpdatesInBackground()
@@ -1178,6 +1704,7 @@ final class RepoManager {
                     repo.releaseGPGProgress = 0
                     repo.startedRefresh = false
                     self.postProgressNotification(repo)
+                    refreshOutcome = .success
                     
                 } //while true
                 updateGroup.leave()
@@ -1281,11 +1808,18 @@ final class RepoManager {
         return ((hashDict[repoPath.absoluteString]) == hash, hash)
     }
 
-    func update(force: Bool, forceReload: Bool, isBackground: Bool, repos: [Repo] = RepoManager.shared.repoList, completion: @escaping (Bool, NSAttributedString) -> Void) {
+    func update(
+        force: Bool,
+        forceReload: Bool,
+        isBackground: Bool,
+        selectionMode: RefreshSelectionMode = .activeOnly,
+        repos: [Repo] = RepoManager.shared.repoList,
+        completion: @escaping (Bool, NSAttributedString) -> Void
+    ) {
         DispatchQueue.global(qos: .userInitiated).async {
             PackageListManager.shared.initWait()
 //            DispatchQueue.main.async {
-                self._update(force: force, forceReload: forceReload, isBackground: isBackground, repos: repos, completion: completion)
+                self._update(force: force, forceReload: forceReload, isBackground: isBackground, selectionMode: selectionMode, repos: repos, completion: completion)
 //            }
         }
     }

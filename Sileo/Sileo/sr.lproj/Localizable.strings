@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Управљање изворима";
+"Source_Management_Short" = "Управљај";
+"Source_Refresh_Timeout" = "Временско ограничење освежавања извора";
+"Source_Refresh_Concurrency" = "Паралелно освежавање извора";
+"Source_Auto_Disable_On_Timeouts" = "Аутоматски онемогући при истеку времена";
+"Source_Auto_Disable_After_Timeouts" = "Аутоматски онемогући после истека времена";
+"Source_Auto_Disable_On_HTTP_Errors" = "Аутоматски онемогући при грешкама веб-сајта";
+"Source_Auto_Disable_After_HTTP_Errors" = "Аутоматски онемогући после грешака веб-сајта";
+"Source_Search.Placeholder" = "Претражи име извора или URL";
+"Disabled_Sources" = "Онемогућени извори";
+"Refresh_Active_Sources" = "Освежи активне изворе";
+"Refresh_All_Sources" = "Освежи све изворе";
+"Source_Management_Timeout_Prompt" = "Подесите временско ограничење освежавања у секундама.";
+"Source_Management_Concurrency_Prompt" = "Подесите максималан број истовремених освежавања извора. Користите 0 за Аутоматски.";
+"Source_Management_Auto_Disable_Prompt" = "Подесите после колико узастопних истека времена се активира аутоматско онемогућавање. Користите 0 за Никад.";
+"Source_Management_HTTP_Error_Prompt" = "Подесите после колико узастопних грешака статуса веб-сајта се извор аутоматски онемогућава. Користите 0 за Никад. Примењује се на HTTP 400, 401, 403, 404, 410 и 451.";
+"Source_Disabled_Manual" = "Ручно онемогућено";
+"Source_Disabled_AutoTimeout" = "Аутоматски онемогућено после %d узастопних истека времена";
+"Source_Disabled_AutoHTTPStatus" = "Аутоматски онемогућено после %d узастопних грешака веб-сајта (последња: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Аутоматски онемогућено после %d узастопних грешака веб-сајта";
+"Disabled_Sources_Manual_Section" = "Ручно онемогућени";
+"Disabled_Sources_Auto_Timeout_Section" = "Аутоматски онемогућени - истек времена";
+"Disabled_Sources_Auto_HTTP_Section" = "Аутоматски онемогућени - грешке веб-сајта";
+"Disabled_Sources_Empty" = "Нема онемогућених извора";

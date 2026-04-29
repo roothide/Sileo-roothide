@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Διαχείριση πηγών";
+"Source_Management_Short" = "Διαχείριση";
+"Source_Refresh_Timeout" = "Χρονικό όριο ανανέωσης πηγών";
+"Source_Refresh_Concurrency" = "Ταυτόχρονες ανανεώσεις πηγών";
+"Source_Auto_Disable_On_Timeouts" = "Αυτόματη απενεργοποίηση σε λήξεις χρόνου";
+"Source_Auto_Disable_After_Timeouts" = "Αυτόματη απενεργοποίηση μετά από λήξεις χρόνου";
+"Source_Auto_Disable_On_HTTP_Errors" = "Αυτόματη απενεργοποίηση σε σφάλματα ιστοτόπου";
+"Source_Auto_Disable_After_HTTP_Errors" = "Αυτόματη απενεργοποίηση μετά από σφάλματα ιστοτόπου";
+"Source_Search.Placeholder" = "Αναζήτηση ονόματος πηγής ή URL";
+"Disabled_Sources" = "Απενεργοποιημένες πηγές";
+"Refresh_Active_Sources" = "Ανανέωση ενεργών πηγών";
+"Refresh_All_Sources" = "Ανανέωση όλων των πηγών";
+"Source_Management_Timeout_Prompt" = "Ορίστε το χρονικό όριο ανανέωσης σε δευτερόλεπτα.";
+"Source_Management_Concurrency_Prompt" = "Ορίστε τον μέγιστο αριθμό ταυτόχρονων ανανεώσεων πηγών. Χρησιμοποιήστε 0 για Αυτόματο.";
+"Source_Management_Auto_Disable_Prompt" = "Ορίστε πόσες συνεχόμενες λήξεις χρόνου ενεργοποιούν την αυτόματη απενεργοποίηση. Χρησιμοποιήστε 0 για Ποτέ.";
+"Source_Management_HTTP_Error_Prompt" = "Ορίστε πόσα συνεχόμενα σφάλματα κατάστασης ιστοτόπου απενεργοποιούν αυτόματα μια πηγή. Χρησιμοποιήστε 0 για Ποτέ. Ισχύει για HTTP 400, 401, 403, 404, 410 και 451.";
+"Source_Disabled_Manual" = "Απενεργοποιήθηκε χειροκίνητα";
+"Source_Disabled_AutoTimeout" = "Απενεργοποιήθηκε αυτόματα μετά από %d συνεχόμενες λήξεις χρόνου";
+"Source_Disabled_AutoHTTPStatus" = "Απενεργοποιήθηκε αυτόματα μετά από %d συνεχόμενα σφάλματα ιστοτόπου (τελευταίο: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Απενεργοποιήθηκε αυτόματα μετά από %d συνεχόμενα σφάλματα ιστοτόπου";
+"Disabled_Sources_Manual_Section" = "Χειροκίνητα απενεργοποιημένες";
+"Disabled_Sources_Auto_Timeout_Section" = "Αυτόματα απενεργοποιημένες - λήξεις χρόνου";
+"Disabled_Sources_Auto_HTTP_Section" = "Αυτόματα απενεργοποιημένες - σφάλματα ιστοτόπου";
+"Disabled_Sources_Empty" = "Δεν υπάρχουν απενεργοποιημένες πηγές";

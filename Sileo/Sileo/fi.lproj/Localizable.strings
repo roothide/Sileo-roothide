@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Lähteiden hallinta";
+"Source_Management_Short" = "Hallitse";
+"Source_Refresh_Timeout" = "Lähteiden päivityksen aikakatkaisu";
+"Source_Refresh_Concurrency" = "Lähteiden päivitysten samanaikaisuus";
+"Source_Auto_Disable_On_Timeouts" = "Poista käytöstä automaattisesti aikakatkaisusta";
+"Source_Auto_Disable_After_Timeouts" = "Poista käytöstä automaattisesti aikakatkaisujen jälkeen";
+"Source_Auto_Disable_On_HTTP_Errors" = "Poista käytöstä automaattisesti verkkosivustovirheistä";
+"Source_Auto_Disable_After_HTTP_Errors" = "Poista käytöstä automaattisesti verkkosivustovirheiden jälkeen";
+"Source_Search.Placeholder" = "Etsi lähteen nimeä tai URL-osoitetta";
+"Disabled_Sources" = "Poistetut lähteet käytöstä";
+"Refresh_Active_Sources" = "Päivitä aktiiviset lähteet";
+"Refresh_All_Sources" = "Päivitä kaikki lähteet";
+"Source_Management_Timeout_Prompt" = "Aseta päivityksen aikakatkaisu sekunteina.";
+"Source_Management_Concurrency_Prompt" = "Aseta samanaikaisten lähdepäivitysten enimmäismäärä. Käytä 0 asetukselle Automaattinen.";
+"Source_Management_Auto_Disable_Prompt" = "Aseta, kuinka monta peräkkäistä aikakatkaisua käynnistää automaattisen käytöstä poiston. Käytä 0 asetukselle Ei koskaan.";
+"Source_Management_HTTP_Error_Prompt" = "Aseta, kuinka monta peräkkäistä verkkosivuston tilavirhettä poistaa lähteen käytöstä automaattisesti. Käytä 0 asetukselle Ei koskaan. Koskee HTTP-koodeja 400, 401, 403, 404, 410 ja 451.";
+"Source_Disabled_Manual" = "Poistettu käytöstä manuaalisesti";
+"Source_Disabled_AutoTimeout" = "Poistettu käytöstä automaattisesti %d peräkkäisen aikakatkaisun jälkeen";
+"Source_Disabled_AutoHTTPStatus" = "Poistettu käytöstä automaattisesti %d peräkkäisen verkkosivustovirheen jälkeen (viimeisin: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Poistettu käytöstä automaattisesti %d peräkkäisen verkkosivustovirheen jälkeen";
+"Disabled_Sources_Manual_Section" = "Poistettu käytöstä manuaalisesti";
+"Disabled_Sources_Auto_Timeout_Section" = "Poistettu käytöstä automaattisesti - aikakatkaisut";
+"Disabled_Sources_Auto_HTTP_Section" = "Poistettu käytöstä automaattisesti - verkkosivustovirheet";
+"Disabled_Sources_Empty" = "Ei poistettuja lähteitä käytöstä";

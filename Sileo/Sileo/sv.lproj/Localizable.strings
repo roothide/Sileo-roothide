@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Källhantering";
+"Source_Management_Short" = "Hantera";
+"Source_Refresh_Timeout" = "Timeout för källuppdatering";
+"Source_Refresh_Concurrency" = "Samtidiga källuppdateringar";
+"Source_Auto_Disable_On_Timeouts" = "Inaktivera automatiskt vid timeout";
+"Source_Auto_Disable_After_Timeouts" = "Inaktivera automatiskt efter timeout";
+"Source_Auto_Disable_On_HTTP_Errors" = "Inaktivera automatiskt vid webbplatsfel";
+"Source_Auto_Disable_After_HTTP_Errors" = "Inaktivera automatiskt efter webbplatsfel";
+"Source_Search.Placeholder" = "Sök efter källnamn eller URL";
+"Disabled_Sources" = "Inaktiverade källor";
+"Refresh_Active_Sources" = "Uppdatera aktiva källor";
+"Refresh_All_Sources" = "Uppdatera alla källor";
+"Source_Management_Timeout_Prompt" = "Ange timeout för uppdatering i sekunder.";
+"Source_Management_Concurrency_Prompt" = "Ange maximalt antal samtidiga källuppdateringar. Använd 0 för Automatiskt.";
+"Source_Management_Auto_Disable_Prompt" = "Ange hur många timeout i följd som ska utlösa automatisk inaktivering. Använd 0 för Aldrig.";
+"Source_Management_HTTP_Error_Prompt" = "Ange hur många webbplatsstatusfel i följd som ska inaktivera en källa automatiskt. Använd 0 för Aldrig. Gäller för HTTP 400, 401, 403, 404, 410 och 451.";
+"Source_Disabled_Manual" = "Inaktiverad manuellt";
+"Source_Disabled_AutoTimeout" = "Inaktiverad automatiskt efter %d timeout i följd";
+"Source_Disabled_AutoHTTPStatus" = "Inaktiverad automatiskt efter %d webbplatsfel i följd (senaste: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Inaktiverad automatiskt efter %d webbplatsfel i följd";
+"Disabled_Sources_Manual_Section" = "Manuellt inaktiverade";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatiskt inaktiverade - timeout";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatiskt inaktiverade - webbplatsfel";
+"Disabled_Sources_Empty" = "Inga inaktiverade källor";

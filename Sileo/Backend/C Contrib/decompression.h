@@ -10,6 +10,7 @@
 #define Decompression_h
 
 #include <stdio.h>
+#include <stdint.h>
 
 uint8_t decompressGzip(FILE *input, FILE *output);
 uint8_t decompressXz(FILE *input, FILE *output, uint8_t type);

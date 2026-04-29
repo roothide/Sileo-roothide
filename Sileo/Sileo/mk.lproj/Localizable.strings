@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Управување со извори";
+"Source_Management_Short" = "Управувај";
+"Source_Refresh_Timeout" = "Време на истекување за освежување на извори";
+"Source_Refresh_Concurrency" = "Паралелност на освежување на извори";
+"Source_Auto_Disable_On_Timeouts" = "Автоматски оневозможи при истекување на време";
+"Source_Auto_Disable_After_Timeouts" = "Автоматски оневозможи по истекувања на време";
+"Source_Auto_Disable_On_HTTP_Errors" = "Автоматски оневозможи при грешки на веб-страница";
+"Source_Auto_Disable_After_HTTP_Errors" = "Автоматски оневозможи по грешки на веб-страница";
+"Source_Search.Placeholder" = "Пребарај име на извор или URL";
+"Disabled_Sources" = "Оневозможени извори";
+"Refresh_Active_Sources" = "Освежи ги активните извори";
+"Refresh_All_Sources" = "Освежи ги сите извори";
+"Source_Management_Timeout_Prompt" = "Поставете го времето на истекување за освежување во секунди.";
+"Source_Management_Concurrency_Prompt" = "Поставете го максималниот број паралелни освежувања на извори. Користете 0 за Автоматски.";
+"Source_Management_Auto_Disable_Prompt" = "Поставете по колку последователни истекувања на време да се активира автоматско оневозможување. Користете 0 за Никогаш.";
+"Source_Management_HTTP_Error_Prompt" = "Поставете по колку последователни грешки на статусот на веб-страницата изворот автоматски ќе се оневозможи. Користете 0 за Никогаш. Се применува на HTTP 400, 401, 403, 404, 410 и 451.";
+"Source_Disabled_Manual" = "Рачно оневозможен";
+"Source_Disabled_AutoTimeout" = "Автоматски оневозможен по %d последователни истекувања на време";
+"Source_Disabled_AutoHTTPStatus" = "Автоматски оневозможен по %d последователни грешки на веб-страница (последна: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Автоматски оневозможен по %d последователни грешки на веб-страница";
+"Disabled_Sources_Manual_Section" = "Рачно оневозможени";
+"Disabled_Sources_Auto_Timeout_Section" = "Автоматски оневозможени - истекување на време";
+"Disabled_Sources_Auto_HTTP_Section" = "Автоматски оневозможени - грешки на веб-страница";
+"Disabled_Sources_Empty" = "Нема оневозможени извори";

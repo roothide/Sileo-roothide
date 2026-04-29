@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Керування джерелами";
+"Source_Management_Short" = "Керувати";
+"Source_Refresh_Timeout" = "Тайм-аут оновлення джерел";
+"Source_Refresh_Concurrency" = "Паралельність оновлення джерел";
+"Source_Auto_Disable_On_Timeouts" = "Автоматично вимикати при тайм-ауті";
+"Source_Auto_Disable_After_Timeouts" = "Автоматично вимикати після тайм-аутів";
+"Source_Auto_Disable_On_HTTP_Errors" = "Автоматично вимикати при помилках сайту";
+"Source_Auto_Disable_After_HTTP_Errors" = "Автоматично вимикати після помилок сайту";
+"Source_Search.Placeholder" = "Шукати назву джерела або URL";
+"Disabled_Sources" = "Вимкнені джерела";
+"Refresh_Active_Sources" = "Оновити активні джерела";
+"Refresh_All_Sources" = "Оновити всі джерела";
+"Source_Management_Timeout_Prompt" = "Укажіть тайм-аут оновлення в секундах.";
+"Source_Management_Concurrency_Prompt" = "Укажіть максимальну кількість одночасних оновлень джерел. Використовуйте 0 для Авто.";
+"Source_Management_Auto_Disable_Prompt" = "Укажіть, скільки послідовних тайм-аутів запускають автоматичне вимкнення. Використовуйте 0 для Ніколи.";
+"Source_Management_HTTP_Error_Prompt" = "Укажіть, скільки послідовних помилок статусу сайту автоматично вимикають джерело. Використовуйте 0 для Ніколи. Застосовується до HTTP 400, 401, 403, 404, 410 і 451.";
+"Source_Disabled_Manual" = "Вимкнено вручну";
+"Source_Disabled_AutoTimeout" = "Автоматично вимкнено після %d послідовних тайм-аутів";
+"Source_Disabled_AutoHTTPStatus" = "Автоматично вимкнено після %d послідовних помилок сайту (остання: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Автоматично вимкнено після %d послідовних помилок сайту";
+"Disabled_Sources_Manual_Section" = "Вимкнені вручну";
+"Disabled_Sources_Auto_Timeout_Section" = "Автоматично вимкнені - тайм-аути";
+"Disabled_Sources_Auto_HTTP_Section" = "Автоматично вимкнені - помилки сайту";
+"Disabled_Sources_Empty" = "Немає вимкнених джерел";

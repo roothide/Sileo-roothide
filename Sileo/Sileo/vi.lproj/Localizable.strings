@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Quản lý nguồn";
+"Source_Management_Short" = "Quản lý";
+"Source_Refresh_Timeout" = "Thời gian chờ làm mới nguồn";
+"Source_Refresh_Concurrency" = "Số lần làm mới nguồn đồng thời";
+"Source_Auto_Disable_On_Timeouts" = "Tự động vô hiệu hóa khi hết thời gian chờ";
+"Source_Auto_Disable_After_Timeouts" = "Tự động vô hiệu hóa sau khi hết thời gian chờ";
+"Source_Auto_Disable_On_HTTP_Errors" = "Tự động vô hiệu hóa khi lỗi trang web";
+"Source_Auto_Disable_After_HTTP_Errors" = "Tự động vô hiệu hóa sau lỗi trang web";
+"Source_Search.Placeholder" = "Tìm tên nguồn hoặc URL";
+"Disabled_Sources" = "Nguồn đã bị vô hiệu hóa";
+"Refresh_Active_Sources" = "Làm mới các nguồn đang hoạt động";
+"Refresh_All_Sources" = "Làm mới tất cả nguồn";
+"Source_Management_Timeout_Prompt" = "Đặt thời gian chờ làm mới theo giây.";
+"Source_Management_Concurrency_Prompt" = "Đặt số lần làm mới nguồn đồng thời tối đa. Dùng 0 cho Tự động.";
+"Source_Management_Auto_Disable_Prompt" = "Đặt số lần hết thời gian chờ liên tiếp sẽ kích hoạt vô hiệu hóa tự động. Dùng 0 cho Không bao giờ.";
+"Source_Management_HTTP_Error_Prompt" = "Đặt số lỗi trạng thái trang web liên tiếp sẽ tự động vô hiệu hóa một nguồn. Dùng 0 cho Không bao giờ. Áp dụng cho HTTP 400, 401, 403, 404, 410 và 451.";
+"Source_Disabled_Manual" = "Vô hiệu hóa thủ công";
+"Source_Disabled_AutoTimeout" = "Tự động vô hiệu hóa sau %d lần hết thời gian chờ liên tiếp";
+"Source_Disabled_AutoHTTPStatus" = "Tự động vô hiệu hóa sau %d lỗi trang web liên tiếp (gần nhất: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Tự động vô hiệu hóa sau %d lỗi trang web liên tiếp";
+"Disabled_Sources_Manual_Section" = "Vô hiệu hóa thủ công";
+"Disabled_Sources_Auto_Timeout_Section" = "Tự động vô hiệu hóa - hết thời gian chờ";
+"Disabled_Sources_Auto_HTTP_Section" = "Tự động vô hiệu hóa - lỗi trang web";
+"Disabled_Sources_Empty" = "Không có nguồn nào bị vô hiệu hóa";

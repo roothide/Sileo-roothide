@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Gestão de Fontes";
+"Source_Management_Short" = "Gerir";
+"Source_Refresh_Timeout" = "Limite de tempo da atualização de fontes";
+"Source_Refresh_Concurrency" = "Concorrência da atualização de fontes";
+"Source_Auto_Disable_On_Timeouts" = "Desativar automaticamente por limite de tempo";
+"Source_Auto_Disable_After_Timeouts" = "Desativar automaticamente após limites de tempo";
+"Source_Auto_Disable_On_HTTP_Errors" = "Desativar automaticamente por erros do site";
+"Source_Auto_Disable_After_HTTP_Errors" = "Desativar automaticamente após erros do site";
+"Source_Search.Placeholder" = "Pesquisar nome ou URL da fonte";
+"Disabled_Sources" = "Fontes desativadas";
+"Refresh_Active_Sources" = "Atualizar fontes ativas";
+"Refresh_All_Sources" = "Atualizar todas as fontes";
+"Source_Management_Timeout_Prompt" = "Defina o limite de tempo da atualização em segundos.";
+"Source_Management_Concurrency_Prompt" = "Defina o número máximo de atualizações simultâneas de fontes. Use 0 para Automático.";
+"Source_Management_Auto_Disable_Prompt" = "Defina quantos limites de tempo consecutivos desencadeiam a desativação automática. Use 0 para Nunca.";
+"Source_Management_HTTP_Error_Prompt" = "Defina quantos erros consecutivos de estado do site desativam automaticamente uma fonte. Use 0 para Nunca. Aplica-se a HTTP 400, 401, 403, 404, 410 e 451.";
+"Source_Disabled_Manual" = "Desativada manualmente";
+"Source_Disabled_AutoTimeout" = "Desativada automaticamente após %d limites de tempo consecutivos";
+"Source_Disabled_AutoHTTPStatus" = "Desativada automaticamente após %d erros consecutivos do site (último: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Desativada automaticamente após %d erros consecutivos do site";
+"Disabled_Sources_Manual_Section" = "Desativadas manualmente";
+"Disabled_Sources_Auto_Timeout_Section" = "Desativadas automaticamente - limites de tempo";
+"Disabled_Sources_Auto_HTTP_Section" = "Desativadas automaticamente - erros do site";
+"Disabled_Sources_Empty" = "Nenhuma fonte desativada";

@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Kildebehandling";
+"Source_Management_Short" = "Administrer";
+"Source_Refresh_Timeout" = "Tidsavbrudd for kildeoppdatering";
+"Source_Refresh_Concurrency" = "Samtidige kildeoppdateringer";
+"Source_Auto_Disable_On_Timeouts" = "Deaktiver automatisk ved tidsavbrudd";
+"Source_Auto_Disable_After_Timeouts" = "Deaktiver automatisk etter tidsavbrudd";
+"Source_Auto_Disable_On_HTTP_Errors" = "Deaktiver automatisk ved nettstedfeil";
+"Source_Auto_Disable_After_HTTP_Errors" = "Deaktiver automatisk etter nettstedfeil";
+"Source_Search.Placeholder" = "Søk etter kildenavn eller URL";
+"Disabled_Sources" = "Deaktiverte kilder";
+"Refresh_Active_Sources" = "Oppdater aktive kilder";
+"Refresh_All_Sources" = "Oppdater alle kilder";
+"Source_Management_Timeout_Prompt" = "Angi tidsavbrudd for oppdatering i sekunder.";
+"Source_Management_Concurrency_Prompt" = "Angi maksimalt antall samtidige kildeoppdateringer. Bruk 0 for Automatisk.";
+"Source_Management_Auto_Disable_Prompt" = "Angi hvor mange påfølgende tidsavbrudd som skal utløse automatisk deaktivering. Bruk 0 for Aldri.";
+"Source_Management_HTTP_Error_Prompt" = "Angi hvor mange påfølgende nettstedstatusfeil som skal deaktivere en kilde automatisk. Bruk 0 for Aldri. Gjelder for HTTP 400, 401, 403, 404, 410 og 451.";
+"Source_Disabled_Manual" = "Deaktivert manuelt";
+"Source_Disabled_AutoTimeout" = "Automatisk deaktivert etter %d påfølgende tidsavbrudd";
+"Source_Disabled_AutoHTTPStatus" = "Automatisk deaktivert etter %d påfølgende nettstedfeil (siste: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Automatisk deaktivert etter %d påfølgende nettstedfeil";
+"Disabled_Sources_Manual_Section" = "Manuelt deaktiverte";
+"Disabled_Sources_Auto_Timeout_Section" = "Automatisk deaktiverte - tidsavbrudd";
+"Disabled_Sources_Auto_HTTP_Section" = "Automatisk deaktiverte - nettstedfeil";
+"Disabled_Sources_Empty" = "Ingen deaktiverte kilder";

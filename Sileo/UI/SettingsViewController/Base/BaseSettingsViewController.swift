@@ -67,6 +67,11 @@ class BaseSettingsViewController: UITableViewController {
     }
 
     @objc func dismissController() {
+        if let navigationController = self.navigationController,
+           navigationController.viewControllers.first != self {
+            navigationController.popViewController(animated: true)
+            return
+        }
         self.dismiss(animated: true)
     }
     

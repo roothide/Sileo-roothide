@@ -245,3 +245,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "Gestió d'orígens";
+"Source_Management_Short" = "Gestiona";
+"Source_Refresh_Timeout" = "Temps d'espera de l'actualització d'orígens";
+"Source_Refresh_Concurrency" = "Concurrència de l'actualització d'orígens";
+"Source_Auto_Disable_On_Timeouts" = "Desactiva automàticament en superar el temps d'espera";
+"Source_Auto_Disable_After_Timeouts" = "Desactiva automàticament després de temps d'espera";
+"Source_Auto_Disable_On_HTTP_Errors" = "Desactiva automàticament en errors del lloc web";
+"Source_Auto_Disable_After_HTTP_Errors" = "Desactiva automàticament després d'errors del lloc web";
+"Source_Search.Placeholder" = "Cerca el nom o l'URL de l'origen";
+"Disabled_Sources" = "Orígens desactivats";
+"Refresh_Active_Sources" = "Actualitza els orígens actius";
+"Refresh_All_Sources" = "Actualitza tots els orígens";
+"Source_Management_Timeout_Prompt" = "Estableix el temps d'espera de l'actualització en segons.";
+"Source_Management_Concurrency_Prompt" = "Estableix el màxim d'actualitzacions d'orígens simultànies. Usa 0 per a Automàtic.";
+"Source_Management_Auto_Disable_Prompt" = "Estableix quants temps d'espera consecutius activen la desactivació automàtica. Usa 0 per a Mai.";
+"Source_Management_HTTP_Error_Prompt" = "Estableix quants errors d'estat del lloc web consecutius desactiven automàticament un origen. Usa 0 per a Mai. S'aplica a HTTP 400, 401, 403, 404, 410 i 451.";
+"Source_Disabled_Manual" = "Desactivat manualment";
+"Source_Disabled_AutoTimeout" = "Desactivat automàticament després de %d temps d'espera consecutius";
+"Source_Disabled_AutoHTTPStatus" = "Desactivat automàticament després de %d errors consecutius del lloc web (últim: HTTP %d)";
+"Source_Disabled_AutoHTTPStatus_Generic" = "Desactivat automàticament després de %d errors consecutius del lloc web";
+"Disabled_Sources_Manual_Section" = "Desactivats manualment";
+"Disabled_Sources_Auto_Timeout_Section" = "Desactivats automàticament - temps d'espera";
+"Disabled_Sources_Auto_HTTP_Section" = "Desactivats automàticament - errors del lloc web";
+"Disabled_Sources_Empty" = "No hi ha orígens desactivats";

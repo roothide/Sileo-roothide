@@ -244,3 +244,29 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Source Management
+"Source_Management" = "軟體源管理";
+"Source_Management_Short" = "管理";
+"Source_Refresh_Timeout" = "軟體源重新整理逾時";
+"Source_Refresh_Concurrency" = "軟體源重新整理並行數";
+"Source_Auto_Disable_On_Timeouts" = "逾時時自動停用";
+"Source_Auto_Disable_After_Timeouts" = "逾時後自動停用";
+"Source_Auto_Disable_On_HTTP_Errors" = "網站錯誤時自動停用";
+"Source_Auto_Disable_After_HTTP_Errors" = "網站錯誤後自動停用";
+"Source_Search.Placeholder" = "搜尋來源名稱或 URL";
+"Disabled_Sources" = "已停用的軟體源";
+"Refresh_Active_Sources" = "重新整理啟用中的軟體源";
+"Refresh_All_Sources" = "重新整理所有軟體源";
+"Source_Management_Timeout_Prompt" = "設定重新整理逾時時間（秒）。";
+"Source_Management_Concurrency_Prompt" = "設定軟體源重新整理的最大並行數。0 表示自動。";
+"Source_Management_Auto_Disable_Prompt" = "設定連續逾時多少次後自動停用。0 表示永不。";
+"Source_Management_HTTP_Error_Prompt" = "設定連續網站狀態錯誤多少次後自動停用。0 表示永不。適用於 HTTP 400、401、403、404、410、451 與 522。";
+"Source_Disabled_Manual" = "手動停用";
+"Source_Disabled_AutoTimeout" = "連續逾時 %d 次後自動停用";
+"Source_Disabled_AutoHTTPStatus" = "連續網站錯誤 %d 次後自動停用（最後一次：HTTP %d）";
+"Source_Disabled_AutoHTTPStatus_Generic" = "連續網站錯誤 %d 次後自動停用";
+"Disabled_Sources_Manual_Section" = "手動停用";
+"Disabled_Sources_Auto_Timeout_Section" = "自動停用 - 逾時";
+"Disabled_Sources_Auto_HTTP_Section" = "自動停用 - 網站錯誤";
+"Disabled_Sources_Empty" = "沒有已停用的軟體源";

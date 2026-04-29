@@ -397,7 +397,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
             let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
             SileoAppDelegate.presentController(alert)
             
-            sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, completion: { _, _ in
+            sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, includeAutoDisabled: false, completion: { _, _ in
                 PackageListManager.shared.upgradeAll(completion: {
                     if UserDefaults.standard.bool(forKey: "AutoConfirmUpgradeAllShortcut", fallback: false) {
                         let downloadMan = DownloadManager.shared
@@ -413,7 +413,7 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
         } else if shortcutItem.type.hasSuffix(".Refresh") {
             tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = sourcesSVC
-            sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, completion: nil)
+            sourcesVC.refreshSources(forceUpdate: false, forceReload: true, isBackground: false, useRefreshControl: true, useErrorScreen: true, includeAutoDisabled: false, completion: nil)
         } else if shortcutItem.type.hasSuffix(".AddSource") {
             tabBarController.closePopup(animated: true)
             tabBarController.selectedViewController = sourcesSVC
