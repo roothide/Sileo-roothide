@@ -1174,6 +1174,11 @@ final class RepoManager {
                     var failureReason: String?
                     var currentFailureKind: RefreshFailureKind = .other
                     func failureKind(for status: Int, error: Error?) -> RefreshFailureKind {
+                        // Treat HTTP 522 as a website status error so it participates
+                        // in the HTTP auto-disable path instead of the timeout path.
+                        if status == 522 {
+                            return .httpStatus(status)
+                        }
                         if self.isTimeoutError(error) {
                             return .timeout
                         }
@@ -1329,7 +1334,7 @@ final class RepoManager {
                     guard let releaseFile = optReleaseFile else {
                         NSLog("SileoLog: optReleaseFile=\(optReleaseFile)")
                         let message = timeoutReason ?? failureReason ?? "Could not find release file for \(repo.repoURL)"
-                        refreshOutcome = .failure(kind: timeoutReason != nil ? .timeout : currentFailureKind, reason: message)
+                        refreshOutcome = .failure(kind: currentFailureKind, reason: message)
                         log(message, type: .error)
                         errorsFound = true
 //                        reposUpdated += 1
@@ -1547,7 +1552,7 @@ final class RepoManager {
                     if !breakOff {
                         guard var packagesFile = optPackagesFile else {
                             let message = timeoutReason ?? failureReason ?? "Could not find packages file for \(repo.repoURL)"
-                            refreshOutcome = .failure(kind: timeoutReason != nil ? .timeout : currentFailureKind, reason: message)
+                            refreshOutcome = .failure(kind: currentFailureKind, reason: message)
                             log(message, type: .error)
                             errorsFound = true
 //                            reposUpdated += 1
