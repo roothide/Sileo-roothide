@@ -9,6 +9,7 @@
 
 /giveMeRoot/bin/
 /packages/
+/out/
 
 .serena
 outputs

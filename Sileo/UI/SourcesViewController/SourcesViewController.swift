@@ -9,6 +9,51 @@
 import Foundation
 import Evander
 
+enum SourcesExportUI {
+    private static func exportEntries(repoManager: RepoManager = .shared) -> [RepoSourceExportEntry] {
+        repoManager.sortedRepoList(repos: repoManager.repoList).map { repo in
+            RepoSourceExportEntry(aptSource: repo.aptSource, isDisabled: repo.isDisabled)
+        }
+    }
+
+    private static func configurePopover(_ popover: UIPopoverPresentationController?, in viewController: UIViewController, sender: Any?) {
+        if let barButtonItem = sender as? UIBarButtonItem {
+            popover?.barButtonItem = barButtonItem
+        } else if let sourceView = sender as? UIView {
+            popover?.sourceView = sourceView
+            popover?.sourceRect = sourceView.bounds
+        } else {
+            popover?.sourceView = viewController.view
+            popover?.sourceRect = CGRect(x: viewController.view.bounds.midX,
+                                         y: viewController.view.bounds.midY,
+                                         width: 0,
+                                         height: 0)
+        }
+    }
+
+    private static func presentShareSheet(from viewController: UIViewController, sender: Any?, mode: RepoSourceExportMode) {
+        let exportText = RepoSourceExportFormatter.exportText(entries: exportEntries(), mode: mode)
+        let activityViewController = UIActivityViewController(activityItems: [exportText], applicationActivities: nil)
+        configurePopover(activityViewController.popoverPresentationController, in: viewController, sender: sender)
+        viewController.present(activityViewController, animated: true)
+    }
+
+    static func presentExportOptions(from viewController: UIViewController, sender: Any?) {
+        let alert = UIAlertController(title: String(localizationKey: "Source_Management_Export_Sources"),
+                                      message: nil,
+                                      preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Export_Sources_All"), style: .default) { _ in
+            presentShareSheet(from: viewController, sender: sender, mode: .all)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Export_Sources_Enabled"), style: .default) { _ in
+            presentShareSheet(from: viewController, sender: sender, mode: .activeOnly)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Cancel"), style: .cancel))
+        configurePopover(alert.popoverPresentationController, in: viewController, sender: sender)
+        viewController.present(alert, animated: true)
+    }
+}
+
 final class SourcesViewController: SileoViewController {
     private var sortedRepoList: [Repo] = []
     private var filteredRepoList: [Repo] = []
@@ -766,30 +811,7 @@ final class SourcesViewController: SileoViewController {
     }
     
     @objc func exportSources(_ sender: Any?) {
-        let titleString = String(localizationKey: "Export")
-        let msgString = String(localizationKey: "Export_Sources")
-        let alert = UIAlertController(title: titleString, message: msgString, preferredStyle: .alert)
-        
-        let yesString = String(localizationKey: "Export_Yes")
-        let yesAction = UIAlertAction(title: yesString, style: .default, handler: { _ in
-            let repos = self.sortedRepoList.filter({$0.aptSource != nil}).map({ $0.aptSource! }).joined(separator: "\n")
-            let activityVC = UIActivityViewController(activityItems: [repos], applicationActivities: nil)
-            
-            activityVC.popoverPresentationController?.sourceView = self.view
-            activityVC.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-            
-            self.present(activityVC, animated: true, completion: nil)
-        })
-        
-        alert.addAction(yesAction)
-        
-        let noString = String(localizationKey: "Export_No")
-        let noAction = UIAlertAction(title: noString, style: .cancel, handler: { _ in
-            self.dismiss(animated: true, completion: nil)
-        })
-        alert.addAction(noAction)
-        
-        self.present(alert, animated: true, completion: nil)
+        SourcesExportUI.presentExportOptions(from: self, sender: sender)
     }
     
     public func presentAddSourceEntryField(url: URL?) {

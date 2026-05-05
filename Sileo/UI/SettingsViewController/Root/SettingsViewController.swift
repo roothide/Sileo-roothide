@@ -429,6 +429,8 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
         case timeoutAutoDisableThreshold
         case httpErrorAutoDisableToggle
         case httpErrorAutoDisableThreshold
+        case http522Treatment
+        case exportSources
         case disabledSources
     }
 
@@ -496,6 +498,17 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
             cell.textLabel?.text = String(localizationKey: "Source_Auto_Disable_After_HTTP_Errors")
             let threshold = RepoRefreshSettings.autoDisableAfterHTTPErrors
             cell.detailTextLabel?.text = threshold == 0 ? String(localizationKey: "Never") : "\(threshold)"
+        case .http522Treatment:
+            cell.textLabel?.text = String(localizationKey: "Source_HTTP_522_Treatment")
+            switch RepoRefreshSettings.http522Treatment {
+            case .websiteError:
+                cell.detailTextLabel?.text = String(localizationKey: "Source_HTTP_522_Treatment_Website_Error")
+            case .timeout:
+                cell.detailTextLabel?.text = String(localizationKey: "Source_HTTP_522_Treatment_Timeout")
+            }
+        case .exportSources:
+            cell.textLabel?.text = String(localizationKey: "Source_Management_Export_Sources")
+            cell.detailTextLabel?.text = nil
         case .disabledSources:
             cell.textLabel?.text = String(localizationKey: "Disabled_Sources")
             cell.detailTextLabel?.text = "\(RepoManager.shared.disabledRepoList().count)"
@@ -537,13 +550,20 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
         case .httpErrorAutoDisableThreshold:
+            let promptLocalizationKey = RepoRefreshSettings.http522Treatment == .websiteError
+                ? "Source_Management_HTTP_Error_Prompt"
+                : "Source_Management_HTTP_Error_Prompt_Without_522"
             presentIntegerEditor(title: String(localizationKey: "Source_Auto_Disable_After_HTTP_Errors"),
-                                 message: String(localizationKey: "Source_Management_HTTP_Error_Prompt"),
+                                 message: String(localizationKey: promptLocalizationKey),
                                  currentValue: "\(RepoRefreshSettings.autoDisableAfterHTTPErrors)",
                                  allowZero: true) { value in
                 RepoRefreshSettings.setAutoDisableAfterHTTPErrors(value)
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
+        case .http522Treatment:
+            presentHTTP522TreatmentSelector(sourceView: tableView.cellForRow(at: indexPath), indexPath: indexPath)
+        case .exportSources:
+            SourcesExportUI.presentExportOptions(from: self, sender: tableView.cellForRow(at: indexPath))
         case .disabledSources:
             let disabledSourcesVC = DisabledSourcesViewController(style: .grouped)
             self.navigationController?.pushViewController(disabledSourcesVC, animated: true)
@@ -567,6 +587,34 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
             return
         }
         tableView.reloadData()
+    }
+
+    private func presentHTTP522TreatmentSelector(sourceView: UIView?, indexPath: IndexPath) {
+        let alert = UIAlertController(title: String(localizationKey: "Source_HTTP_522_Treatment"),
+                                      message: String(localizationKey: "Source_HTTP_522_Treatment_Message"),
+                                      preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Source_HTTP_522_Treatment_Website_Error"), style: .default) { _ in
+            RepoManager.shared.updateHTTP522Treatment(.websiteError)
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Source_HTTP_522_Treatment_Timeout"), style: .default) { _ in
+            RepoManager.shared.updateHTTP522Treatment(.timeout)
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        })
+        alert.addAction(UIAlertAction(title: String(localizationKey: "Cancel"), style: .cancel))
+        if let popover = alert.popoverPresentationController {
+            if let sourceView {
+                popover.sourceView = sourceView
+                popover.sourceRect = sourceView.bounds
+            } else {
+                popover.sourceView = self.view
+                popover.sourceRect = CGRect(x: self.view.bounds.midX,
+                                            y: self.view.bounds.midY,
+                                            width: 0,
+                                            height: 0)
+            }
+        }
+        self.present(alert, animated: true)
     }
 
     private func presentIntegerEditor(title: String, message: String, currentValue: String, allowZero: Bool, onSave: @escaping (Int) -> Void) {
@@ -601,7 +649,16 @@ final class SourceManagementSwitchTableViewCell: SettingsSwitchTableViewCell {
     }
 }
 
-final class DisabledSourcesSectionHeaderView: UIView {
+final class DisabledSourcesSectionHeaderView: UITableViewHeaderFooterView {
+    struct Configuration: Equatable {
+        let title: String
+        let subtitle: String?
+        let actionsEnabled: Bool
+        let canRemove: Bool
+    }
+
+    static let reuseIdentifier = "DisabledSourcesSectionHeaderView"
+
     private enum ActionsLayoutMode {
         case singleRow
         case twoRows
@@ -609,6 +666,8 @@ final class DisabledSourcesSectionHeaderView: UIView {
     }
 
     private let titleLabel = SileoLabelView()
+    private let textStackView = UIStackView()
+    private let subtitleLabel = UILabel()
     private let actionsRowsStackView = UIStackView()
     private let topActionsStackView = UIStackView()
     private let middleActionsStackView = UIStackView()
@@ -616,34 +675,49 @@ final class DisabledSourcesSectionHeaderView: UIView {
     private let enableButton = UIButton(type: .system)
     private let refreshButton = UIButton(type: .system)
     private let removeButton = UIButton(type: .system)
-    private let buttonHeight: CGFloat = 30
+    private let buttonHeight: CGFloat = 34
     private let buttonSpacing: CGFloat = 8
     private var actionsLayoutMode: ActionsLayoutMode?
+    private var onEnable: (() -> Void)?
+    private var onRefresh: (() -> Void)?
+    private var onRemove: (() -> Void)?
+    private var currentConfiguration: Configuration?
 
-    init(title: String,
-         actionsEnabled: Bool,
-         canRemove: Bool,
-         enableAction: UIAction,
-         refreshAction: UIAction,
-         removeAction: UIAction) {
-        super.init(frame: .zero)
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
 
-        preservesSuperviewLayoutMargins = true
-        insetsLayoutMarginsFromSafeArea = true
-        layoutMargins = UIEdgeInsets(top: 16, left: layoutMargins.left, bottom: 8, right: layoutMargins.right)
+        contentView.preservesSuperviewLayoutMargins = true
+        contentView.insetsLayoutMarginsFromSafeArea = true
+        contentView.layoutMargins = UIEdgeInsets(top: 16, left: contentView.layoutMargins.left, bottom: 8, right: contentView.layoutMargins.right)
+        backgroundView = UIView()
+        backgroundView?.backgroundColor = .clear
+        textLabel?.isHidden = true
+        detailTextLabel?.isHidden = true
 
         let contentStackView = UIStackView()
         contentStackView.translatesAutoresizingMaskIntoConstraints = false
         contentStackView.axis = .vertical
         contentStackView.alignment = .fill
-        contentStackView.spacing = 8
+        contentStackView.spacing = 10
+
+        textStackView.translatesAutoresizingMaskIntoConstraints = false
+        textStackView.axis = .vertical
+        textStackView.alignment = .fill
+        textStackView.spacing = 4
 
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = title
         titleLabel.numberOfLines = 0
         titleLabel.lineBreakMode = .byWordWrapping
         titleLabel.font = UIFont.systemFont(ofSize: 19, weight: .semibold)
         titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.numberOfLines = 0
+        subtitleLabel.lineBreakMode = .byWordWrapping
+        subtitleLabel.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        subtitleLabel.isHidden = true
 
         actionsRowsStackView.translatesAutoresizingMaskIntoConstraints = false
         actionsRowsStackView.axis = .vertical
@@ -661,29 +735,29 @@ final class DisabledSourcesSectionHeaderView: UIView {
 
         configureActionButton(enableButton,
                               title: String(localizationKey: "Enable"),
-                              action: enableAction,
-                              enabled: actionsEnabled)
+                              selector: #selector(enableButtonTapped))
         configureActionButton(refreshButton,
                               title: String(localizationKey: "Refresh"),
-                              action: refreshAction,
-                              enabled: actionsEnabled)
+                              selector: #selector(refreshButtonTapped))
         configureActionButton(removeButton,
                               title: String(localizationKey: "Remove"),
-                              action: removeAction,
-                              enabled: actionsEnabled && canRemove)
+                              selector: #selector(removeButtonTapped))
 
-        contentStackView.addArrangedSubview(titleLabel)
+        textStackView.addArrangedSubview(titleLabel)
+        textStackView.addArrangedSubview(subtitleLabel)
+        contentStackView.addArrangedSubview(textStackView)
         contentStackView.addArrangedSubview(actionsRowsStackView)
-        addSubview(contentStackView)
+        contentView.addSubview(contentStackView)
 
         NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
-            contentStackView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
-            contentStackView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
-            contentStackView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor)
+            contentStackView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            contentStackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            contentStackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            contentStackView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor)
         ])
 
         applyActionsLayout(.singleRow)
+        updateActionButtonStyles()
     }
 
     @available(*, unavailable)
@@ -691,21 +765,145 @@ final class DisabledSourcesSectionHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        onEnable = nil
+        onRefresh = nil
+        onRemove = nil
+        currentConfiguration = nil
+        titleLabel.text = nil
+        subtitleLabel.text = nil
+        subtitleLabel.isHidden = true
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
+        let availableTextWidth = contentView.layoutMarginsGuide.layoutFrame.width
+        if titleLabel.preferredMaxLayoutWidth != availableTextWidth {
+            titleLabel.preferredMaxLayoutWidth = availableTextWidth
+        }
+        if subtitleLabel.preferredMaxLayoutWidth != availableTextWidth {
+            subtitleLabel.preferredMaxLayoutWidth = availableTextWidth
+        }
         updateActionsLayoutIfNeeded()
     }
 
-    private func configureActionButton(_ button: UIButton, title: String, action: UIAction, enabled: Bool) {
+    override func systemLayoutSizeFitting(_ targetSize: CGSize,
+                                          withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
+                                          verticalFittingPriority: UILayoutPriority) -> CGSize {
+        let fittingWidth = targetSize.width > 0 ? targetSize.width : bounds.width
+        if fittingWidth > 0 {
+            let availableTextWidth = max(0, fittingWidth - contentView.layoutMargins.left - contentView.layoutMargins.right)
+            titleLabel.preferredMaxLayoutWidth = availableTextWidth
+            subtitleLabel.preferredMaxLayoutWidth = availableTextWidth
+        }
+        contentView.setNeedsLayout()
+        contentView.layoutIfNeeded()
+
+        let size = contentView.systemLayoutSizeFitting(CGSize(width: fittingWidth,
+                                                              height: UIView.layoutFittingCompressedSize.height),
+                                                       withHorizontalFittingPriority: .required,
+                                                       verticalFittingPriority: .fittingSizeLevel)
+        return CGSize(width: fittingWidth, height: size.height)
+    }
+
+    func configure(configuration: Configuration,
+                   onEnable: @escaping () -> Void,
+                   onRefresh: @escaping () -> Void,
+                   onRemove: @escaping () -> Void) {
+        self.onEnable = onEnable
+        self.onRefresh = onRefresh
+        self.onRemove = onRemove
+
+        guard currentConfiguration != configuration else {
+            return
+        }
+
+        let previousConfiguration = currentConfiguration
+        currentConfiguration = configuration
+        if previousConfiguration?.title != configuration.title ||
+            previousConfiguration?.subtitle != configuration.subtitle {
+            updateTextLabels(configuration: configuration)
+            setNeedsLayout()
+        }
+        if previousConfiguration?.actionsEnabled != configuration.actionsEnabled {
+            enableButton.isEnabled = configuration.actionsEnabled
+            refreshButton.isEnabled = configuration.actionsEnabled
+        }
+
+        let removeButtonEnabled = configuration.actionsEnabled && configuration.canRemove
+        let previousRemoveButtonEnabled = previousConfiguration.map { $0.actionsEnabled && $0.canRemove }
+        if previousRemoveButtonEnabled != removeButtonEnabled {
+            removeButton.isEnabled = removeButtonEnabled
+        }
+        updateActionButtonStyles()
+        accessibilityLabel = [configuration.title, configuration.subtitle]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+    }
+
+    private func configureActionButton(_ button: UIButton, title: String, selector: Selector) {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(title, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         button.titleLabel?.adjustsFontSizeToFitWidth = true
         button.titleLabel?.minimumScaleFactor = 0.8
         button.titleLabel?.lineBreakMode = .byTruncatingTail
-        button.addAction(action, for: .touchUpInside)
-        button.isEnabled = enabled
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        button.clipsToBounds = true
+        button.layer.cornerRadius = 12
+        if #available(iOS 13.0, *) {
+            button.layer.cornerCurve = .continuous
+        }
+        button.addTarget(self, action: selector, for: .touchUpInside)
         button.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
+    }
+
+    private func updateTextLabels(configuration: Configuration) {
+        titleLabel.text = configuration.title
+        if let subtitle = configuration.subtitle, !subtitle.isEmpty {
+            subtitleLabel.text = subtitle
+            subtitleLabel.isHidden = false
+        } else {
+            subtitleLabel.text = nil
+            subtitleLabel.isHidden = true
+        }
+    }
+
+    private func actionButtonBaseColor(for button: UIButton) -> UIColor {
+        if button === enableButton {
+            return .tintColor
+        }
+        if button === refreshButton {
+            return .systemGreen
+        }
+        return .systemRed
+    }
+
+    private func updateActionButtonStyles() {
+        [enableButton, refreshButton, removeButton].forEach(updateActionButtonStyle)
+    }
+
+    private func updateActionButtonStyle(_ button: UIButton) {
+        let baseColor = actionButtonBaseColor(for: button)
+        let isEnabled = button.isEnabled
+        button.backgroundColor = isEnabled ? baseColor.withAlphaComponent(0.12) : UIColor.tertiarySystemFill
+        button.layer.borderWidth = 1
+        button.layer.borderColor = (isEnabled ? baseColor.withAlphaComponent(0.24) : UIColor.separator.withAlphaComponent(0.35)).cgColor
+        button.setTitleColor(isEnabled ? baseColor : UIColor.secondaryLabel, for: .normal)
+        button.alpha = isEnabled ? 1 : 0.82
+    }
+
+    @objc private func enableButtonTapped() {
+        onEnable?()
+    }
+
+    @objc private func refreshButtonTapped() {
+        onRefresh?()
+    }
+
+    @objc private func removeButtonTapped() {
+        onRemove?()
     }
 
     private func clearArrangedSubviews(from stackView: UIStackView) {
@@ -768,7 +966,7 @@ final class DisabledSourcesSectionHeaderView: UIView {
     }
 
     private func updateActionsLayoutIfNeeded() {
-        let availableWidth = layoutMarginsGuide.layoutFrame.width
+        let availableWidth = contentView.layoutMarginsGuide.layoutFrame.width
         let preferredMode = preferredActionsLayoutMode(for: availableWidth)
         guard preferredMode != actionsLayoutMode else {
             return
@@ -779,13 +977,21 @@ final class DisabledSourcesSectionHeaderView: UIView {
 }
 
 final class DisabledSourcesViewController: BaseSettingsViewController {
-    private struct DisabledSourceSection {
+    private struct DisabledSourceSection: Equatable {
         let id: String
         let title: String
+        let subtitle: String?
         let repos: [Repo]
     }
 
     private var activeRefreshSectionID: String?
+    private var disabledSectionsSnapshot = [DisabledSourceSection]()
+    private var disabledSourcesObserver: Any?
+    private var disabledSectionsReloadWorkItem: DispatchWorkItem?
+    private var disabledSectionsNeedsForceReload = false
+    private var disabledSectionsPendingSectionIDs = Set<String>()
+    private let disabledSectionsReloadDebounceInterval: TimeInterval = 0.05
+    private var renderedActiveRefreshSectionID: String?
 
     private func conciseAutoDisabledSectionTitle(localizationKey: String) -> String {
         let fullTitle = String(localizationKey: localizationKey)
@@ -796,7 +1002,7 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
         return fullTitle
     }
 
-    private var disabledSections: [DisabledSourceSection] {
+    private func buildDisabledSectionsSnapshot() -> [DisabledSourceSection] {
         let disabledRepos = RepoManager.shared.sortedRepoList(repos: RepoManager.shared.disabledRepoList())
         var manualRepos = [Repo]()
         var autoTimeoutRepos = [Repo]()
@@ -822,11 +1028,13 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
         if !manualRepos.isEmpty {
             sections.append(DisabledSourceSection(id: "manual",
                                                   title: String(localizationKey: "Disabled_Sources_Manual_Section"),
+                                                  subtitle: nil,
                                                   repos: manualRepos))
         }
         if !autoTimeoutRepos.isEmpty {
             sections.append(DisabledSourceSection(id: "auto-timeout",
                                                   title: conciseAutoDisabledSectionTitle(localizationKey: "Disabled_Sources_Auto_Timeout_Section"),
+                                                  subtitle: nil,
                                                   repos: autoTimeoutRepos))
         }
 
@@ -836,15 +1044,197 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
                 continue
             }
             sections.append(DisabledSourceSection(id: "auto-http-\(statusCode)",
-                                                  title: "\(autoHTTPSectionTitle)\nHTTP \(statusCode)",
+                                                  title: autoHTTPSectionTitle,
+                                                  subtitle: "HTTP \(statusCode)",
                                                   repos: repos))
         }
         if !autoHTTPReposWithoutStatus.isEmpty {
             sections.append(DisabledSourceSection(id: "auto-http-unknown",
                                                   title: autoHTTPSectionTitle,
+                                                  subtitle: nil,
                                                   repos: autoHTTPReposWithoutStatus))
         }
         return sections
+    }
+
+    private func sectionIndexes(for sectionIDs: Set<String>, in snapshot: [DisabledSourceSection]) -> IndexSet {
+        var indexes = IndexSet()
+        for (index, section) in snapshot.enumerated() where sectionIDs.contains(section.id) {
+            indexes.insert(index)
+        }
+        return indexes
+    }
+
+    private func headerConfiguration(for section: DisabledSourceSection,
+                                     activeRefreshSectionID: String?) -> DisabledSourcesSectionHeaderView.Configuration {
+        let isRefreshing = activeRefreshSectionID == section.id
+        return DisabledSourcesSectionHeaderView.Configuration(title: section.title,
+                                                             subtitle: section.subtitle,
+                                                             actionsEnabled: !isRefreshing,
+                                                             canRemove: section.repos.contains(where: canRemove))
+    }
+
+    private func configureHeaderView(_ headerView: DisabledSourcesSectionHeaderView, section: DisabledSourceSection) {
+        headerView.configure(configuration: headerConfiguration(for: section, activeRefreshSectionID: activeRefreshSectionID),
+                             onEnable: { [weak self] in
+                                 self?.enableSection(section.id)
+                             },
+                             onRefresh: { [weak self] in
+                                 self?.refreshSection(section.id)
+                             },
+                             onRemove: { [weak self] in
+                                 self?.removeSection(section.id)
+                             })
+    }
+
+    private func reconfigureVisibleHeaders(for sectionIDs: Set<String>,
+                                           in snapshot: [DisabledSourceSection]) -> Set<String> {
+        var reconfiguredSectionIDs = Set<String>()
+        for sectionID in sectionIDs {
+            guard let sectionIndex = snapshot.firstIndex(where: { $0.id == sectionID }),
+                  let headerView = tableView.headerView(forSection: sectionIndex) as? DisabledSourcesSectionHeaderView else {
+                continue
+            }
+            configureHeaderView(headerView, section: snapshot[sectionIndex])
+            reconfiguredSectionIDs.insert(sectionID)
+        }
+        return reconfiguredSectionIDs
+    }
+
+    private func applyDisabledSectionsSnapshotIfNeeded(forceReload: Bool = false) {
+        let previousSnapshot = disabledSectionsSnapshot
+        let previousActiveRefreshSectionID = renderedActiveRefreshSectionID
+        let snapshot = buildDisabledSectionsSnapshot()
+        let structureChanged = previousSnapshot.map(\.id) != snapshot.map(\.id)
+
+        var changedSectionIDs = Set<String>()
+        var headerOnlySectionIDs = Set<String>()
+        var headerLayoutChangedSectionIDs = Set<String>()
+        if !structureChanged {
+            for (oldSection, newSection) in zip(previousSnapshot, snapshot) {
+                let previousHeaderConfiguration = headerConfiguration(for: oldSection,
+                                                                     activeRefreshSectionID: previousActiveRefreshSectionID)
+                let currentHeaderConfiguration = headerConfiguration(for: newSection,
+                                                                    activeRefreshSectionID: activeRefreshSectionID)
+                if oldSection.repos != newSection.repos {
+                    changedSectionIDs.insert(newSection.id)
+                } else if previousHeaderConfiguration != currentHeaderConfiguration {
+                    headerOnlySectionIDs.insert(newSection.id)
+                    if previousHeaderConfiguration.title != currentHeaderConfiguration.title ||
+                        previousHeaderConfiguration.subtitle != currentHeaderConfiguration.subtitle {
+                        headerLayoutChangedSectionIDs.insert(newSection.id)
+                    }
+                }
+            }
+        }
+
+        headerOnlySectionIDs.formUnion(disabledSectionsPendingSectionIDs)
+        disabledSectionsPendingSectionIDs.removeAll()
+        disabledSectionsSnapshot = snapshot
+        renderedActiveRefreshSectionID = activeRefreshSectionID
+
+        if snapshot.isEmpty {
+            tableView.reloadData()
+            return
+        }
+
+        if structureChanged || previousSnapshot.isEmpty != snapshot.isEmpty {
+            tableView.reloadData()
+            return
+        }
+
+        if tableView.numberOfSections == 0 {
+            tableView.reloadData()
+            return
+        }
+
+        headerOnlySectionIDs.subtract(changedSectionIDs)
+
+        let reconfiguredHeaderSectionIDs = reconfigureVisibleHeaders(for: headerOnlySectionIDs, in: snapshot)
+        if !headerLayoutChangedSectionIDs.intersection(reconfiguredHeaderSectionIDs).isEmpty {
+            tableView.beginUpdates()
+            tableView.endUpdates()
+        }
+
+        let sectionIndexes = sectionIndexes(for: changedSectionIDs, in: snapshot)
+        if !sectionIndexes.isEmpty {
+            tableView.reloadSections(sectionIndexes, with: .automatic)
+            return
+        }
+
+        if !reconfiguredHeaderSectionIDs.isEmpty {
+            return
+        }
+
+        if forceReload,
+           tableView.numberOfSections != max(snapshot.count, 1) {
+            tableView.reloadData()
+        }
+    }
+
+    private func reloadDisabledSectionsTable(forceReload: Bool = false,
+                                            debounced: Bool = false,
+                                            preferredSectionIDs: Set<String> = []) {
+        disabledSectionsNeedsForceReload = disabledSectionsNeedsForceReload || forceReload
+        disabledSectionsPendingSectionIDs.formUnion(preferredSectionIDs)
+        disabledSectionsReloadWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else {
+                return
+            }
+            let shouldForceReload = self.disabledSectionsNeedsForceReload
+            self.disabledSectionsNeedsForceReload = false
+            self.disabledSectionsReloadWorkItem = nil
+            self.applyDisabledSectionsSnapshotIfNeeded(forceReload: shouldForceReload)
+        }
+        disabledSectionsReloadWorkItem = workItem
+
+        if debounced {
+            DispatchQueue.main.asyncAfter(deadline: .now() + disabledSectionsReloadDebounceInterval, execute: workItem)
+        } else {
+            DispatchQueue.main.async(execute: workItem)
+        }
+    }
+
+    private func cancelDisabledSectionsReload() {
+        disabledSectionsReloadWorkItem?.cancel()
+        disabledSectionsReloadWorkItem = nil
+        disabledSectionsNeedsForceReload = false
+        disabledSectionsPendingSectionIDs.removeAll()
+    }
+
+    private func startObservingDisabledSourceChanges() {
+        guard disabledSourcesObserver == nil else {
+            return
+        }
+        disabledSourcesObserver = NotificationCenter.default.addObserver(forName: RepoManager.repoStateDidChangeNotification,
+                                                                        object: nil,
+                                                                        queue: .main) { [weak self] _ in
+            guard let self = self,
+                  self.isViewLoaded,
+                  self.view.window != nil else {
+                return
+            }
+            self.reloadDisabledSectionsTable(debounced: true)
+        }
+    }
+
+    private func stopObservingDisabledSourceChanges() {
+        cancelDisabledSectionsReload()
+        guard let observer = disabledSourcesObserver else {
+            return
+        }
+        NotificationCenter.default.removeObserver(observer)
+        disabledSourcesObserver = nil
+    }
+
+    private func section(at index: Int) -> DisabledSourceSection? {
+        disabledSectionsSnapshot.indices.contains(index) ? disabledSectionsSnapshot[index] : nil
+    }
+
+    private func section(withID id: String) -> DisabledSourceSection? {
+        disabledSectionsSnapshot.first { $0.id == id }
     }
 
     private func displayTitle(for repo: Repo) -> String {
@@ -872,23 +1262,19 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
     }
 
     private func repo(at indexPath: IndexPath) -> Repo? {
-        let sections = disabledSections
-        guard !sections.isEmpty else {
+        guard let section = section(at: indexPath.section),
+              section.repos.indices.contains(indexPath.row) else {
             return nil
         }
-        return sections[indexPath.section].repos[indexPath.row]
+        return section.repos[indexPath.row]
     }
 
-    private func repos(in section: Int) -> [Repo] {
-        let sections = disabledSections
-        guard !sections.isEmpty, sections.indices.contains(section) else {
-            return []
-        }
-        return sections[section].repos
+    private func repos(inSectionID sectionID: String) -> [Repo] {
+        section(withID: sectionID)?.repos ?? []
     }
 
-    private func removableRepos(in section: Int) -> [Repo] {
-        repos(in: section).filter(canRemove)
+    private func removableRepos(inSectionID sectionID: String) -> [Repo] {
+        repos(inSectionID: sectionID).filter(canRemove)
     }
 
     private func refreshSucceeded(repo: Repo, previousSuccessAt: Date?) -> Bool {
@@ -907,19 +1293,21 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
         self.present(errorVC, animated: true)
     }
 
-    private func enableSection(_ section: Int) {
+    private func enableSection(_ sectionID: String) {
         guard !DownloadManager.shared.queueRunning else {
             TabBarController.singleton?.presentPopupController()
             return
         }
-        for repo in repos(in: section) {
-            RepoManager.shared.enableRepo(repo)
+        let repos = repos(inSectionID: sectionID)
+        guard !repos.isEmpty else {
+            return
         }
-        tableView.reloadData()
+        RepoManager.shared.enableRepos(repos)
+        reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: [sectionID])
     }
 
-    private func removeSection(_ section: Int) {
-        let removableRepos = removableRepos(in: section)
+    private func removeSection(_ sectionID: String) {
+        let removableRepos = removableRepos(inSectionID: sectionID)
         guard !removableRepos.isEmpty else {
             return
         }
@@ -930,37 +1318,42 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
         for repo in removableRepos {
             RepoManager.shared.remove(repo: repo)
         }
-        tableView.reloadData()
+        reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: [sectionID])
     }
 
-    private func refreshSection(_ section: Int) {
-        let repos = repos(in: section)
+    private func refreshSection(_ sectionID: String) {
+        let repos = repos(inSectionID: sectionID)
         guard !repos.isEmpty, activeRefreshSectionID == nil else {
             return
         }
 
-        let previousSuccessByRepo = Dictionary(uniqueKeysWithValues: repos.map {
-            ($0.refreshStateKey, RepoManager.shared.refreshState(for: $0).lastSuccessAt)
-        })
+        var previousSuccessByRepo = [String: Date?]()
+        for repo in repos {
+            previousSuccessByRepo[repo.refreshStateKey] = RepoManager.shared.refreshState(for: repo).lastSuccessAt
+        }
 
-        activeRefreshSectionID = disabledSections[section].id
-        tableView.reloadData()
+        activeRefreshSectionID = sectionID
+        reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: [sectionID])
 
         RepoManager.shared.update(force: false,
                                   forceReload: true,
                                   isBackground: false,
                                   selectionMode: .explicit,
                                   repos: repos) { didFindErrors, errorOutput in
+            var reposToEnable = [Repo]()
             for repo in repos {
                 let previousSuccessAt = previousSuccessByRepo[repo.refreshStateKey] ?? nil
                 if self.refreshSucceeded(repo: repo, previousSuccessAt: previousSuccessAt),
                    RepoManager.shared.isRepoDisabled(repo) {
-                    RepoManager.shared.enableRepo(repo)
+                    reposToEnable.append(repo)
                 }
             }
 
+            if !reposToEnable.isEmpty {
+                RepoManager.shared.enableRepos(reposToEnable)
+            }
             self.activeRefreshSectionID = nil
-            self.tableView.reloadData()
+            self.reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: [sectionID])
 
             if didFindErrors, errorOutput.length > 0 {
                 self.presentRefreshErrors(errorOutput)
@@ -973,65 +1366,66 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
         self.title = String(localizationKey: "Disabled_Sources")
         tableView.sectionHeaderHeight = UITableView.automaticDimension
         tableView.estimatedSectionHeaderHeight = 112
+        tableView.register(DisabledSourcesSectionHeaderView.self,
+                           forHeaderFooterViewReuseIdentifier: DisabledSourcesSectionHeaderView.reuseIdentifier)
+        disabledSectionsSnapshot = buildDisabledSectionsSnapshot()
+        renderedActiveRefreshSectionID = activeRefreshSectionID
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tableView.reloadData()
+        startObservingDisabledSourceChanges()
+        reloadDisabledSectionsTable(forceReload: true)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        stopObservingDisabledSourceChanges()
+    }
+
+    deinit {
+        cancelDisabledSectionsReload()
+        stopObservingDisabledSourceChanges()
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        max(disabledSections.count, 1)
+        max(disabledSectionsSnapshot.count, 1)
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let sections = disabledSections
-        guard !sections.isEmpty else {
+        guard !disabledSectionsSnapshot.isEmpty else {
+            return nil
+        }
+        guard let sectionInfo = self.section(at: section) else {
             return super.tableView(tableView, viewForHeaderInSection: section)
         }
 
-        let sectionInfo = sections[section]
-        let isRefreshing = activeRefreshSectionID == sectionInfo.id
-        return DisabledSourcesSectionHeaderView(
-            title: sectionInfo.title,
-            actionsEnabled: !isRefreshing,
-            canRemove: !removableRepos(in: section).isEmpty,
-            enableAction: UIAction { [weak self] _ in
-                self?.enableSection(section)
-            },
-            refreshAction: UIAction { [weak self] _ in
-                self?.refreshSection(section)
-            },
-            removeAction: UIAction { [weak self] _ in
-                self?.removeSection(section)
-            }
-        )
+        let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: DisabledSourcesSectionHeaderView.reuseIdentifier) as? DisabledSourcesSectionHeaderView ?? DisabledSourcesSectionHeaderView(reuseIdentifier: DisabledSourcesSectionHeaderView.reuseIdentifier)
+        configureHeaderView(headerView, section: sectionInfo)
+        return headerView
     }
 
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        disabledSections.isEmpty ? super.tableView(tableView, heightForHeaderInSection: section) : UITableView.automaticDimension
+        disabledSectionsSnapshot.isEmpty ? CGFloat.leastNonzeroMagnitude : UITableView.automaticDimension
     }
 
     override func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {
-        disabledSections.isEmpty ? super.tableView(tableView, estimatedHeightForHeaderInSection: section) : 112
+        disabledSectionsSnapshot.isEmpty ? 0 : 112
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let sections = disabledSections
-        guard !sections.isEmpty else {
+        guard !disabledSectionsSnapshot.isEmpty else {
             return 1
         }
-        return sections[section].repos.count
+        return self.section(at: section)?.repos.count ?? 0
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let sections = disabledSections
-        return sections.isEmpty ? String(localizationKey: "Disabled_Sources") : sections[section].title
+        nil
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let sections = disabledSections
-        if sections.isEmpty {
+        if disabledSectionsSnapshot.isEmpty {
             let cell = self.reusableCell(withStyle: .default, reuseIdentifier: "DisabledSourcesEmptyCell")
             cell.textLabel?.text = String(localizationKey: "Disabled_Sources_Empty")
             cell.selectionStyle = .none
@@ -1039,7 +1433,13 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
             return cell
         }
 
-        let repo = sections[indexPath.section].repos[indexPath.row]
+        guard let repo = repo(at: indexPath) else {
+            let cell = self.reusableCell(withStyle: .default, reuseIdentifier: "DisabledSourcesFallbackCell")
+            cell.textLabel?.text = String(localizationKey: "Disabled_Sources_Empty")
+            cell.selectionStyle = .none
+            cell.accessoryType = .none
+            return cell
+        }
         let state = RepoManager.shared.refreshState(for: repo)
         let cell = self.reusableCell(withStyle: .subtitle, reuseIdentifier: "DisabledSourceCell")
         cell.textLabel?.text = displayTitle(for: repo)
@@ -1063,7 +1463,8 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
                 return
             }
             RepoManager.shared.enableRepo(repo)
-            self.tableView.reloadData()
+            let sectionID = self.section(at: indexPath.section)?.id
+            self.reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: Set(sectionID.map { [$0] } ?? []))
         })
         if self.canRemove(repo) {
             alert.addAction(UIAlertAction(title: String(localizationKey: "Remove"), style: .destructive) { _ in
@@ -1072,7 +1473,8 @@ final class DisabledSourcesViewController: BaseSettingsViewController {
                     return
                 }
                 RepoManager.shared.remove(repo: repo)
-                self.tableView.reloadData()
+                let sectionID = self.section(at: indexPath.section)?.id
+                self.reloadDisabledSectionsTable(forceReload: true, preferredSectionIDs: Set(sectionID.map { [$0] } ?? []))
             })
         }
         alert.addAction(UIAlertAction(title: String(localizationKey: "Cancel"), style: .cancel))

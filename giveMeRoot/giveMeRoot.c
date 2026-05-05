@@ -14,37 +14,6 @@ extern int proc_pidpath(int pid, void *buffer, uint32_t buffersize);
 #define FLAG_PLATFORMIZE (1 << 1)
 
 
-const char *getBuildtimeAppPath(void) {
-    const char *path = NULL;
-#ifndef MAC
-    
-#ifdef PREBOOT
-    
-#ifdef NIGHTLY
-    path = "/var/jb/Applications/Sileo-Nightly.app/Sileo-Preboot";
-#elif BETA
-    path = "/var/jb/Applications/Sileo-Beta.app/Sileo-Preboot";
-#else
-    path = "/var/jb/Applications/Sileo.app/Sileo-Preboot";
-#endif
-    
-#else
-    
-#ifdef NIGHTLY
-    path = "/Applications/Sileo-Nightly.app/Sileo";
-#elif BETA
-    path = "/Applications/Sileo-Beta.app/Sileo";
-#else
-    path = "/Applications/Sileo.app/Sileo";
-#endif
-    
-#endif
-    
-#endif
-    
-    return path;
-}
-
 void patch_setuid() {
     void* handle = dlopen("/usr/lib/libjailbreak.dylib", RTLD_LAZY);
     if (!handle) return;
@@ -61,11 +30,27 @@ void patch_setuid() {
 }
 
 char *copyRuntimeAppPath(void) {
-    const char *buildtimePath = getBuildtimeAppPath();
-    if (buildtimePath == NULL) {
+    char selfPath[PROC_PIDPATHINFO_MAXSIZE] = {0};
+    int selfPathLength = proc_pidpath(getpid(), selfPath, sizeof(selfPath));
+    if (selfPathLength <= 0) {
         return NULL;
     }
-    return realpath(buildtimePath, NULL);
+
+    char *expectedAppPath = strdup(selfPath);
+    if (expectedAppPath == NULL) {
+        return NULL;
+    }
+
+    char *lastSlash = strrchr(expectedAppPath, '/');
+    if (lastSlash == NULL) {
+        free(expectedAppPath);
+        return NULL;
+    }
+
+    strcpy(lastSlash + 1, "Sileo");
+    char *resolvedPath = realpath(expectedAppPath, NULL);
+    free(expectedAppPath);
+    return resolvedPath;
 }
 
 int main(int argc, const char *argv[]) {

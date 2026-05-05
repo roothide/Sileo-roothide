@@ -257,6 +257,28 @@ extension NewsViewController { // Get Data
         default: return .packages
         }
     }
+
+    private func packageSectionTimestamp(for section: Int) -> Int64? {
+        guard currentSection(section) == .packages else {
+            return nil
+        }
+        return timestamps.safe(section - newsBuffer)
+    }
+
+    private func packages(in section: Int) -> [Package]? {
+        guard let timestamp = packageSectionTimestamp(for: section) else {
+            return nil
+        }
+        return sections[timestamp]
+    }
+
+    private func package(at indexPath: IndexPath) -> Package? {
+        guard let packages = packages(in: indexPath.section),
+              packages.indices.contains(indexPath.row) else {
+            return nil
+        }
+        return packages[indexPath.row]
+    }
 }
 
 extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection View Data Source
@@ -273,7 +295,7 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
         switch currentSection(section) {
         case .news: return 1
         case .placeholder: return sections.isEmpty ? 1 : 0
-        case .packages: return sections[timestamps[section - newsBuffer]]?.count ?? 0
+        case .packages: return packages(in: section)?.count ?? 0
         }
     }
 
@@ -284,7 +306,7 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
         case .packages:
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PackageCollectionViewCell",
                                                                 for: indexPath) as? PackageCollectionViewCell,
-                  let package = sections[timestamps[indexPath.section - newsBuffer]]?[indexPath.row] else { return PackageCollectionViewCell() }
+                  let package = package(at: indexPath) else { return PackageCollectionViewCell() }
             cell.setTargetPackage(package, isUnread: !package.userRead)
             return cell
         }
@@ -292,10 +314,13 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {
+            guard let timestamp = packageSectionTimestamp(for: indexPath.section) else {
+                return UICollectionReusableView()
+            }
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
                                                                              withReuseIdentifier: "NewsDateHeader",
                                                                              for: indexPath) as? PackageListHeader ?? PackageListHeader()
-            let date = NSDate(timeIntervalSince1970: TimeInterval(timestamps[indexPath.section - newsBuffer]))
+            let date = NSDate(timeIntervalSince1970: TimeInterval(timestamp))
             headerView.label?.text = dateFormatter.string(from: date as Date).uppercased(with: Locale.current)
             return headerView
         }
@@ -326,7 +351,9 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         if currentSection(indexPath.section) != .packages { return }
-        let viewController = self.controller(indexPath: indexPath)
+        guard let viewController = self.controller(indexPath: indexPath) else {
+            return
+        }
         self.navigationController?.pushViewController(viewController, animated: true)
     }
 
@@ -356,24 +383,31 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
     }
     
     private func markAsSeen(_ indexPath: IndexPath) {
-        guard let safe = timestamps.safe(indexPath.section - newsBuffer),
-              let section = sections[safe] else { return }
-        let package = section[indexPath.row]
+        guard let timestamp = packageSectionTimestamp(for: indexPath.section),
+              var packages = sections[timestamp],
+              packages.indices.contains(indexPath.row) else { return }
+        let package = packages[indexPath.row]
         DatabaseManager.shared.markAsSeen(package)
-        sections[timestamps[indexPath.section - newsBuffer]]?[indexPath.row].userRead = true
+        package.userRead = true
+        packages[indexPath.row] = package
+        sections[timestamp] = packages
     }
 }
 
 extension NewsViewController { // 3D Touch
-    func controller(indexPath: IndexPath) -> PackageActions {
-        guard let package = sections[timestamps[indexPath.section - newsBuffer]]?[indexPath.row] else { fatalError("Something went wrong with indexxing") }
+    func controller(indexPath: IndexPath) -> PackageActions? {
+        guard let package = package(at: indexPath) else {
+            return nil
+        }
         return NativePackageViewController.viewController(for: package)
     }
 
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
         guard let indexPath = collectionView?.indexPathForItem(at: location) else { return nil }
         if currentSection(indexPath.section) != .packages { return nil }
-        let packageViewController = self.controller(indexPath: indexPath)
+        guard let packageViewController = self.controller(indexPath: indexPath) else {
+            return nil
+        }
         return packageViewController
     }
 
@@ -386,7 +420,9 @@ extension NewsViewController { // 3D Touch
 extension NewsViewController {
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         if currentSection(indexPath.section) != .packages { return nil }
-        let packageViewController = self.controller(indexPath: indexPath)
+        guard let packageViewController = self.controller(indexPath: indexPath) else {
+            return nil
+        }
         let menuItems = packageViewController.actions()
         
         return UIContextMenuConfiguration(identifier: nil,
@@ -409,7 +445,7 @@ extension NewsViewController {
 
 extension Array {
     func safe(_ index: Int) -> Element? {
-        if (self.count - 1) < index { return nil }
+        guard index >= 0, index < self.count else { return nil }
         return self[index]
     }
 }

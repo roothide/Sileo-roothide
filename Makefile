@@ -145,6 +145,7 @@ export DISPLAY_NAME = "Sileo"
 ICON = https:\/\/getsileo.app\/img\/icon.png
 SILEO_NAME = Sileo
 SILEO_APP  = Sileo.app
+SILEO_APP_INSTALL_PATH = $(PREFIX)/Applications/$(SILEO_APP)
 SILEO_VERSION = $$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" $(SILEO_STAGE_DIR)/$(PREFIX)/Applications/$(SILEO_APP)/$(CONTENTS)Info.plist)
 
 
@@ -280,7 +281,7 @@ package: stage
 		-e 's/@@ICON@@/$(ICON)/' \
 		-e 's/@@DEB_DEPENDS@@/$(DEB_DEPENDS)/' $(SILEO_STAGE_DIR)/DEBIAN/control.in > $(SILEO_STAGE_DIR)/DEBIAN/control
 	@rm -f $(SILEO_STAGE_DIR)/DEBIAN/control.in
-	@sed -e s/@@SILEO_APP@@/$(SILEO_APP)/ \
+	@sed -e 's#@@SILEO_APP_PATH@@#$(SILEO_APP_INSTALL_PATH)#' \
 		$(SILEO_STAGE_DIR)/DEBIAN/postinst.in > $(SILEO_STAGE_DIR)/DEBIAN/postinst
 	@chmod 0755 $(SILEO_STAGE_DIR)/DEBIAN/postinst
 	@rm -f $(SILEO_STAGE_DIR)/DEBIAN/postinst.in

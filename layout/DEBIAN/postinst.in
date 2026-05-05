@@ -38,6 +38,6 @@ case "$1" in
 esac
 
 if [ -z "${SILEO}" ]; then echo "Not running in Sileo. Trigger UICache"; fi
-if [ -z "${SILEO}" ]; then uicache -p /Applications/@@SILEO_APP@@; fi
+if [ -z "${SILEO}" ]; then uicache -p @@SILEO_APP_PATH@@; fi
 
 exit 0

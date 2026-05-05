@@ -16,13 +16,15 @@ enum RepoRefreshSettings {
     static let autoDisableAfterTimeoutsKey = "RepoAutoDisableAfterTimeouts"
     static let httpErrorAutoDisableEnabledKey = "RepoHTTPErrorAutoDisableEnabled"
     static let autoDisableAfterHTTPErrorsKey = "RepoAutoDisableAfterHTTPErrors"
+    static let http522TreatmentKey = "RepoHTTP522Treatment"
 
     static let defaultTimeoutSeconds = 20
     static let defaultConcurrencyOverride = 0
-    static let defaultTimeoutAutoDisableEnabled = true
+    static let defaultTimeoutAutoDisableEnabled = false
     static let defaultAutoDisableAfterTimeouts = 3
     static let defaultHTTPErrorAutoDisableEnabled = true
-    static let defaultAutoDisableAfterHTTPErrors = 1
+    static let defaultAutoDisableAfterHTTPErrors = 2
+    static let defaultHTTP522Treatment: HTTP522Treatment = .timeout
 
     static var timeoutSeconds: TimeInterval {
         let rawValue = UserDefaults.standard.integer(forKey: timeoutKey, fallback: defaultTimeoutSeconds)
@@ -50,6 +52,14 @@ enum RepoRefreshSettings {
     static var autoDisableAfterHTTPErrors: Int {
         let rawValue = UserDefaults.standard.integer(forKey: autoDisableAfterHTTPErrorsKey, fallback: defaultAutoDisableAfterHTTPErrors)
         return max(0, rawValue)
+    }
+
+    static var http522Treatment: HTTP522Treatment {
+        guard let rawValue = UserDefaults.standard.string(forKey: http522TreatmentKey),
+              let treatment = HTTP522Treatment(rawValue: rawValue) else {
+            return defaultHTTP522Treatment
+        }
+        return treatment
     }
 
     static func setTimeoutSeconds(_ value: Int) {
@@ -81,10 +91,16 @@ enum RepoRefreshSettings {
         UserDefaults.standard.set(max(0, value), forKey: autoDisableAfterHTTPErrorsKey)
         UserDefaults.standard.synchronize()
     }
+
+    static func setHTTP522Treatment(_ treatment: HTTP522Treatment) {
+        UserDefaults.standard.set(treatment.rawValue, forKey: http522TreatmentKey)
+        UserDefaults.standard.synchronize()
+    }
 }
 
 // swiftlint:disable:next type_body_length
 final class RepoManager {
+    static let repoStateDidChangeNotification = Notification.Name("SileoRepoManagerStateDidChange")
 
     enum RepoDisableReason: String, Codable {
         case manual
@@ -189,7 +205,13 @@ final class RepoManager {
     private var repoListLock = DispatchSemaphore(value: 1)
     private var refreshStates = [String: RepoRefreshState]()
     private let refreshStateLock = DispatchSemaphore(value: 1)
-    private let autoDisableHTTPStatusCodes: Set<Int> = [400, 401, 403, 404, 410, 451, 522]
+    private var autoDisableHTTPStatusCodes: Set<Int> {
+        var statusCodes: Set<Int> = [400, 401, 403, 404, 410, 451]
+        if RepoRefreshSettings.http522Treatment == .websiteError {
+            statusCodes.insert(522)
+        }
+        return statusCodes
+    }
     
     public func sortedRepoList(repos: [Repo]?=nil) -> [Repo] {
         let repos = repos ?? repoListSnapshot()
@@ -375,6 +397,7 @@ final class RepoManager {
 
     private func notifyRepoVisibilityDidChange() {
         DispatchQueue.main.async {
+            NotificationCenter.default.post(name: RepoManager.repoStateDidChangeNotification, object: nil)
             NotificationCenter.default.post(name: SourcesViewController.reloadDataNotification, object: nil)
             NotificationCenter.default.post(name: PackageListManager.reloadNotification, object: nil)
             NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
@@ -410,16 +433,26 @@ final class RepoManager {
     }
 
     func enableRepo(_ repo: Repo) {
-        let (previousState, nextState) = updateRefreshState(for: repo) { state in
-            state.disableReason = nil
-            state.disabledAt = nil
-            state.consecutiveTimeoutCount = 0
-            state.consecutiveHTTPErrorCount = 0
-            state.lastHTTPStatusCode = nil
-            state.lastFailureReason = nil
+        enableRepos([repo])
+    }
+
+    func enableRepos(_ repos: [Repo]) {
+        var didChangeVisibility = false
+        for repo in repos {
+            let (previousState, nextState) = updateRefreshState(for: repo) { state in
+                state.disableReason = nil
+                state.disabledAt = nil
+                state.consecutiveTimeoutCount = 0
+                state.consecutiveHTTPErrorCount = 0
+                state.lastHTTPStatusCode = nil
+                state.lastFailureReason = nil
+            }
+            restoreCachedPackagesIfNeeded(for: repo)
+            if previousState.isDisabled != nextState.isDisabled {
+                didChangeVisibility = true
+            }
         }
-        restoreCachedPackagesIfNeeded(for: repo)
-        if previousState.isDisabled != nextState.isDisabled {
+        if didChangeVisibility {
             notifyRepoVisibilityDidChange()
         }
     }
@@ -501,6 +534,47 @@ final class RepoManager {
         }
         if didChangeVisibility {
             notifyRepoVisibilityDidChange()
+        }
+    }
+
+    func updateHTTP522Treatment(_ treatment: HTTP522Treatment) {
+        guard RepoRefreshSettings.http522Treatment != treatment else {
+            return
+        }
+
+        RepoRefreshSettings.setHTTP522Treatment(treatment)
+        refreshStateLock.wait()
+        defer { refreshStateLock.signal() }
+
+        var didUpdate = false
+        for key in refreshStates.keys {
+            guard var state = refreshStates[key], state.lastHTTPStatusCode == 522 else {
+                continue
+            }
+
+            switch treatment {
+            case .websiteError:
+                if state.consecutiveHTTPErrorCount == 0, state.consecutiveTimeoutCount > 0 {
+                    state.consecutiveHTTPErrorCount = state.consecutiveTimeoutCount
+                }
+                if state.disableReason == .autoTimeout {
+                    state.disableReason = .autoHTTPError
+                }
+            case .timeout:
+                if state.consecutiveTimeoutCount == 0, state.consecutiveHTTPErrorCount > 0 {
+                    state.consecutiveTimeoutCount = state.consecutiveHTTPErrorCount
+                }
+                if state.disableReason == .autoHTTPError {
+                    state.disableReason = .autoTimeout
+                }
+            }
+
+            refreshStates[key] = state
+            didUpdate = true
+        }
+
+        if didUpdate {
+            saveRefreshStatesLocked()
         }
     }
 
@@ -738,6 +812,9 @@ final class RepoManager {
             DependencyResolverAccelerator.shared.removeRepo(repo: repo)
         }
         DownloadManager.shared.reloadData(recheckPackages: true)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: RepoManager.repoStateDidChangeNotification, object: nil)
+        }
         NotificationCenter.default.post(name: NewsViewController.reloadNotification, object: nil)
     }
 
@@ -1174,18 +1251,19 @@ final class RepoManager {
                     var failureReason: String?
                     var currentFailureKind: RefreshFailureKind = .other
                     func failureKind(for status: Int, error: Error?) -> RefreshFailureKind {
-                        // Treat HTTP 522 as a website status error so it participates
-                        // in the HTTP auto-disable path instead of the timeout path.
-                        if status == 522 {
-                            return .httpStatus(status)
-                        }
-                        if self.isTimeoutError(error) {
+                        let classification = RepoRefreshFailureClassifier.classify(
+                            status: status,
+                            isTimeoutError: self.isTimeoutError(error),
+                            http522Treatment: RepoRefreshSettings.http522Treatment
+                        )
+                        switch classification {
+                        case .timeout:
                             return .timeout
+                        case .httpStatus(let statusCode):
+                            return .httpStatus(statusCode)
+                        case .other:
+                            return .other
                         }
-                        if status > 0 {
-                            return .httpStatus(status)
-                        }
-                        return .other
                     }
                     defer {
                         self.finalizeRefresh(for: repo, outcome: refreshOutcome, selectionMode: selectionMode)

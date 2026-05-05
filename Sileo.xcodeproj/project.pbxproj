@@ -281,6 +281,7 @@
 		E12818BD26BBFAA500D2553B /* FeaturedLayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FF7A6624FAF0310088F88B /* FeaturedLayerView.swift */; };
 		E12818BE26BBFAA500D2553B /* UITextView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499162C22607C06500D09BE7 /* UITextView+Extensions.swift */; };
 		E12818BF26BBFAA500D2553B /* RepoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D6A62E22E53EF900CBD045 /* RepoManager.swift */; };
+		84EAA0022E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84EAA0012E18B1001A2B3C4D /* RepoManagementPolicy.swift */; };
 		E12818C026BBFAA500D2553B /* SourceErrorsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DB3BCE22D58200008FCFA1 /* SourceErrorsViewController.swift */; };
 		E12818C126BBFAA500D2553B /* SourceLicense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172B2ED022F08B21000155B9 /* SourceLicense.swift */; };
 		E12818C226BBFAA500D2553B /* SourceProgressIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1AB912922ED09AE0054341B /* SourceProgressIndicatorView.swift */; };
@@ -732,6 +733,7 @@
 		F139D0D022EA9209007F5C0D /* DepictionMinVersionForceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C5D99D22D1453A0021BD89 /* DepictionMinVersionForceView.swift */; };
 		F139D0D222EA9209007F5C0D /* SourceErrorsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DB3BCE22D58200008FCFA1 /* SourceErrorsViewController.swift */; };
 		F139D0D322EA9209007F5C0D /* Repo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D6A63222E54C6700CBD045 /* Repo.swift */; };
+		84EAA0032E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84EAA0012E18B1001A2B3C4D /* RepoManagementPolicy.swift */; };
 		F139D0DA22EA9209007F5C0D /* FeaturedPackageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C5D9DA22D18C570021BD89 /* FeaturedPackageView.swift */; };
 		F139D0DC22EA9209007F5C0D /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = 56A5989A214657A700677FCA /* ZKSwizzle.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F139D0DD22EA9209007F5C0D /* PackageListHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DB3BCB22D57BD9008FCFA1 /* PackageListHeader.swift */; };
@@ -929,6 +931,7 @@
 		F1D6A62C22E53E7000CBD045 /* String+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D6A62322E53E7000CBD045 /* String+Utilities.swift */; };
 		F1D6A62F22E53EF900CBD045 /* RepoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D6A62E22E53EF900CBD045 /* RepoManager.swift */; };
 		F1D6A63322E54C6700CBD045 /* Repo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D6A63222E54C6700CBD045 /* Repo.swift */; };
+		84EAA0042E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84EAA0012E18B1001A2B3C4D /* RepoManagementPolicy.swift */; };
 		F1D82F1823050FED00EECCAE /* PackageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D82F1723050FED00EECCAE /* PackageListViewController.swift */; };
 		F1D82F7823094E1C00EECCAE /* PackageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D82F1723050FED00EECCAE /* PackageListViewController.swift */; };
 		F1D82F7C230959D400EECCAE /* FeaturedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D82F7B230959D400EECCAE /* FeaturedViewController.swift */; };
@@ -1618,6 +1621,7 @@
 		F1D6A62322E53E7000CBD045 /* String+Utilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Utilities.swift"; sourceTree = "<group>"; };
 		F1D6A62E22E53EF900CBD045 /* RepoManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RepoManager.swift; sourceTree = "<group>"; };
 		F1D6A63222E54C6700CBD045 /* Repo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repo.swift; sourceTree = "<group>"; };
+		84EAA0012E18B1001A2B3C4D /* RepoManagementPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoManagementPolicy.swift; sourceTree = "<group>"; };
 		F1D82F1723050FED00EECCAE /* PackageListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageListViewController.swift; sourceTree = "<group>"; };
 		F1D82F7B230959D400EECCAE /* FeaturedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturedViewController.swift; sourceTree = "<group>"; };
 		F1DB3BCB22D57BD9008FCFA1 /* PackageListHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackageListHeader.swift; sourceTree = "<group>"; };
@@ -2722,6 +2726,7 @@
 			isa = PBXGroup;
 			children = (
 				F1D6A62E22E53EF900CBD045 /* RepoManager.swift */,
+				84EAA0012E18B1001A2B3C4D /* RepoManagementPolicy.swift */,
 			);
 			path = "Repo Manager";
 			sourceTree = "<group>";
@@ -4172,6 +4177,7 @@
 				E12818BC26BBFAA500D2553B /* Repo.swift in Sources */,
 				E12818BD26BBFAA500D2553B /* FeaturedLayerView.swift in Sources */,
 				E12818BE26BBFAA500D2553B /* UITextView+Extensions.swift in Sources */,
+				84EAA0022E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */,
 				E12818BF26BBFAA500D2553B /* RepoManager.swift in Sources */,
 				E12818C026BBFAA500D2553B /* SourceErrorsViewController.swift in Sources */,
 				E12818C126BBFAA500D2553B /* SourceLicense.swift in Sources */,
@@ -4383,6 +4389,7 @@
 				F1FF7A6824FAF0310088F88B /* FeaturedLayerView.swift in Sources */,
 				F139D0D322EA9209007F5C0D /* Repo.swift in Sources */,
 				E1F4B967288E8F3500E0C6E8 /* Data+Extensions.swift in Sources */,
+				84EAA0032E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */,
 				F139D11422EA9209007F5C0D /* RepoManager.swift in Sources */,
 				F139D0D222EA9209007F5C0D /* SourceErrorsViewController.swift in Sources */,
 				172B2ED822F0A351000155B9 /* SourceLicense.swift in Sources */,
@@ -4570,6 +4577,7 @@
 				F1D6A63322E54C6700CBD045 /* Repo.swift in Sources */,
 				F1FF7A6724FAF0310088F88B /* FeaturedLayerView.swift in Sources */,
 				499162C42607C06500D09BE7 /* UITextView+Extensions.swift in Sources */,
+				84EAA0042E18B1001A2B3C4D /* RepoManagementPolicy.swift in Sources */,
 				F1D6A62F22E53EF900CBD045 /* RepoManager.swift in Sources */,
 				F1DB3BCF22D58200008FCFA1 /* SourceErrorsViewController.swift in Sources */,
 				172B2ED122F08B21000155B9 /* SourceLicense.swift in Sources */,

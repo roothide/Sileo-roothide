@@ -46,6 +46,16 @@ For software, make a Pull Request with your changes and our team will review it.
 
 If you have questions, ask in the Sileo Discord server.
 
+# Packaging
+
+To build all supported jailbreak package variants from this repository, run:
+
+```sh
+./Scripts/build_packages.sh
+```
+
+This produces rootful, rootless, and roothide `.deb` packages under `out/`. The roothide package is derived from the rootless package layout during the script run.
+
 #
 
 Sileo Team 2018 - 2023
