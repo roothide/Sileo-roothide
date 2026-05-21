@@ -422,7 +422,14 @@ extension SettingsViewController: UIColorPickerViewControllerDelegate {
 }
 
 final class SourceManagementSettingsViewController: BaseSettingsViewController {
-    private enum Row: Int, CaseIterable {
+    private enum SourceManagementSection: Int, CaseIterable {
+        case refresh
+        case timeoutAutoDisable
+        case websiteErrors
+        case management
+    }
+
+    private enum Row {
         case timeout
         case concurrency
         case timeoutAutoDisableToggle
@@ -432,11 +439,54 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
         case http522Treatment
         case exportSources
         case disabledSources
+
+        var symbolName: String {
+            switch self {
+            case .timeout:
+                return "timer"
+            case .concurrency:
+                return "arrow.triangle.2.circlepath"
+            case .timeoutAutoDisableToggle:
+                return "stopwatch"
+            case .timeoutAutoDisableThreshold:
+                return "number.circle"
+            case .httpErrorAutoDisableToggle:
+                return "exclamationmark.triangle"
+            case .httpErrorAutoDisableThreshold:
+                return "number.circle"
+            case .http522Treatment:
+                return "globe"
+            case .exportSources:
+                return "square.and.arrow.up"
+            case .disabledSources:
+                return "nosign"
+            }
+        }
+
+        var iconColor: UIColor {
+            switch self {
+            case .timeout:
+                return UIColor(red: 0.00, green: 0.48, blue: 1.00, alpha: 1.00)
+            case .concurrency:
+                return UIColor(red: 0.20, green: 0.68, blue: 0.31, alpha: 1.00)
+            case .timeoutAutoDisableToggle, .timeoutAutoDisableThreshold:
+                return UIColor(red: 1.00, green: 0.58, blue: 0.00, alpha: 1.00)
+            case .httpErrorAutoDisableToggle, .httpErrorAutoDisableThreshold:
+                return UIColor(red: 1.00, green: 0.23, blue: 0.19, alpha: 1.00)
+            case .http522Treatment:
+                return UIColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.00)
+            case .exportSources:
+                return UIColor(red: 0.00, green: 0.63, blue: 0.64, alpha: 1.00)
+            case .disabledSources:
+                return UIColor(red: 0.56, green: 0.56, blue: 0.58, alpha: 1.00)
+            }
+        }
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = String(localizationKey: "Source_Management")
+        configureSeparators()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -444,20 +494,31 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
         tableView.reloadData()
     }
 
+    override func updateSileoColors() {
+        super.updateSileoColors()
+        configureSeparators()
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
-        1
+        SourceManagementSection.allCases.count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        Row.allCases.count
+        guard let section = SourceManagementSection(rawValue: section) else {
+            return 0
+        }
+        return rows(in: section).count
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        String(localizationKey: "Sources_Page")
+        guard SourceManagementSection(rawValue: section) == .refresh else {
+            return nil
+        }
+        return String(localizationKey: "Sources_Page")
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let row = Row(rawValue: indexPath.row) else {
+        guard let row = row(at: indexPath) else {
             return UITableViewCell()
         }
         if row == .timeoutAutoDisableToggle || row == .httpErrorAutoDisableToggle {
@@ -467,6 +528,7 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
             cell.onToggle = { [weak self] isOn in
                 self?.handleToggleChange(for: row, isOn: isOn)
             }
+            cell.iconImage = settingsIcon(for: row)
             switch row {
             case .timeoutAutoDisableToggle:
                 cell.amyPogLabel.text = String(localizationKey: "Source_Auto_Disable_On_Timeouts")
@@ -482,6 +544,7 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
 
         let cell = self.reusableCell(withStyle: .value1, reuseIdentifier: "SourceManagementSettingCell")
         cell.accessoryType = .disclosureIndicator
+        configureIcon(for: row, in: cell)
         switch row {
         case .timeout:
             cell.textLabel?.text = String(localizationKey: "Source_Refresh_Timeout")
@@ -515,11 +578,12 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
         default:
             break
         }
+        configureStateAppearance(for: row, in: cell)
         return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let row = Row(rawValue: indexPath.row) else {
+        guard let row = row(at: indexPath) else {
             tableView.deselectRow(at: indexPath, animated: true)
             return
         }
@@ -575,18 +639,156 @@ final class SourceManagementSettingsViewController: BaseSettingsViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 
+    private func row(at indexPath: IndexPath) -> Row? {
+        guard let section = SourceManagementSection(rawValue: indexPath.section) else {
+            return nil
+        }
+        let rows = rows(in: section)
+        guard rows.indices.contains(indexPath.row) else {
+            return nil
+        }
+        return rows[indexPath.row]
+    }
+
+    private func rows(in section: SourceManagementSection) -> [Row] {
+        switch section {
+        case .refresh:
+            return [.timeout, .concurrency]
+        case .timeoutAutoDisable:
+            return [.timeoutAutoDisableToggle, .timeoutAutoDisableThreshold]
+        case .websiteErrors:
+            return [.httpErrorAutoDisableToggle, .httpErrorAutoDisableThreshold, .http522Treatment]
+        case .management:
+            return [.exportSources, .disabledSources]
+        }
+    }
+
+    private func section(containing row: Row) -> SourceManagementSection? {
+        switch row {
+        case .timeout, .concurrency:
+            return .refresh
+        case .timeoutAutoDisableToggle, .timeoutAutoDisableThreshold:
+            return .timeoutAutoDisable
+        case .httpErrorAutoDisableToggle, .httpErrorAutoDisableThreshold, .http522Treatment:
+            return .websiteErrors
+        case .exportSources, .disabledSources:
+            return .management
+        }
+    }
+
+    private func configureSeparators() {
+        tableView.separatorColor = .sileoSeparatorColor
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 65, bottom: 0, right: 20)
+    }
+
+    private func configureIcon(for row: Row, in cell: UITableViewCell) {
+        cell.imageView?.image = settingsIcon(for: row, isEnabled: isRowVisuallyEnabled(row))
+        cell.imageView?.tintColor = nil
+    }
+
+    private func configureStateAppearance(for row: Row, in cell: UITableViewCell) {
+        let color = isRowVisuallyEnabled(row) ? UIColor.tintColor : disabledConfigurationColor
+        cell.tintColor = color
+        cell.textLabel?.textColor = color
+        cell.detailTextLabel?.textColor = color
+    }
+
+    private func isRowVisuallyEnabled(_ row: Row) -> Bool {
+        switch row {
+        case .timeoutAutoDisableThreshold:
+            return RepoRefreshSettings.timeoutAutoDisableEnabled
+        case .httpErrorAutoDisableThreshold, .http522Treatment:
+            return RepoRefreshSettings.httpErrorAutoDisableEnabled
+        default:
+            return true
+        }
+    }
+
+    private var disabledConfigurationColor: UIColor {
+        if #available(iOS 13.0, *) {
+            return .secondaryLabel
+        }
+        return .gray
+    }
+
+    private func settingsIcon(for row: Row, isEnabled: Bool = true) -> UIImage? {
+        guard #available(iOS 13.0, *),
+              let symbol = UIImage(systemName: row.symbolName,
+                                   withConfiguration: UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold))?
+                .withTintColor(.white, renderingMode: .alwaysOriginal) else {
+            return nil
+        }
+
+        let size = CGSize(width: 29, height: 29)
+        let symbolBounds = CGSize(width: 17, height: 17)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            (isEnabled ? row.iconColor : disabledConfigurationColor).setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 7).fill()
+
+            let ratio = min(symbolBounds.width / max(symbol.size.width, 1),
+                            symbolBounds.height / max(symbol.size.height, 1))
+            let drawSize = CGSize(width: symbol.size.width * ratio,
+                                  height: symbol.size.height * ratio)
+            symbol.draw(in: CGRect(x: (size.width - drawSize.width) / 2,
+                                   y: (size.height - drawSize.height) / 2,
+                                   width: drawSize.width,
+                                   height: drawSize.height))
+        }
+    }
+
     private func handleToggleChange(for row: Row, isOn: Bool) {
+        guard let section = section(containing: row) else {
+            return
+        }
+
         switch row {
         case .timeoutAutoDisableToggle:
             RepoRefreshSettings.setTimeoutAutoDisableEnabled(isOn)
-            RepoManager.shared.updateAutoDisablePreference(for: .autoTimeout, enabled: isOn)
+            reloadConfigurationRows(in: section)
+            updateTimeoutAutoDisablePreferenceAsync()
         case .httpErrorAutoDisableToggle:
             RepoRefreshSettings.setHTTPErrorAutoDisableEnabled(isOn)
-            RepoManager.shared.updateAutoDisablePreference(for: .autoHTTPError, enabled: isOn)
+            reloadConfigurationRows(in: section)
+            updateHTTPErrorAutoDisablePreferenceAsync()
         default:
             return
         }
-        tableView.reloadData()
+    }
+
+    private func reloadConfigurationRows(in section: SourceManagementSection) {
+        let rows = rows(in: section)
+        let indexPaths = rows.enumerated().compactMap { offset, row -> IndexPath? in
+            isConfigurationRow(row) ? IndexPath(row: offset, section: section.rawValue) : nil
+        }
+
+        guard !indexPaths.isEmpty else {
+            return
+        }
+        tableView.reloadRows(at: indexPaths, with: .none)
+    }
+
+    private func isConfigurationRow(_ row: Row) -> Bool {
+        switch row {
+        case .timeoutAutoDisableThreshold, .httpErrorAutoDisableThreshold, .http522Treatment:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func updateTimeoutAutoDisablePreferenceAsync() {
+        DispatchQueue.global(qos: .utility).async {
+            RepoManager.shared.updateAutoDisablePreference(for: .autoTimeout,
+                                                           enabled: RepoRefreshSettings.timeoutAutoDisableEnabled)
+        }
+    }
+
+    private func updateHTTPErrorAutoDisablePreferenceAsync() {
+        DispatchQueue.global(qos: .utility).async {
+            RepoManager.shared.updateAutoDisablePreference(for: .autoHTTPError,
+                                                           enabled: RepoRefreshSettings.httpErrorAutoDisableEnabled)
+        }
     }
 
     private func presentHTTP522TreatmentSelector(sourceView: UIView?, indexPath: IndexPath) {

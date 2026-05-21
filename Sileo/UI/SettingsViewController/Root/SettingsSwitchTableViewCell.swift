@@ -13,10 +13,23 @@ class SettingsSwitchTableViewCell: UITableViewCell {
     
     public var control: UISwitch = UISwitch()
     public var amyPogLabel: UILabel = UILabel()
+    private let iconImageView = UIImageView()
+    private var labelLeadingWithoutIconConstraint: NSLayoutConstraint?
+    private var labelLeadingWithIconConstraint: NSLayoutConstraint?
     var viewControllerForPresentation: UIViewController?
     var fallback = false
     
     var defaultKey: String?
+    var iconImage: UIImage? {
+        didSet {
+            updateIconImage()
+        }
+    }
+    var symbolName: String? {
+        didSet {
+            iconImage = symbolName.flatMap { UIImage(systemNameOrNil: $0)?.withRenderingMode(.alwaysTemplate) }
+        }
+    }
     
     public func sync() {
         if let key = defaultKey {
@@ -35,20 +48,31 @@ class SettingsSwitchTableViewCell: UITableViewCell {
         self.selectionStyle = .none
         amyPogLabel.textColor = .tintColor
         control.onTintColor = .tintColor
+        iconImageView.tintColor = .tintColor
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.isHidden = true
         amyPogLabel.adjustsFontSizeToFitWidth = true
+        self.contentView.addSubview(iconImageView)
         self.contentView.addSubview(control)
         self.contentView.addSubview(amyPogLabel)
         
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
         amyPogLabel.translatesAutoresizingMaskIntoConstraints = false
         control.translatesAutoresizingMaskIntoConstraints = false
         
-        control.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
+        control.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor).isActive = true
         control.addTarget(self, action: #selector(self.didChange(sender:)), for: .valueChanged)
         
-        amyPogLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor).isActive = true
-        amyPogLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20).isActive = true
-        control.leadingAnchor.constraint(equalTo: amyPogLabel.trailingAnchor, constant: 5).isActive = true
-        control.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor).isActive = true
+        iconImageView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor).isActive = true
+        iconImageView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 20).isActive = true
+        iconImageView.widthAnchor.constraint(equalToConstant: 29).isActive = true
+        iconImageView.heightAnchor.constraint(equalToConstant: 29).isActive = true
+        amyPogLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor).isActive = true
+        labelLeadingWithoutIconConstraint = amyPogLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 20)
+        labelLeadingWithIconConstraint = amyPogLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12)
+        labelLeadingWithoutIconConstraint?.isActive = true
+        control.leadingAnchor.constraint(equalTo: amyPogLabel.trailingAnchor, constant: 12).isActive = true
+        control.trailingAnchor.constraint(equalTo: self.contentView.layoutMarginsGuide.trailingAnchor).isActive = true
         amyPogLabel.setContentHuggingPriority(UILayoutPriority(251), for: .horizontal)
         amyPogLabel.setContentHuggingPriority(UILayoutPriority(251), for: .vertical)
         amyPogLabel.setContentCompressionResistancePriority(UILayoutPriority(749), for: .horizontal)
@@ -57,6 +81,12 @@ class SettingsSwitchTableViewCell: UITableViewCell {
                                                selector: #selector(updateSileoColors),
                                                name: SileoThemeManager.sileoChangedThemeNotification,
                                                object: nil)
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        symbolName = nil
+        iconImage = nil
     }
     
     @objc public func didChange(sender: UISwitch!) {
@@ -84,5 +114,13 @@ class SettingsSwitchTableViewCell: UITableViewCell {
     @objc private func updateSileoColors() {
         amyPogLabel.textColor = .tintColor
         control.onTintColor = .tintColor
+        iconImageView.tintColor = .tintColor
+    }
+
+    private func updateIconImage() {
+        iconImageView.image = iconImage
+        iconImageView.isHidden = iconImage == nil
+        labelLeadingWithoutIconConstraint?.isActive = iconImage == nil
+        labelLeadingWithIconConstraint?.isActive = iconImage != nil
     }
 }
