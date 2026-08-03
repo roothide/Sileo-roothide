@@ -244,3 +244,13 @@
 "Whats_Collected" = "مالذي يتم جمعه";
 "Non_Identifying" = "فقط معلومات عن الحزم وبعض المعلومات عن الجهاز غير الحساسة هي التي يتم جمعها.";
 "Privacy_Policy" = "سياسة الخصوصية";
+
+// Added translations
+"Convert" = "تحويل";
+"Get Patcher" = "الحصول على Patcher";
+"Not Updated" = "غير محدث";
+"Remind_Roothide" = "ذكّر المطورين بتكييف roothide وتحديث التويكات الحالية.";
+"Select Version" = "تحديد الإصدار";
+"Select the version of the package to install" = "حدد إصدار الحزمة المراد تثبيتها";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "يمكنك التواصل مع مطور هذه الحزمة لتحديثها لـ roothide، أو يمكنك محاولة تحويلها عبر roothide Patcher.";
+"please contact @roothideDev to update it" = "يرجى التواصل مع @roothideDev لتحديثه";

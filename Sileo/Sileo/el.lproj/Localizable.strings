@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Μετατροπή";
+"Get Patcher" = "Λήψη Patcher";
+"Not Updated" = "Μη ενημερωμένο";
+"Remind_Roothide" = "Υπενθυμίστε στους προγραμματιστές να προσαρμόσουν το roothide και να ενημερώσουν τα υπάρχοντα tweaks.";
+"Select Version" = "Επιλογή έκδοσης";
+"Select the version of the package to install" = "Επιλέξτε την έκδοση του πακέτου προς εγκατάσταση";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Μπορείτε να επικοινωνήσετε με τον προγραμματιστή αυτού του πακέτου για να το ενημερώσει για το roothide, ή μπορείτε να προσπαθήσετε να το μετατρέψετε μέσω του roothide Patcher.";
+"please contact @roothideDev to update it" = "παρακαλούμε επικοινωνήστε με το @roothideDev για ενημέρωση";

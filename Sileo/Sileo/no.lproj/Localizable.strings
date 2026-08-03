@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Konverter";
+"Get Patcher" = "Hent Patcher";
+"Not Updated" = "Ikke oppdatert";
+"Remind_Roothide" = "Påminn utviklere om å tilpasse roothide og oppdatere eksisterende tweaks.";
+"Select Version" = "Velg versjon";
+"Select the version of the package to install" = "Velg versjonen av pakken som skal installeres";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Du kan kontakte utvikleren av denne pakken for å oppdatere den for roothide, eller du kan prøve å konvertere den via roothide Patcher.";
+"please contact @roothideDev to update it" = "vennligst kontakt @roothideDev for å oppdatere den";

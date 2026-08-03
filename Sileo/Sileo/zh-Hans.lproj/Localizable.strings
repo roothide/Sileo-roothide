@@ -26,9 +26,9 @@
 "Sileo_Team" = "Sileo 团队";
 "Warning" = "警告";
 "Edit" = "编辑";
-"Why" = "Why";
-"Deny" = "Deny";
-"Accept" = "Accept";
+"Why" = "为什么";
+"Deny" = "拒绝";
+"Accept" = "接受";
 
 // Popup messages
 "Background_App_Refresh" = "后台App刷新";
@@ -92,7 +92,7 @@
 "Packages_By_Author" = "%@ 的软件包"; // %@ = author name
 
 "Featured_Page" = "精选";
-"News_Page" = "新闻";
+"News_Page" = "更新";
 "Sources_Page" = "软件源";
 "Packages_Page" = "软件包";
 "Search_Page" = "搜索";
@@ -101,7 +101,7 @@
 "Refreshing_Sources_Page" = "正在刷新软件源";
 "Package_Installed_Files_Page" = "已安装的文件";
 "Refresh" = "刷新";
-"Remove" = "Remove";
+"Remove" = "移除";
 
 "All_Packages.Title" = "所有软件包";
 "All_Packages.Cell_Subtitle" = "查看已经添加的软件源的所有软件包";
@@ -236,11 +236,21 @@
 "View_Depiction" = "查看介绍";
 
 "Copy_ID" = "复制 ID";
-"Canister_Policy" = "Canister Privacy Policy";
-"Download_Analytics" = "Download Analytics";
-"Provided_Canister" = "Provided by Canister";
-"Data_Collected" = "Data collected is used to update the featured page and various recommendation sources.";
-"Change_Later" = "You can always change your choice later.";
-"Whats_Collected" = "What's Collected";
-"Non_Identifying" = "Only package and non-identifying device information is collected.";
-"Privacy_Policy" = "Privacy Policy";
+"Canister_Policy" = "Canister 隐私政策";
+"Download_Analytics" = "下载分析";
+"Provided_Canister" = "由 Canister 提供";
+"Data_Collected" = "收集的数据用于更新精选页面和各种推荐来源。";
+"Remind_Roothide" = "提醒开发者适配 roothide，更新现有越狱插件。";
+"Change_Later" = "您随时可以稍后更改选择。";
+"Whats_Collected" = "收集的内容";
+"Non_Identifying" = "仅收集软件包和不可识别的设备信息。";
+"Privacy_Policy" = "隐私政策";
+
+"Select Version" = "选择版本";
+"Select the version of the package to install" = "选择要安装的软件包版本";
+
+"Not Updated" = "未更新";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "您可以联系此软件包的开发者以适配 roothide 进行更新，或尝试通过 roothide Patcher 进行转换。";
+"please contact @roothideDev to update it" = "请联系 @roothideDev 进行更新";
+"Convert" = "转换";
+"Get Patcher" = "获取 Patcher";

@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Chuyển đổi";
+"Get Patcher" = "Tải Patcher";
+"Not Updated" = "Chưa cập nhật";
+"Remind_Roothide" = "Nhắc nhở các nhà phát triển thích ứng roothide và cập nhật các tweak hiện có.";
+"Select Version" = "Chọn phiên bản";
+"Select the version of the package to install" = "Chọn phiên bản gói để cài đặt";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Bạn có thể liên hệ với nhà phát triển của gói này để cập nhật cho roothide, hoặc bạn có thể thử chuyển đổi qua roothide Patcher.";
+"please contact @roothideDev to update it" = "vui lòng liên hệ @roothideDev để cập nhật";

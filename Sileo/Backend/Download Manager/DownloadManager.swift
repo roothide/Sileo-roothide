@@ -935,7 +935,13 @@ final class DownloadManager {
                     
                     let title = String(localizationKey: "Not Updated")
                     
-                    let msg = ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host) ? String(localizationKey: "please contact @roothideDev to update it") : String(localizationKey: "\(package.package)(\(package.version))\n\nYou can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
+                    let msg: String
+                    if ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host) {
+                        msg = String(localizationKey: "please contact @roothideDev to update it")
+                    } else {
+                        let prefix = "\(package.package)(\(package.version))\n\n"
+                        msg = prefix + String(localizationKey: "You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
+                    }
                     
                     let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
                     

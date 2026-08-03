@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "変換";
+"Get Patcher" = "Patcherを入手";
+"Not Updated" = "未更新";
+"Remind_Roothide" = "開発者にroothideの対応と既存のtweakの更新を促してください。";
+"Select Version" = "バージョンを選択";
+"Select the version of the package to install" = "インストールするパッケージのバージョンを選択";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "このパッケージの開発者にroothideの更新を依頼するか、roothide Patcherで変換してみてください。";
+"please contact @roothideDev to update it" = "更新については@roothideDevにお問い合わせください";

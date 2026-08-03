@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Konvertera";
+"Get Patcher" = "Hämta Patcher";
+"Not Updated" = "Inte uppdaterad";
+"Remind_Roothide" = "Påminn utvecklare att anpassa roothide och uppdatera befintliga tweaks.";
+"Select Version" = "Välj version";
+"Select the version of the package to install" = "Välj version av paketet att installera";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Du kan kontakta utvecklaren av detta paket för att uppdatera det för roothide, eller så kan du försöka konvertera det via roothide Patcher.";
+"please contact @roothideDev to update it" = "vänligen kontakta @roothideDev för att uppdatera det";

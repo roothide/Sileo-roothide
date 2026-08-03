@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "轉換";
+"Get Patcher" = "取得 Patcher";
+"Not Updated" = "未更新";
+"Remind_Roothide" = "提醒開發者適配 roothide，更新現有越獄插件。";
+"Select Version" = "選擇版本";
+"Select the version of the package to install" = "選擇要安裝的軟體包版本";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "您可以聯絡此軟體包的開發者以適配 roothide 進行更新，或嘗試透過 roothide Patcher 進行轉換。";
+"please contact @roothideDev to update it" = "請聯絡 @roothideDev 進行更新";

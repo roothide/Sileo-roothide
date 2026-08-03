@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "변환";
+"Get Patcher" = "Patcher 받기";
+"Not Updated" = "업데이트 안 됨";
+"Remind_Roothide" = "개발자에게 roothide 적용 및 기존 트윅 업데이트를 상기시키세요.";
+"Select Version" = "버전 선택";
+"Select the version of the package to install" = "설치할 패키지 버전 선택";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "이 패키지의 개발자에게 roothide 업데이트를 요청하거나, roothide Patcher를 통해 변환해 볼 수 있습니다.";
+"please contact @roothideDev to update it" = "업데이트하려면 @roothideDev에게 문의하세요";

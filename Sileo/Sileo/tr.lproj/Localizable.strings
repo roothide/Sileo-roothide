@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Dönüştür";
+"Get Patcher" = "Patcher'ı Al";
+"Not Updated" = "Güncellenmedi";
+"Remind_Roothide" = "Geliştiricilere roothide'e uyum sağlamalarını ve mevcut tweak'leri güncellemelerini hatırlatın.";
+"Select Version" = "Sürüm Seç";
+"Select the version of the package to install" = "Yüklenecek paketin sürümünü seçin";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Bu paketin geliştiricisine roothide için güncellemesi için başvurabilir veya roothide Patcher aracılığıyla dönüştürmeyi deneyebilirsiniz.";
+"please contact @roothideDev to update it" = "güncellemek için lütfen @roothideDev ile iletişime geçin";

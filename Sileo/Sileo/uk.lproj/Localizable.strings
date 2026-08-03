@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Конвертувати";
+"Get Patcher" = "Отримати Patcher";
+"Not Updated" = "Не оновлено";
+"Remind_Roothide" = "Нагадайте розробникам адаптувати roothide та оновити існуючі твіки.";
+"Select Version" = "Вибрати версію";
+"Select the version of the package to install" = "Виберіть версію пакунка для встановлення";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Ви можете звернутися до розробника цього пакунка, щоб оновити його для roothide, або ви можете спробувати конвертувати його через roothide Patcher.";
+"please contact @roothideDev to update it" = "будь ласка, зверніться до @roothideDev для оновлення";

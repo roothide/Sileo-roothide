@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "แปลง";
+"Get Patcher" = "รับ Patcher";
+"Not Updated" = "ไม่ได้อัปเดต";
+"Remind_Roothide" = "เตือนนักพัฒนาให้ปรับให้เข้ากับ roothide และอัปเดตทวีกที่มีอยู่";
+"Select Version" = "เลือกเวอร์ชัน";
+"Select the version of the package to install" = "เลือกเวอร์ชันของแพ็กเกจที่จะติดตั้ง";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "คุณสามารถติดต่อนักพัฒนาของแพ็กเกจนี้เพื่ออัปเดตสำหรับ roothide หรือลองแปลงผ่าน roothide Patcher";
+"please contact @roothideDev to update it" = "โปรดติดต่อ @roothideDev เพื่ออัปเดต";

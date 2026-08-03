@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Convert";
+"Get Patcher" = "Get Patcher";
+"Not Updated" = "Not Updated";
+"Remind_Roothide" = "Remind developers to update tweaks for roothide.";
+"Select Version" = "Select Version";
+"Select the version of the package to install" = "Select the version of the package to install";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.";
+"please contact @roothideDev to update it" = "please contact @roothideDev to update it";

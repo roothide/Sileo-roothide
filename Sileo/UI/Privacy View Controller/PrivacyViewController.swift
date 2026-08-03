@@ -24,7 +24,7 @@ public class PrivacyViewController {
             onboardingVC = OnboardingViewController(title: title, description: description, image: UIImage(named: "User"))
         }
         
-        onboardingVC.addBulletin(.init(title: String(localizationKey: "Why"), description: String(localizationKey: "Data_Collected")+"\n\nRemind developers to update tweaks for roothide.", image: UIImage(named: "Chevron")!))
+        onboardingVC.addBulletin(.init(title: String(localizationKey: "Why"), description: String(localizationKey: "Data_Collected")+"\n\n"+String(localizationKey: "Remind_Roothide"), image: UIImage(named: "Chevron")!))
         onboardingVC.addBulletin(.init(title: String(localizationKey: "Whats_Collected"), description: String(localizationKey: "Non_Identifying"), image: UIImage(named: "Chevron")!))
         onboardingVC.addBulletin(.init(title: String(localizationKey: "Settings"), description: String(localizationKey: "Change_Later"), image: UIImage(named: "Chevron")!))
         

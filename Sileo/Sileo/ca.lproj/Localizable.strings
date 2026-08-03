@@ -245,3 +245,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "Converteix";
+"Get Patcher" = "Obtenir Patcher";
+"Not Updated" = "No actualitzat";
+"Remind_Roothide" = "Recorda als desenvolupadors adaptar roothide i actualitzar els ajusts existents.";
+"Select Version" = "Seleccionar versió";
+"Select the version of the package to install" = "Seleccioneu la versió del paquet a instal·lar";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "Podeu contactar amb el desenvolupador d'aquest paquet per actualitzar-lo per a roothide, o podeu intentar convertir-lo mitjançant roothide Patcher.";
+"please contact @roothideDev to update it" = "si us plau contacteu amb @roothideDev per actualitzar-lo";

@@ -244,3 +244,13 @@
 "Whats_Collected" = "What's Collected";
 "Non_Identifying" = "Only package and non-identifying device information is collected.";
 "Privacy_Policy" = "Privacy Policy";
+
+// Added translations
+"Convert" = "המר";
+"Get Patcher" = "קבל Patcher";
+"Not Updated" = "לא עודכן";
+"Remind_Roothide" = "הזכר למפתחים להתאים את roothide ולעדכן את הטוויקים הקיימים.";
+"Select Version" = "בחר גרסה";
+"Select the version of the package to install" = "בחר את גרסת החבילה להתקנה";
+"You can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher." = "ניתן ליצור קשר עם מפתח החבילה הזו כדי לעדכן אותה עבור roothide, או לנסות להמיר אותה דרך roothide Patcher.";
+"please contact @roothideDev to update it" = "אנא צור קשר עם @roothideDev לעדכון";
