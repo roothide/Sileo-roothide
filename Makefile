@@ -16,6 +16,11 @@ TARGET_CODESIGN = $(shell which ldid)
 SILEOTMP = $(TMPDIR)/sileo
 SILEO_STAGE_DIR = $(SILEOTMP)/stage
 
+# SPM dependency patches (applied to resolved checkouts before building).
+SPM_CHECKOUTS = $(SILEOTMP)/SourcePackages/checkouts
+ALDERIS_DIR   = $(SPM_CHECKOUTS)/Alderis
+ALDERIS_PATCH = $(CURDIR)/patches/alderis-ios26-tab.patch
+
 # Platform to build for.
 SILEO_PLATFORM ?= iphoneos-arm
 PREFIX ?=
@@ -187,6 +192,23 @@ else
 DPKG_TYPE ?= xz
 endif
 
+# Resolve SPM dependencies, then patch the Alderis checkout so it builds against
+# the iOS 26 SDK (its `tab` property clashes with the new UIViewController.tab).
+# The patch guard makes this idempotent; the build below disables automatic
+# resolution so the patched checkout is not reverted.
+patch-deps:
+	@echo "Resolving Swift package dependencies..."
+	@xcodebuild -resolvePackageDependencies -project 'Sileo.xcodeproj' -scheme '$(SCHEME)' -derivedDataPath $(SILEOTMP)
+	@if [ -d "$(ALDERIS_DIR)" ]; then \
+		if git -C "$(ALDERIS_DIR)" apply --check "$(ALDERIS_PATCH)" >/dev/null 2>&1; then \
+			git -C "$(ALDERIS_DIR)" apply "$(ALDERIS_PATCH)" && echo "Applied Alderis iOS 26 tab patch."; \
+		else \
+			echo "Alderis iOS 26 tab patch already applied or not applicable, skipping."; \
+		fi; \
+	else \
+		echo "error: Alderis checkout not found at $(ALDERIS_DIR)"; exit 1; \
+	fi
+
 giveMeRoot/bin/giveMeRoot: giveMeRoot/giveMeRoot.c
 	$(MAKE) -C giveMeRoot \
 		CC="xcrun -sdk $(PLATFORM) clang -arch $(ARCH) -mios-version-min=11.0"
@@ -198,7 +220,7 @@ all ::
 endif
 
 ifneq ($(MAC),1)
-stage: all
+stage: patch-deps all
 	@echo $(BUILD_CONFIG)
 	@echo $(ARCH)
 	@echo $(PLATFORM)
@@ -206,6 +228,7 @@ stage: all
 	@echo $(SILEO_STAGE_DIR)/$(PREFIX)/Applications/$(SILEO_APP)
 	@set -o pipefail; \
 		xcodebuild -jobs $(shell sysctl -n hw.ncpu) -project 'Sileo.xcodeproj' -scheme "$(SCHEME)" -configuration $(BUILD_CONFIG) -arch $(ARCH) -sdk $(PLATFORM) -derivedDataPath $(SILEOTMP) \
+		-disableAutomaticPackageResolution \
 		CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=$(PRODUCT_BUNDLE_IDENTIFIER) DISPLAY_NAME=$(DISPLAY_NAME) \
 		DSTROOT=$(SILEOTMP)/install $(XCPRETTY) ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
 	@rm -rf $(SILEO_STAGE_DIR)/
@@ -230,9 +253,10 @@ stage: all
 	@$(TARGET_CODESIGN) -SgiveMeRoot/Entitlements.plist $(SILEO_STAGE_DIR)/$(PREFIX)/Applications/$(SILEO_APP)/giveMeRoot
 	@chmod 4755 $(SILEO_STAGE_DIR)/$(PREFIX)/Applications/$(SILEO_APP)/giveMeRoot
 else
-stage: all
+stage: patch-deps all
 	@set -o pipefail; \
 		xcodebuild -jobs $(shell sysctl -n hw.ncpu) -project 'Sileo.xcodeproj' -scheme 'Sileo' $(DESTINATION) -configuration $(BUILD_CONFIG) ARCHS=$(ARCH) -derivedDataPath $(SILEOTMP) \
+		-disableAutomaticPackageResolution \
 		DSTROOT=$(SILEOTMP)/install $(XCPRETTY) ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
 	@rm -rf $(SILEO_STAGE_DIR)
 	@mkdir -p $(SILEO_STAGE_DIR)/$(PREFIX)/Applications/

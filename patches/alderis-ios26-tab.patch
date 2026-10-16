@@ -1,0 +1,22 @@
+diff --git a/Alderis/ColorPickerInnerViewController.swift b/Alderis/ColorPickerInnerViewController.swift
+index dcfb790..c25a59c 100644
+--- a/Alderis/ColorPickerInnerViewController.swift
++++ b/Alderis/ColorPickerInnerViewController.swift
+@@ -28,7 +28,7 @@ internal class ColorPickerInnerViewController: UIViewController {
+ 	let configuration: ColorPickerConfiguration
+ 	var color: Color
+ 
+-	var tab: ColorPickerTab {
++	var selectedTab: ColorPickerTab {
+ 		get { configuration.visibleTabs[currentTab] }
+ 		set { currentTab = configuration.visibleTabs.firstIndex(of: newValue) ?? 0 }
+ 	}
+@@ -286,7 +286,7 @@ internal class ColorPickerInnerViewController: UIViewController {
+ 		])
+ 
+ 		colorDidChange()
+-		tab = configuration.initialTab
++		selectedTab = configuration.initialTab
+ 		tabsView?.selectedSegmentIndex = currentTab
+ 	}
+ 

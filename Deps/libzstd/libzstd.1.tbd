@@ -1,12 +1,12 @@
 --- !tapi-tbd-v2
-archs:           [ i386, x86_64, armv7, armv7s, arm64, arm64e ]
+archs:           [ arm64, arm64e ]
 platform:        ios
 flags:           [ not_app_extension_safe, installapi ]
 install-name:    '@rpath/libzstd.1.dylib'
 current-version: 0
 compatibility-version: 0
 exports:
-  - archs:           [ i386, x86_64, armv7, armv7s, arm64, arm64e ]
+  - archs:           [ arm64, arm64e ]
     symbols:         [ _ZBUFF_compressContinue, _ZBUFF_compressEnd, _ZBUFF_compressFlush, 
                        _ZBUFF_compressInit, _ZBUFF_compressInitDictionary, _ZBUFF_compressInit_advanced, 
                        _ZBUFF_createCCtx, _ZBUFF_createCCtx_advanced, _ZBUFF_createDCtx, 

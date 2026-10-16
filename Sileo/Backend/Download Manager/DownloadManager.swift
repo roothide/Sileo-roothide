@@ -933,9 +933,11 @@ final class DownloadManager {
                 func showPatchAlert() {
                     NSLog("SileoLog: not updated for roothide: \(package.package) \(package.architecture)")
                     
+                    let IncompatibleRepo = ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host)
+                    
                     let title = String(localizationKey: "Not Updated")
                     
-                    let msg = ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host) ? String(localizationKey: "please contact @roothideDev to update it") : String(localizationKey: "\(package.package)(\(package.version))\n\nYou can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
+                    let msg = IncompatibleRepo ? String(localizationKey: "please contact @roothideDev to update it") : String(localizationKey: "\(package.package)(\(package.version))\n\nYou can contact the developer of this package to update it for roothide, or you can try to convert it via roothide Patcher.")
                     
                     let alert = UIAlertController(title: title, message: msg, preferredStyle: .alert)
                     
@@ -954,7 +956,7 @@ final class DownloadManager {
                         })
                     }
                     
-                    if ["apt.procurs.us","ellekit.space"].contains(package.sourceRepo?.url?.host)==false {
+                    if !IncompatibleRepo {
                         alert.addAction(patchAction)
                     }
                     
