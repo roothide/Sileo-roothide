@@ -470,7 +470,7 @@ final class PackageListManager {
                     return DpkgWrapper.isVersion(package1.version, greaterThan: package2.version)
                 }
                 
-                return name1.compare(name2) != .orderedDescending
+                return name1.compare(name2) == .orderedAscending
                 
             } else {
                 
@@ -489,7 +489,7 @@ final class PackageListManager {
                 
                 let name1 = package1.name.lowercased()
                 let name2 = package2.name.lowercased()
-                return name1.compare(name2) != .orderedDescending
+                return name1.compare(name2) == .orderedAscending
             }
         }
         return tmp
@@ -561,7 +561,7 @@ final class PackageListManager {
             
             if sorted {
                 return Array(Set(rawPackages.sorted(by: { pkg1, pkg2 -> Bool in
-                    return pkg1.name.compare(pkg2.name) != .orderedDescending
+                    return pkg1.name.compare(pkg2.name) == .orderedAscending
                 })))
             } else {
                 return Array(Set(rawPackages))

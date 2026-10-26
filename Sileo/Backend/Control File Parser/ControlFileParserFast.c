@@ -56,7 +56,7 @@ static int tagExists(const char *rawTags, const char *tag, size_t rawTagLen, boo
         }
     }
     
-    if (((rawTagPtr - rawTags) + tagLen) != rawTagLen && *(rawTagPtr + tagLen + 1) != ' ' && *(rawTagPtr + tagLen + 1) != ',') {
+    if (((rawTagPtr - rawTags) + tagLen) != rawTagLen && *(rawTagPtr + tagLen) != ' ' && *(rawTagPtr + tagLen) != ',') {
         return false;
     }
     return true;
@@ -101,7 +101,10 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
     const char **multlineKeys = isReleaseFile ? releaseMultilineKeys : regularMultilineKeys;
     size_t multilineKeyCount = isReleaseFile ? sizeof(releaseMultilineKeys) / sizeof(char *) : sizeof(regularMultilineKeys) / sizeof(char *);
     
-    const char *nextLineSeparator = strstr(ptr, "\n");
+    const char *nextLineSeparator = strnstr(ptr, "\n", controlDataSize);
+    if (!nextLineSeparator && controlDataSize) {
+        nextLineSeparator = controlData + controlDataSize;
+    }
     char *lastMultlineKey = NULL;
     char *lastMultilineValue = NULL;
     
@@ -113,16 +116,16 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
         
         if (*ptr == 32 || *ptr == 9) {
             if (lastMultlineKey == NULL) {
-                return;
+                goto continueLoop;
             }
             
             const char *rawValue = ptr;
-            while (*rawValue == 32 || *rawValue == 9) {
+            while (rawValue < nextLineSeparator && (*rawValue == 32 || *rawValue == 9)) {
                 rawValue++;
             }
             
             const char *endValue = ptr + lineLen;
-            while (endValue > rawValue && (*endValue == 32 || *endValue == 9 || *endValue == 13 || *endValue == 10)){
+            while (endValue > rawValue && (endValue[-1] == 32 || endValue[-1] == 9 || endValue[-1] == 13 || endValue[-1] == 10)){
                 endValue--;
             }
             
@@ -133,7 +136,7 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
                     currentValSize = strlen(currentVal);
                 }
                 
-                size_t newValLen = currentValSize + 1 + (endValue + 1 - rawValue);
+                size_t newValLen = currentValSize + 1 + (endValue - rawValue);
                 char *newVal = malloc(newValLen + 1);
                 bzero(newVal, newValLen + 1);
                 
@@ -142,7 +145,7 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
                     free((void *)currentVal);
                 }
                 newVal[currentValSize] = '\n';
-                strncpy(newVal + 1 + currentValSize, rawValue, endValue + 1 - rawValue);
+                strncpy(newVal + 1 + currentValSize, rawValue, endValue - rawValue);
                 lastMultilineValue = newVal;
             }
             
@@ -181,14 +184,8 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
         }
         
         const char *endValue = ptr + lineLen;
-        bool movedEnd = false;
-        while (endValue > rawValue && (*endValue == 32 || *endValue == 9 || *endValue == 13 || *endValue == 10)) {
+        while (endValue > rawValue && (endValue[-1] == 32 || endValue[-1] == 9 || endValue[-1] == 13 || endValue[-1] == 10)) {
             endValue--;
-            movedEnd = true;
-        }
-        
-        if (movedEnd) {
-            endValue++;
         }
         
         char *value = nil;
@@ -205,6 +202,9 @@ void parseControlFile(const uint8_t *rawControlData, size_t controlDataSize, boo
         }
         
     continueLoop:
+        if (nextLineSeparator == controlData + controlDataSize) {
+            break;
+        }
         ptr = nextLineSeparator + 1;
         if (ptr >= controlData + controlDataSize) {
             break;

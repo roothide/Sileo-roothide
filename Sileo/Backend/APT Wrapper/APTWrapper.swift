@@ -160,7 +160,7 @@ class APTWrapper {
                 let digestType = sigComponents[9]
 
                 guard let digestIdx = Int(digestType),
-                    digestIdx <= digests.count else {
+                    digestIdx < digests.count else {
                         continue
                 }
 
@@ -447,7 +447,7 @@ class APTWrapper {
                         return
                     }
 
-                    statusFdSource.cancel()
+                    sileoFdSource.cancel()
                     return
                 }
 

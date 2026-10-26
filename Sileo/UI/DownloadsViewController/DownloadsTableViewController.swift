@@ -502,7 +502,7 @@ class DownloadsTableViewController: SileoViewController {
         // When the animation has finished, fire the dumb respring code
         animator.addCompletion { _ in
             
-            //1: at least since iOS16, "uicache -p sileo.app" will kill the sileo process
+            //1: at least since iOS16, "uicache -p sileo.app" will kill the sileo process (when only the bundle mtime changed)
             //2: rebooting userspace immediately after executing uicache may cause jailbreak apps to disappear
             
             switch self.returnButtonAction {

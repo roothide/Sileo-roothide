@@ -59,6 +59,9 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
     
     func applicationDidBecomeActive(_ application: UIApplication) {
         NSLog("SileoLog: applicationDidBecomeActive")
+
+        // RUNNINGBOARD 3735883980 test
+        // let dead10ccDirectory = URL(fileURLWithPath: jbroot("/var/mobile/Library/Caches/Sileo/"), isDirectory: true); let dead10ccFD = open(dead10ccDirectory.appendingPathComponent("dead10cc-test.lock").path, O_CREAT | O_RDWR, mode_t(0o600)); precondition(dead10ccFD >= 0 && flock(dead10ccFD, LOCK_SH | LOCK_NB) == 0, "DEAD10CC test: file lock failed"); // DEAD10CC TEST: retain the fd and lock until process exit.
     }
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
@@ -309,12 +312,19 @@ class SileoAppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDe
                         
                         let tmpdir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID.init().uuidString)
                         let newurl = tmpdir.appendingPathComponent(self.aptEncoded(string: url.lastPathComponent))
-                        try! FileManager.default.createDirectory(at: tmpdir, withIntermediateDirectories: false)
-                        try! FileManager.default.copyItem(at: url, to: newurl)
+                        do {
+                            try FileManager.default.createDirectory(at: tmpdir, withIntermediateDirectories: false)
+                            try FileManager.default.copyItem(at: url, to: newurl)
+                        } catch {
+                            NSLog("SileoLog: failed to stage deb: \(error)")
+                            let alert = UIAlertController(title: "Bad Deb", message: "The provided deb file could not be read", preferredStyle: .alert)
+                            alert.addAction(UIAlertAction(title: "Ok", style: .cancel))
+                            self.window?.rootViewController?.present(alert, animated: true, completion: nil)
+                            return
+                        }
                         NSLog("SileoLog: newurl=\(newurl)")
-                        
-                        if options[UIApplication.OpenURLOptionsKey.openInPlace] as! Bool == false {
-                            try! FileManager.default.removeItem(at: url)
+                        if options[UIApplication.OpenURLOptionsKey.openInPlace] as? Bool ?? false == false {
+                            try? FileManager.default.removeItem(at: url)
                         }
                         
                         guard let package = PackageListManager.shared.package(url: newurl) else {

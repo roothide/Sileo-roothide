@@ -326,7 +326,7 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         if currentSection(indexPath.section) != .packages { return }
-        let viewController = self.controller(indexPath: indexPath)
+        guard let viewController = self.controller(indexPath: indexPath) else { return }
         self.navigationController?.pushViewController(viewController, animated: true)
     }
 
@@ -357,23 +357,23 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout { // Collection
     
     private func markAsSeen(_ indexPath: IndexPath) {
         guard let safe = timestamps.safe(indexPath.section - newsBuffer),
-              let section = sections[safe] else { return }
-        let package = section[indexPath.row]
+              let section = sections[safe], let package = section[safe: indexPath.row] else { return }
         DatabaseManager.shared.markAsSeen(package)
-        sections[timestamps[indexPath.section - newsBuffer]]?[indexPath.row].userRead = true
+        package.userRead = true
     }
 }
 
 extension NewsViewController { // 3D Touch
-    func controller(indexPath: IndexPath) -> PackageActions {
-        guard let package = sections[timestamps[indexPath.section - newsBuffer]]?[indexPath.row] else { fatalError("Something went wrong with indexxing") }
+    func controller(indexPath: IndexPath) -> PackageActions? {
+        guard let timestamp = timestamps[safe: indexPath.section - newsBuffer],
+              let package = sections[timestamp]?[safe: indexPath.row] else { return nil }
         return NativePackageViewController.viewController(for: package)
     }
 
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
         guard let indexPath = collectionView?.indexPathForItem(at: location) else { return nil }
         if currentSection(indexPath.section) != .packages { return nil }
-        let packageViewController = self.controller(indexPath: indexPath)
+        guard let packageViewController = self.controller(indexPath: indexPath) else { return nil }
         return packageViewController
     }
 
@@ -386,7 +386,7 @@ extension NewsViewController { // 3D Touch
 extension NewsViewController {
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         if currentSection(indexPath.section) != .packages { return nil }
-        let packageViewController = self.controller(indexPath: indexPath)
+        guard let packageViewController = self.controller(indexPath: indexPath) else { return nil }
         let menuItems = packageViewController.actions()
         
         return UIContextMenuConfiguration(identifier: nil,

@@ -92,15 +92,11 @@ final class DownloadManager {
     
     public var vars = TSyncVars()
     
-    public var viewController: DownloadsTableViewController
+    public lazy var viewController: DownloadsTableViewController = DownloadsTableViewController(nibName: "DownloadsTableViewController", bundle: nil)
     
     public var currentDownloads = 0
     public var maxParallelDownloads = 5
     public var currentDownloadSession:UInt32 = 0
-    
-    init() {
-        viewController = DownloadsTableViewController(nibName: "DownloadsTableViewController", bundle: nil)
-    }
     
     public func installingPackages() -> Int {
         self.vars.upgrades.count + self.vars.installations.count + self.vars.installdeps.count

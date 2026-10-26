@@ -1339,7 +1339,7 @@ final class RepoManager {
         for source in rawSources.components(separatedBy: .newlines) {
             let parts = source.trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces).filter({$0.isEmpty==false})
             
-            let uri = parts[0]
+            guard let uri = parts.first else { continue }
             
             guard let _ = URL(string: uri) else { continue }
             

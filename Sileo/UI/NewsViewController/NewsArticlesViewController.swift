@@ -74,7 +74,7 @@ extension NewsArticlesViewController { // UICollectionViewDelegate
 
 extension NewsArticlesViewController { // 3D Touch
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
-        let indexPath = collectionView.indexPathForItem(at: location) ?? IndexPath()
+        guard let indexPath = collectionView.indexPathForItem(at: location) else { return nil }
         var presentModally = false
         let viewController = URLManager.viewController(url: NewsResolver.shared.articles[indexPath.row].url, isExternalOpen: false, presentModally: &presentModally)
         presentNextURLCommittedModally = presentModally

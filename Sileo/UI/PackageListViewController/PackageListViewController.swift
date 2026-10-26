@@ -47,7 +47,17 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     final private var packages: [Package] = []
     final private var availableUpdates: [Package] = []
     final private var ignoredUpdates: [Package] = []
-    final private var searchCache: [String: [Package]] = [:]
+    final private var _searchCache: [String: [Package]] = [:]
+    private let searchCacheLock = DispatchSemaphore(value: 1)
+    final private var searchCache: [String: [Package]] {
+        get { searchCacheLock.wait(); defer { searchCacheLock.signal() }; return _searchCache }
+        set { searchCacheLock.wait(); defer { searchCacheLock.signal() }; _searchCache = newValue }
+        _modify {
+            searchCacheLock.wait()
+            defer { searchCacheLock.signal() }
+            yield &_searchCache
+        }
+    }
     final private var provisionalPackages: [ProvisionalPackage] = []
     final private var cachedInstalled: [Package]?
     
@@ -239,22 +249,22 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
             
             if !self.showSearchField {
                 let pkgs = packageMan.packageList(identifier: self.packagesLoadIdentifier, sortPackages: true, repoContext: self.repoContext, packagePrepend: self.packagesLoadIdentifier=="--contextInstalled" ? (self.repoContext?.installedPackages ?? []) : nil)
-                self.packages = pkgs
-                self.searchCache[""] = pkgs
-                DispatchQueue.main.async { self.updateSearchResults(for: self.searchController) }
+                DispatchQueue.main.async {
+                    self.packages = pkgs
+                    self.searchCache[""] = pkgs
+                    self.updateSearchResults(for: self.searchController)
+                }
             }
-            if self.showUpdates {
-                let updates = packageMan.availableUpdates()
+            
+            let updates = self.showUpdates ? packageMan.availableUpdates() : []
+            
+            DispatchQueue.main.async {
                 self.availableUpdates = updates.filter({ $0.1?.wantInfo != .hold }).map({ $0.0 })
                 if UserDefaults.standard.bool(forKey: "ShowIgnoredUpdates", fallback: true) {
                     self.ignoredUpdates = updates.filter({ $0.1?.wantInfo == .hold }).map({ $0.0 })
                 }
-            }
-            
-            DispatchQueue.main.async {
-                let updates = self.availableUpdates
-                if !updates.isEmpty {
-                    self.navigationController?.tabBarItem.badgeValue = String(format: "%ld", updates.count)
+                if !self.availableUpdates.isEmpty {
+                    self.navigationController?.tabBarItem.badgeValue = String(format: "%ld", self.availableUpdates.count)
                 } else {
                     self.navigationController?.tabBarItem.badgeValue = nil
                 }
@@ -275,16 +285,22 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     
     func controller(indexPath: IndexPath) -> PackageActions? {
         switch findWhatFuckingSectionThisIs(indexPath.section) {
-        case .canister:
-            let pro = provisionalPackages[indexPath.row]
-            guard let package = CanisterResolver.package(pro) else { return nil }
-            return controller(package: package)
-        case .ignoredUpdates: return controller(package: ignoredUpdates[indexPath.row])
-        case .packages, .reallyBoringList: return controller(package: packages[indexPath.row])
-        case .updates: return controller(package: availableUpdates[indexPath.row])
-        case .searchHistoryList:
-            searchController.searchBar.text = searchHistory[safe: indexPath.row]
-            return nil
+            case .canister:
+                guard let pro = provisionalPackages[safe: indexPath.row],
+                    let package = CanisterResolver.package(pro) else { return nil }
+                return controller(package: package)
+            case .ignoredUpdates:
+                guard let package = ignoredUpdates[safe: indexPath.row] else { return nil }
+                return controller(package: package)
+            case .packages, .reallyBoringList:
+                guard let package = packages[safe: indexPath.row] else { return nil }
+                return controller(package: package)
+            case .updates:
+                guard let package = availableUpdates[safe: indexPath.row] else { return nil }
+                return controller(package: package)
+            case .searchHistoryList:
+                searchController.searchBar.text = searchHistory[safe: indexPath.row]
+                return nil
         }
     }
     
@@ -320,13 +336,14 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     @objc func reloadDataWithUpdates() {
         DispatchQueue.global(qos: .userInteractive).async {
             let updates = PackageListManager.shared.availableUpdates()
-            self.availableUpdates = updates.filter({ $0.1?.wantInfo != .hold }).map({ $0.0 })
-            if UserDefaults.standard.bool(forKey: "ShowIgnoredUpdates", fallback: true) {
-                self.ignoredUpdates = updates.filter({ $0.1?.wantInfo == .hold }).map({ $0.0 })
-            } else {
-                self.ignoredUpdates.removeAll()
-            }
             DispatchQueue.main.async {
+                self.availableUpdates = updates.filter({ $0.1?.wantInfo != .hold }).map({ $0.0 })
+                if UserDefaults.standard.bool(forKey: "ShowIgnoredUpdates", fallback: true) {
+                    self.ignoredUpdates = updates.filter({ $0.1?.wantInfo == .hold }).map({ $0.0 })
+                } else {
+                    self.ignoredUpdates.removeAll()
+                }
+                
                 if !self.availableUpdates.isEmpty {
                     self.navigationController?.tabBarItem.badgeValue = String(format: "%ld", self.availableUpdates.count)
                     UIApplication.shared.applicationIconBadgeNumber = self.availableUpdates.count

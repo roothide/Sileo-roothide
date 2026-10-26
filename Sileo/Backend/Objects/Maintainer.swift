@@ -26,7 +26,7 @@ struct Maintainer: Decodable {
             let nameRange = inputString.startIndex..<emailStartIndex
             let name = inputString[nameRange].trimmingCharacters(in: .whitespaces)
             
-            if let emailEndIndex = inputString.range(of: ">")?.lowerBound {
+            if let emailEndIndex = inputString.range(of: ">")?.lowerBound, emailEndIndex > emailStartIndex {
                 let emailRange = inputString.index(after: emailStartIndex)..<emailEndIndex
                 let email = inputString[emailRange].lowercased()
                 

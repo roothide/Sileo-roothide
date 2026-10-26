@@ -40,7 +40,8 @@ class DepictionScreenshotsView: DepictionBaseView, UIScrollViewDelegate {
             return nil
         }
         let itemSize = NSCoder.cgSize(for: rawItemSize)
-        if itemSize == .zero {
+        guard itemSize.width.isFinite, itemSize.width > 0,
+            itemSize.height.isFinite, itemSize.height > 0 else {
             return nil
         }
         self.itemSize = itemSize

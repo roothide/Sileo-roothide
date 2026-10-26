@@ -9,6 +9,11 @@
 import Foundation
 
 class SileoNavigationController: UINavigationController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationBar.preservesSuperviewLayoutMargins = true
+    }
+
     override var childForStatusBarStyle: UIViewController? {
         viewControllers.last
     }

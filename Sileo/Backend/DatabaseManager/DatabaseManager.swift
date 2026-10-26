@@ -23,8 +23,15 @@ class DatabaseManager {
     
     let database: Connection
     
-    private var packages = ContiguousArray<Package>()
-    private var updateQueue: DispatchQueue = DispatchQueue(label: "org.coolstar.SileoStore.news-seen-update")
+    private static let updateQueueContext = 50
+    private static let updateQueueKey = DispatchSpecificKey<Int>()
+    private static let updateQueue: DispatchQueue = {
+        let queue = DispatchQueue(label: "org.coolstar.SileoStore.news-seen-update", qos: .userInitiated)
+        queue.setSpecific(key: updateQueueKey, value: updateQueueContext)
+        return queue
+    }()
+    
+    private var packages = SafeArray<Package>(queue: updateQueue, key: updateQueueKey, context: updateQueueContext)
     
     init() {
         let sileoURL = EvanderNetworking._cacheDirectory.appendingPathComponent("Database")
@@ -65,10 +72,15 @@ class DatabaseManager {
     
     public func addToSaveQueue(packages: [Package]) {
         NSLog("SileoLog: addToSaveQueue \(packages.map({"\($0.package)=\($0.version)"}))")
-        self.packages += packages
+        self.packages.appendGroup(packages)
     }
     
     public func saveQueue() {
+        let packages = DatabaseManager.updateQueue.sync {
+            let pending = self.packages.raw
+            self.packages.removeAll()
+            return pending
+        }
         if packages.isEmpty { return }
         let guid = Expression<String>("guid")
         let package = Expression<String>("package")
@@ -96,7 +108,6 @@ class DatabaseManager {
                 ))
             }
         }
-        packages.removeAll()
     }
     
     public func saveStubs(stubs: [PackageStub]) {
@@ -161,7 +172,7 @@ class DatabaseManager {
     }
     
     public func markAsSeen(_ dataPackage: Package) {
-        updateQueue.async {
+        DatabaseManager.updateQueue.async {
             let database = self.database
             let packages = Table("Packages")
             let package = Expression<String>("package")

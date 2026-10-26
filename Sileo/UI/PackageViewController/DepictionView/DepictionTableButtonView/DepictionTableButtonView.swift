@@ -22,11 +22,10 @@ class DepictionTableButtonView: DepictionBaseView, UIGestureRecognizerDelegate {
     private let openExternal: Bool
 
     required init?(dictionary: [String: Any], viewController: UIViewController, tintColor: UIColor, isActionable: Bool) {
-        guard let title = dictionary["title"] as? String else {
-            return nil
-        }
+        guard let title = dictionary["title"] as? String else { return nil }
+        guard let action = dictionary["action"] as? String else { return nil }
 
-        self.action = dictionary["action"] as! String
+        self.action = action
         
         context = dictionary["context"]
 

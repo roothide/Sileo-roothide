@@ -49,6 +49,10 @@ class DepictionTabView: DepictionBaseView, DepictionTabControlContainer {
             }
         }
 
+        if tabViews.count == 0 {
+            return nil
+        }
+
         tabViewSeparator = UIView(frame: .zero)
         tabViewSeparator?.backgroundColor = .sileoSeparatorColor
         

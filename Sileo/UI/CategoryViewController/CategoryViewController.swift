@@ -111,13 +111,14 @@ class CategoryViewController: SileoTableViewController {
             categoriesCountCache["--allCategories"] = packages?.count ?? 0
             categoriesCountCache["--contextInstalled"] = installed?.count ?? 0
             categoriesCountCache["--contextRootHide"] = roothided.count
-            self.showInstalled = !(installed?.isEmpty ?? true)
-            self.showRootHide = roothided.count>0 && (roothided.count+archall.count)<(packages?.count ?? 0)
-            self.categoriesCountCache = categoriesCountCache
-            self.categories = categories.sorted(by: { str1, str2 -> Bool in
-                str1.compare(str2) != .orderedDescending
-            })
+            let categoriesSorted = categories.sorted(by: { str1, str2 -> Bool in
+                    str1.compare(str2)  == .orderedAscending
+                })
             DispatchQueue.main.async {
+                self.showInstalled = !(installed?.isEmpty ?? true)
+                self.showRootHide = roothided.count>0 && (roothided.count+archall.count)<(packages?.count ?? 0)
+                self.categoriesCountCache = categoriesCountCache
+                self.categories = categoriesSorted
                 self.tableView.reloadData()
             }
         }
