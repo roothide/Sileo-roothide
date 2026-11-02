@@ -381,20 +381,9 @@ class PackageListViewController: SileoScrollViewController, UIGestureRecognizerD
     }
     
     func getPackages() -> String {
-        var bodyFromArray = ""
-        let packages = self.packages
-        for package in packages {
-            let packageName = package.name
-            let packageVersion = package.version
-            
-            bodyFromArray += "\(packageName):(\(package.package)) \(packageVersion)\n"
-        }
-        
-        if let subRange = Range<String.Index>(NSRange(location: bodyFromArray.count - 1, length: 1), in: bodyFromArray) {
-            bodyFromArray.removeSubrange(subRange)
-        }
-        
-        return bodyFromArray
+        return packages.map { package in
+            "\(package.name):(\(package.package)) \(package.version)"
+        }.joined(separator: "\n")
     }
     
     enum SortMode {
