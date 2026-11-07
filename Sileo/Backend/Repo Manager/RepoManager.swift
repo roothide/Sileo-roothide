@@ -128,6 +128,7 @@ final class RepoManager {
                 repoList.append(bigBoss)
                 repos.append(bigBoss)
                 return true
+            /*
             case "apt.procurs.us":
                 let arch = DpkgWrapper.architecture
                 let suite = arch.primary == .rootful ? "iphoneos-arm64/":""
@@ -145,6 +146,7 @@ final class RepoManager {
                 repoList.append(jailbreakRepo)
                 repos.append(jailbreakRepo)
                 return true
+            */
             default: return false
             }
         }
